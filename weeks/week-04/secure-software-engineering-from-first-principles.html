@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 4.1: Secure Software Engineering from First Principles | MS Cybersecurity</title>
+  <meta name="description" content="Secure software engineering from zero: SDLC, requirements, abuse cases, secure design, secure coding, testing, supply-chain basics, metrics, labs, and self-assessment.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-04-01" data-title="Lesson 4.1: Secure Software Engineering from First Principles">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 4</a> / Lesson 4.1</div>
+      <header class="hero">
+        <div class="eyebrow">Week 4 · Secure Software and Supply Chain</div>
+        <h1>Lesson 4.1: Secure Software Engineering from First Principles</h1>
+        <p class="lead">Software security begins before anyone writes code. It starts with understanding what software is supposed to do, what could go wrong, who can change it, how it is tested, how it is deployed, and how it is maintained after release.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>220–320 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Weeks 0–3 recommended; no software-engineering background required</div>
+          <div class="meta-item"><strong>Practice time</strong>5–8 hours</div>
+        </div>
+        <div class="toolbar">
+          <button class="bookmark-btn" type="button">☆ Bookmark lesson</button>
+          <button class="complete-btn" type="button">Mark complete</button>
+          <button class="quiz-toggle" type="button">Start quiz mode</button>
+          <button class="pdf-btn" type="button">Download lesson as PDF</button>
+          <button class="theme-toggle" type="button">Toggle dark mode</button>
+        </div>
+      </header>
+
+      <section class="lesson-visual card">
+        <div class="visual-graphic" aria-label="Secure software lifecycle illustration">
+          <svg viewBox="0 0 560 360" role="img" aria-labelledby="svg-title svg-desc">
+            <title id="svg-title">Secure software lifecycle</title>
+            <desc id="svg-desc">Requirements, design, code, test, release, operate, and learn are connected in a secure feedback loop.</desc>
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#6ea8ff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient>
+            </defs>
+            <circle cx="280" cy="180" r="104" fill="none" stroke="url(#g1)" stroke-width="24" stroke-dasharray="70 20"/>
+            <circle cx="280" cy="180" r="58" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/>
+            <text x="280" y="170" text-anchor="middle" font-size="24">SECURE</text>
+            <text x="280" y="200" text-anchor="middle" font-size="20">SDLC</text>
+            <g fill="var(--bg)" stroke="var(--border)" stroke-width="2">
+              <rect x="34" y="38" width="130" height="54" rx="15"/><rect x="392" y="38" width="136" height="54" rx="15"/>
+              <rect x="34" y="268" width="130" height="54" rx="15"/><rect x="392" y="268" width="136" height="54" rx="15"/>
+              <rect x="212" y="18" width="136" height="54" rx="15"/><rect x="212" y="288" width="136" height="54" rx="15"/>
+            </g>
+            <text x="99" y="70" text-anchor="middle" font-size="15">Requirements</text>
+            <text x="280" y="50" text-anchor="middle" font-size="15">Design</text>
+            <text x="460" y="70" text-anchor="middle" font-size="15">Code</text>
+            <text x="99" y="300" text-anchor="middle" font-size="15">Operate</text>
+            <text x="280" y="320" text-anchor="middle" font-size="15">Learn</text>
+            <text x="460" y="300" text-anchor="middle" font-size="15">Release</text>
+          </svg>
+        </div>
+        <div class="visual-panel">
+          <h2>Security is built into the lifecycle.</h2>
+          <p>A secure product is not created by one final scan. It comes from repeated decisions: what is required, how the system is designed, how code is reviewed, how dependencies are selected, how tests run, how releases are protected, and how incidents feed back into engineering.</p>
+          <div class="visual-steps">
+            <div class="visual-step"><strong>Build</strong><span>Requirements, design, code, dependencies.</span></div>
+            <div class="visual-step"><strong>Verify</strong><span>Review, test, scan, threat model.</span></div>
+            <div class="visual-step"><strong>Operate</strong><span>Deploy, monitor, patch, learn.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview">
+            <h2>Week 4 Context</h2>
+            <p>Week 4 moves from cryptographic building blocks into software engineering. Most modern cybersecurity incidents do not happen because nobody knew the word “security.” They happen because requirements were vague, code handled input unsafely, secrets leaked, dependencies were trusted blindly, build systems were weak, or nobody owned security after release.</p>
+            <p>This lesson introduces secure software engineering from zero. Later Week 4 lessons will go deeper into secure requirements, input validation, dependency management, software bills of materials, testing, fuzzing, CI/CD, and release integrity.</p>
+            <div class="callout warning"><p><strong>Boundary:</strong> all examples in this lesson are defensive and local. Do not scan public repositories, test third-party applications, or search for real secrets in systems you do not own or have written authorization to assess.</p></div>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <h3>Plain-English explanation</h3>
+            <p><strong>Software engineering</strong> is the organized process of building and maintaining software. <strong>Secure software engineering</strong> means building software so that it still behaves safely when users make mistakes, attackers send hostile input, components fail, dependencies change, or administrators misconfigure something.</p>
+            <p>Analogy: building software is like building a hospital. It is not enough for the doors to open and lights to work. The building also needs fire exits, restricted medicine storage, emergency power, hygiene rules, staff badges, maintenance records, and incident drills. Secure software needs the digital equivalent: access control, input validation, logging, safe error handling, dependency control, tests, monitoring, and patching.</p>
+
+            <h3>Why the topic exists</h3>
+            <p>Software controls banking, healthcare, cloud platforms, vehicles, universities, identity systems, industrial systems, and national infrastructure. A small code defect or design mistake can leak data, corrupt records, interrupt service, or become a stepping stone into a larger environment.</p>
+
+            <h3>Why the topic matters</h3>
+            <p>Security teams cannot inspect every line of software after it is already deployed. The lower-cost and higher-impact approach is to reduce defects early, make risky decisions visible, automate checks where possible, and design systems that are easier to review and recover.</p>
+
+            <h3>Where it is used</h3>
+            <ul>
+              <li>Web and mobile applications.</li>
+              <li>Cloud services and APIs.</li>
+              <li>Operating-system and embedded software.</li>
+              <li>Banking, healthcare, education, government, and defense systems.</li>
+              <li>Open-source projects and commercial products.</li>
+              <li>CI/CD pipelines and software supply chains.</li>
+            </ul>
+
+            <h3>Who uses it</h3>
+            <ul>
+              <li><strong>Developers</strong> use it to avoid introducing vulnerabilities.</li>
+              <li><strong>Security engineers</strong> use it to define secure patterns, review code, and build guardrails.</li>
+              <li><strong>DevOps and platform engineers</strong> use it to secure builds, deployments, and runtime environments.</li>
+              <li><strong>Product managers</strong> use it to prioritize security requirements and risk reduction.</li>
+              <li><strong>Auditors and governance teams</strong> use it to evaluate process evidence.</li>
+              <li><strong>Researchers</strong> use it to study vulnerability classes, developer behavior, automated testing, and supply-chain assurance.</li>
+            </ul>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <p>After finishing this lesson, you should be able to:</p>
+            <ul>
+              <li>Explain software, programs, source code, binaries, builds, releases, and deployments from first principles.</li>
+              <li>Describe the software development life cycle and where security controls fit.</li>
+              <li>Distinguish functional requirements, non-functional requirements, security requirements, abuse cases, and acceptance criteria.</li>
+              <li>Explain why secure software is a lifecycle problem rather than a final checklist.</li>
+              <li>Identify common software vulnerability classes at a beginner level.</li>
+              <li>Explain secure design principles such as least privilege, deny by default, fail safely, complete mediation, secure defaults, and separation of duties.</li>
+              <li>Perform a safe local review of a small program for input validation, error handling, logging, and secret-handling issues.</li>
+              <li>Write a simple secure coding checklist and map it to development stages.</li>
+              <li>Describe how secure software engineering is used in banks, governments, cloud providers, healthcare, defense, universities, and enterprises.</li>
+              <li>Summarize research directions in secure software engineering and software supply-chain security.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <p>This lesson assumes no previous software-engineering course. It re-explains the required concepts here.</p>
+            <h3>Program</h3>
+            <p>A <strong>program</strong> is a set of instructions a computer can run. A calculator app, web server, mobile app, and login script are all programs.</p>
+            <h3>Source code</h3>
+            <p><strong>Source code</strong> is human-readable program text written in a programming language such as Python, JavaScript, Java, Go, Rust, or C. Humans write source code. Tools translate or interpret it so computers can execute it.</p>
+            <h3>Input and output</h3>
+            <p><strong>Input</strong> is data the program receives: keyboard text, files, web requests, API parameters, environment variables, database records, or network packets. <strong>Output</strong> is what the program produces: screen text, files, HTTP responses, database updates, logs, or messages.</p>
+            <h3>Bug</h3>
+            <p>A <strong>bug</strong> is a mistake in software behavior. Not every bug is a security vulnerability. A spelling mistake in a label may be a bug, but usually not a vulnerability. A bug that lets one student read another student’s grades is a security vulnerability.</p>
+            <h3>Vulnerability</h3>
+            <p>A <strong>vulnerability</strong> is a weakness that can be used to violate a security goal such as confidentiality, integrity, availability, privacy, or safety.</p>
+            <h3>Repository</h3>
+            <p>A <strong>repository</strong> stores project files and their history, usually managed by Git. It helps teams track changes, review code, and recover older versions.</p>
+            <h3>Build</h3>
+            <p>A <strong>build</strong> converts source code and dependencies into something that can run: a binary, container image, package, or deployable web artifact.</p>
+            <h3>Deployment</h3>
+            <p>A <strong>deployment</strong> places software into an environment where users or other systems can use it, such as a web server, cloud service, mobile app store, or internal network.</p>
+            <details class="callout">
+              <summary>Mini-explanation: why “it works” is not enough</summary>
+              <p>A program can work correctly for friendly input and fail dangerously for hostile input. Secure engineering asks: What if the input is too long, missing, malformed, repeated, encoded strangely, sent too fast, or submitted by the wrong identity?</p>
+            </details>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 Software as a system of decisions</h3>
+            <p>Beginners often think software is only code. In professional security, software is a system of decisions:</p>
+            <ul>
+              <li>What should the software do?</li>
+              <li>Who is allowed to use each function?</li>
+              <li>What data is accepted?</li>
+              <li>Where are secrets stored?</li>
+              <li>Which third-party packages are trusted?</li>
+              <li>How is code reviewed?</li>
+              <li>How are builds protected?</li>
+              <li>How are logs created and monitored?</li>
+              <li>How are defects patched after release?</li>
+            </ul>
+            <p>Each decision can reduce risk or create risk.</p>
+
+            <h3>4.2 The software development life cycle</h3>
+            <p>The <strong>software development life cycle</strong>, often shortened to <strong>SDLC</strong>, is the process used to create and maintain software. Different organizations use different models, but most include these stages:</p>
+            <table>
+              <thead><tr><th>Stage</th><th>Plain meaning</th><th>Security question</th><th>Example control</th></tr></thead>
+              <tbody>
+                <tr><td>Plan</td><td>Decide what to build</td><td>What harm could this system cause if abused?</td><td>Threat modeling and risk review</td></tr>
+                <tr><td>Requirements</td><td>Define expected behavior</td><td>What security behavior is required?</td><td>Security requirements and abuse cases</td></tr>
+                <tr><td>Design</td><td>Choose architecture and data flows</td><td>Where are trust boundaries?</td><td>Data-flow diagrams and secure design review</td></tr>
+                <tr><td>Code</td><td>Implement features</td><td>Can hostile input cause unsafe behavior?</td><td>Secure coding standards and code review</td></tr>
+                <tr><td>Test</td><td>Check behavior</td><td>Do tests include abuse and edge cases?</td><td>SAST, DAST, unit tests, fuzzing</td></tr>
+                <tr><td>Build</td><td>Create deployable artifact</td><td>Can the build be tampered with?</td><td>Protected CI, signed artifacts, provenance</td></tr>
+                <tr><td>Release</td><td>Ship to users</td><td>Can users verify what was released?</td><td>Release approval, change record, artifact signing</td></tr>
+                <tr><td>Operate</td><td>Run in production</td><td>Can attacks be detected and contained?</td><td>Logging, monitoring, patching, incident response</td></tr>
+                <tr><td>Learn</td><td>Improve after bugs and incidents</td><td>What process failed?</td><td>Post-incident review and backlog fixes</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.3 Secure SDLC</h3>
+            <p>A <strong>secure SDLC</strong> adds security activities to the ordinary SDLC. The goal is not to slow development for no reason. The goal is to catch expensive security mistakes when they are still cheaper to fix.</p>
+            <p>Example: finding a missing authorization check during design may require one diagram change. Finding it after breach investigation may require emergency patching, incident response, customer notification, legal review, and reputational repair.</p>
+
+            <h3>4.4 Requirements</h3>
+            <p>A <strong>requirement</strong> states what the system must do. A functional requirement describes a feature. A security requirement describes how the system must behave to preserve security goals.</p>
+            <table>
+              <thead><tr><th>Weak requirement</th><th>Better requirement</th><th>Why better?</th></tr></thead>
+              <tbody>
+                <tr><td>The system should be secure.</td><td>Only authenticated students may view their own grade records.</td><td>Specific asset, subject, object, and action.</td></tr>
+                <tr><td>Use encryption.</td><td>All grade records must be encrypted in transit with TLS and at rest using managed keys.</td><td>Defines where and how protection applies.</td></tr>
+                <tr><td>Log errors.</td><td>Authentication failures, authorization denials, admin changes, and grade updates must be logged with timestamp, actor, object, action, result, and request ID.</td><td>Supports detection and investigation.</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.5 Abuse cases</h3>
+            <p>A <strong>use case</strong> describes how a legitimate user uses a feature. An <strong>abuse case</strong> describes how someone could misuse the feature to cause harm.</p>
+            <p>Use case: “A student downloads their own transcript.” Abuse case: “A student changes the student ID in the URL and downloads someone else’s transcript.”</p>
+
+            <h3>4.6 Secure design principles</h3>
+            <p>Secure design principles are reusable ideas that help systems remain safe under stress.</p>
+            <table>
+              <thead><tr><th>Principle</th><th>Meaning</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td>Least privilege</td><td>Give only the access needed to perform a task.</td><td>A reporting job can read reports but cannot modify grades.</td></tr>
+                <tr><td>Deny by default</td><td>If access is not explicitly allowed, reject it.</td><td>Unknown API role receives no access.</td></tr>
+                <tr><td>Secure defaults</td><td>The safest configuration should be the default.</td><td>New storage bucket is private unless explicitly published.</td></tr>
+                <tr><td>Fail safely</td><td>When an error occurs, do not expose sensitive data or grant extra access.</td><td>If authorization service is unavailable, deny grade changes.</td></tr>
+                <tr><td>Complete mediation</td><td>Check authorization every time a protected object is accessed.</td><td>Every transcript download verifies ownership.</td></tr>
+                <tr><td>Separation of duties</td><td>Split sensitive responsibilities across roles.</td><td>One person requests a production release; another approves it.</td></tr>
+                <tr><td>Defense in depth</td><td>Use multiple independent controls.</td><td>Authentication, authorization, logging, rate limits, and backups.</td></tr>
+                <tr><td>Minimize attack surface</td><td>Remove unnecessary interfaces and features.</td><td>Disable unused admin endpoints.</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.7 Common vulnerability classes</h3>
+            <p>A <strong>vulnerability class</strong> is a family of similar security mistakes. Knowing classes helps you recognize patterns.</p>
+            <ul>
+              <li><strong>Injection:</strong> untrusted input is interpreted as code or command.</li>
+              <li><strong>Broken access control:</strong> a user can perform an action or access an object they should not.</li>
+              <li><strong>Authentication weakness:</strong> login or identity proof can be bypassed or abused.</li>
+              <li><strong>Cryptographic failure:</strong> sensitive data is exposed because crypto is missing or misused.</li>
+              <li><strong>Insecure design:</strong> the feature itself has unsafe assumptions.</li>
+              <li><strong>Security misconfiguration:</strong> software is deployed with unsafe settings.</li>
+              <li><strong>Vulnerable dependency:</strong> a third-party component contains a known weakness.</li>
+              <li><strong>Insufficient logging and monitoring:</strong> attacks occur but are not noticed quickly.</li>
+            </ul>
+
+            <h3>4.8 Secure coding</h3>
+            <p><strong>Secure coding</strong> means writing code that resists common mistakes. It includes input validation, output encoding, authorization checks, safe error handling, secure defaults, secret management, and careful dependency use.</p>
+            <p>Secure coding does not mean the developer must be afraid of every line. It means the developer uses safe patterns and avoids known dangerous shortcuts.</p>
+
+            <h3>4.9 Code review</h3>
+            <p><strong>Code review</strong> is a human inspection of code before it is merged. Security-aware review asks questions such as:</p>
+            <ul>
+              <li>Can input reach a sensitive operation?</li>
+              <li>Is authorization checked on every protected object?</li>
+              <li>Are secrets hardcoded?</li>
+              <li>Are errors exposing sensitive information?</li>
+              <li>Are logs useful without leaking private data?</li>
+              <li>Does this dependency add unnecessary risk?</li>
+            </ul>
+
+            <h3>4.10 Automated analysis</h3>
+            <p>Automated tools help, but they are not complete security proof.</p>
+            <table>
+              <thead><tr><th>Tool type</th><th>What it checks</th><th>Limitation</th></tr></thead>
+              <tbody>
+                <tr><td>SAST</td><td>Source code patterns before runtime</td><td>Can miss design flaws and create false positives</td></tr>
+                <tr><td>DAST</td><td>Running application behavior from outside</td><td>May miss hidden code paths</td></tr>
+                <tr><td>IAST</td><td>Runtime behavior with instrumentation</td><td>Requires environment integration</td></tr>
+                <tr><td>SCA</td><td>Known vulnerable dependencies and licenses</td><td>Needs accurate dependency inventory and context</td></tr>
+                <tr><td>Secret scanning</td><td>Potential keys, tokens, credentials</td><td>Requires rotation after real exposure</td></tr>
+                <tr><td>Fuzzing</td><td>Unexpected input handling</td><td>Needs harnesses and triage capacity</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.11 DevSecOps</h3>
+            <p><strong>DevSecOps</strong> means integrating security into development and operations workflows. It is not a tool name. It is a way of making secure behavior easier for teams by embedding checks, templates, guardrails, and feedback into normal engineering work.</p>
+
+            <h3>4.12 Software supply chain</h3>
+            <p>The <strong>software supply chain</strong> includes everything used to create, build, test, package, distribute, and run software: developers, source repositories, dependencies, package managers, CI runners, build scripts, artifacts, containers, registries, deployment tools, and cloud infrastructure.</p>
+            <p>Supply-chain security asks: Can someone tamper with source code, dependencies, build systems, or release artifacts before users receive the software?</p>
+
+            <h3>4.13 SBOM</h3>
+            <p>A <strong>software bill of materials</strong>, or <strong>SBOM</strong>, is an inventory of software components. It is like an ingredient list for software. It helps teams answer: “Are we using a vulnerable component?”</p>
+            <p>An SBOM does not automatically make software secure. It improves visibility. Security still requires prioritization, patching, verification, and risk management.</p>
+
+            <h3>4.14 Secure by design</h3>
+            <p><strong>Secure by design</strong> means security is treated as a product responsibility from the beginning, not pushed entirely onto customers or administrators after release. It emphasizes safe defaults, reducing whole classes of vulnerabilities, and making the secure path the easiest path.</p>
+
+            <h3>4.15 Security debt</h3>
+            <p><strong>Security debt</strong> is accumulated risk from postponed security work: old dependencies, missing tests, temporary exceptions, weak architecture, unclear ownership, or undocumented assumptions. Like financial debt, it can grow until it becomes expensive to fix.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>Secure SDLC flowchart</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  A[Plan] --> B[Security requirements]
+  B --> C[Secure design]
+  C --> D[Code]
+  D --> E[Review and test]
+  E --> F[Build]
+  F --> G[Release]
+  G --> H[Operate]
+  H --> I[Monitor and learn]
+  I --> B
+  C -. threat model .-> E
+  D -. SAST and review .-> E
+  F -. provenance and signing .-> G
+</pre></div>
+
+            <h3>Software supply-chain architecture</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TB
+  Dev[Developer workstation] --> Repo[Source repository]
+  Repo --> CI[CI build system]
+  Ext[Third-party dependencies] --> CI
+  CI --> Artifact[Build artifact]
+  Artifact --> Registry[Package or container registry]
+  Registry --> Deploy[Deployment platform]
+  Deploy --> Users[Users and services]
+  Secrets[Secrets manager] -. controlled access .-> CI
+  Policy[Security policy and approvals] -. gates .-> Repo
+  Policy -. gates .-> CI
+  Logs[Build and runtime logs] -. evidence .-> SecOps[Security operations]
+</pre></div>
+
+            <h3>Sequence diagram: secure code change</h3>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant D as Developer
+  participant R as Repository
+  participant C as CI Pipeline
+  participant S as Security Checks
+  participant P as Peer Reviewer
+  participant A as Artifact Registry
+  D->>R: Open pull request
+  R->>C: Trigger automated build
+  C->>S: Run tests, SAST, SCA, secret scan
+  S-->>R: Results and evidence
+  P->>R: Review code and security-sensitive changes
+  R->>C: Merge approved change
+  C->>A: Publish signed artifact
+</pre></div>
+
+            <h3>Decision tree: should a change be blocked?</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Start[New code change] --> Secrets{Contains real secret?}
+  Secrets -- Yes --> Block1[Block merge and rotate secret]
+  Secrets -- No --> Authz{Touches authorization?}
+  Authz -- Yes --> Review1[Require security review and tests]
+  Authz -- No --> Dependency{Adds dependency?}
+  Dependency -- Yes --> SCA[Check source, license, maintenance, vulnerabilities]
+  Dependency -- No --> Tests{Tests pass?}
+  SCA --> Tests
+  Review1 --> Tests
+  Tests -- No --> Block2[Fix before merge]
+  Tests -- Yes --> Approve[Merge with evidence]
+</pre></div>
+
+            <h3>State diagram: vulnerability lifecycle</h3>
+            <div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> Discovered
+  Discovered --> Triage
+  Triage --> Accepted: valid
+  Triage --> Rejected: not reproducible or out of scope
+  Accepted --> Prioritized
+  Prioritized --> Fixed
+  Fixed --> Verified
+  Verified --> Released
+  Released --> Monitored
+  Monitored --> [*]
+  Prioritized --> RiskAccepted: documented exception
+  RiskAccepted --> Monitored
+</pre></div>
+
+            <h3>Timeline: from defect to incident</h3>
+            <div class="diagram"><pre class="mermaid">timeline
+  title How a software security weakness can grow
+  Requirement missed : No security requirement is written
+  Design assumed trust : No trust boundary is documented
+  Code merged : No authorization test exists
+  Release shipped : Vulnerability reaches production
+  Attack attempted : Hostile request abuses the gap
+  Detection delayed : Logs are incomplete
+  Incident response : Team patches and learns
+</pre></div>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Secure Software Engineering))
+    Foundations
+      Program
+      Source code
+      Input and output
+      Build
+      Deployment
+    Lifecycle
+      Requirements
+      Design
+      Code
+      Test
+      Release
+      Operate
+      Learn
+    Security controls
+      Threat modeling
+      Secure coding
+      Code review
+      SAST
+      DAST
+      SCA
+      Secret scanning
+      Fuzzing
+    Design principles
+      Least privilege
+      Secure defaults
+      Deny by default
+      Fail safely
+      Defense in depth
+    Supply chain
+      Dependencies
+      CI/CD
+      Artifact signing
+      SBOM
+      Provenance
+    Outcomes
+      Fewer vulnerabilities
+      Better evidence
+      Faster patching
+      Safer products
+</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <p>Secure software engineering uses simple quantitative reasoning. Numbers do not replace judgment, but they help compare risks and track improvement.</p>
+
+            <h3>7.1 Expected loss</h3>
+            <p>A basic risk estimate can be written as:</p>
+            <pre><code>Expected Loss = Probability of Event × Impact of Event</code></pre>
+            <p>Example: a team estimates a 5% annual chance that an authorization flaw exposes grade records. Estimated impact is $200,000 in investigation, notification, and remediation costs.</p>
+            <pre><code>Expected Loss = 0.05 × 200,000 = 10,000 dollars per year</code></pre>
+            <p>This does not prove the exact future. It helps compare whether a control costing $2,000 and reducing the probability significantly may be justified.</p>
+
+            <h3>7.2 Defect density</h3>
+            <p><strong>Defect density</strong> is often measured as defects per thousand lines of code, abbreviated KLOC.</p>
+            <pre><code>Defect Density = Number of Confirmed Defects / Thousand Lines of Code</code></pre>
+            <p>If a project has 40 confirmed defects in 20,000 lines of code:</p>
+            <pre><code>20,000 lines = 20 KLOC
+Defect Density = 40 / 20 = 2 defects per KLOC</code></pre>
+            <p>Security caution: fewer reported defects does not always mean safer software. It may also mean weak testing or low reporting.</p>
+
+            <h3>7.3 Defect removal efficiency</h3>
+            <p><strong>Defect removal efficiency</strong>, or DRE, estimates the percentage of defects found before release.</p>
+            <pre><code>DRE = Defects found before release / (Defects found before release + Defects found after release)</code></pre>
+            <p>If 90 defects are found before release and 10 after release:</p>
+            <pre><code>DRE = 90 / (90 + 10) = 0.90 = 90%</code></pre>
+            <p>Security interpretation: teams want more serious defects found before release, but they must avoid hiding or reclassifying post-release vulnerabilities to make metrics look better.</p>
+
+            <h3>7.4 Test coverage</h3>
+            <p><strong>Test coverage</strong> measures how much code or behavior is exercised by tests.</p>
+            <pre><code>Line Coverage = Executed Lines / Total Lines</code></pre>
+            <p>If tests execute 800 lines out of 1,000:</p>
+            <pre><code>Line Coverage = 800 / 1000 = 80%</code></pre>
+            <p>Security caution: 100% line coverage can still miss security flaws if the tests do not include hostile input, authorization checks, race conditions, and abuse cases.</p>
+
+            <h3>7.5 Mean time to remediate</h3>
+            <p><strong>Mean time to remediate</strong>, or MTTR, measures average time to fix confirmed issues.</p>
+            <pre><code>MTTR = Sum of remediation times / Number of issues</code></pre>
+            <p>If three vulnerabilities take 2, 5, and 8 days to fix:</p>
+            <pre><code>MTTR = (2 + 5 + 8) / 3 = 5 days</code></pre>
+
+            <h3>7.6 Prioritization formula</h3>
+            <p>A simple internal prioritization score can combine severity, exposure, asset importance, and exploit evidence:</p>
+            <pre><code>Priority = Severity × Exposure × Asset Criticality × Exploit Evidence</code></pre>
+            <p>Example scale: each factor ranges from 1 to 5.</p>
+            <pre><code>Severity = 4
+Exposure = 5
+Asset Criticality = 5
+Exploit Evidence = 3
+Priority = 4 × 5 × 5 × 3 = 300</code></pre>
+            <p>This is not a universal standard. It is a teaching formula to show that risk is contextual. A severe bug in an unreachable lab system may be lower priority than a medium-severity bug in an internet-facing payment system.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>8.1 Linux examples</h3>
+            <p>Create a safe local project folder and inspect files:</p>
+            <pre><code class="language-bash"># Create a local-only practice project
+mkdir -p ~/secure-sdlc-lab
+cd ~/secure-sdlc-lab
+
+# Create a tiny source file
+printf 'print("hello secure software")\n' &gt; app.py
+
+# Show file permissions and owner
+ls -l app.py
+
+# Initialize Git to track changes
+git init
+git status</code></pre>
+            <p>Security idea: a local repository helps you track exactly what changed. Evidence matters when investigating when a risky pattern was introduced.</p>
+
+            <h3>8.2 Windows examples</h3>
+            <p>Use PowerShell in a local folder:</p>
+            <pre><code class="language-powershell"># Create a local-only practice project
+New-Item -ItemType Directory -Path "$HOME\secure-sdlc-lab" -Force
+Set-Location "$HOME\secure-sdlc-lab"
+
+# Create a tiny source file
+'print("hello secure software")' | Out-File -Encoding utf8 app.py
+
+# Show the file and initialize Git if installed
+Get-ChildItem
+git init
+git status</code></pre>
+
+            <h3>8.3 Python example: safe input validation</h3>
+            <p>This toy function validates a student ID format. It does not contact any real system.</p>
+            <pre><code class="language-python">import re
+
+# Compile a regular expression once.
+# This pattern allows exactly: S, followed by 6 digits.
+STUDENT_ID_PATTERN = re.compile(r"^S\d{6}$")
+
+def is_valid_student_id(value: str) -&gt; bool:
+    """Return True only when value matches the approved student ID format."""
+    if not isinstance(value, str):
+        # Reject non-string input instead of converting unexpected objects silently.
+        return False
+
+    if STUDENT_ID_PATTERN.fullmatch(value) is None:
+        # fullmatch means the entire string must match, not just part of it.
+        return False
+
+    return True
+
+# Safe local tests
+examples = ["S123456", "123456", "S123", "S123456; DROP TABLE grades", "S000001"]
+for item in examples:
+    print(item, is_valid_student_id(item))</code></pre>
+            <p>Common mistake: using a weak check such as <code>if "S" in value</code>. That checks whether the letter appears somewhere, not whether the input has the expected structure.</p>
+
+            <h3>8.4 Network example</h3>
+            <p>In a safe lab, network-facing software should be treated as exposed to untrusted input. Even a simple HTTP endpoint receives strings controlled by clients.</p>
+            <pre><code class="language-text">Client request
+  method: GET
+  path: /grades?student=S123456
+  header: User-Agent: anything the client wants
+  source: untrusted network
+
+Secure design question:
+  Is the authenticated user allowed to access this exact student record?</code></pre>
+
+            <h3>8.5 Web example</h3>
+            <p>Unsafe output can create cross-site scripting risk. When displaying untrusted text in HTML, encode it rather than inserting it as raw HTML.</p>
+            <pre><code class="language-python">import html
+
+comment = "&lt;script&gt;alert('not safe')&lt;/script&gt;"
+
+# Escape special characters before placing untrusted text into HTML.
+safe_comment = html.escape(comment)
+
+print(safe_comment)
+# Output: &amp;lt;script&amp;gt;alert(&amp;#x27;not safe&amp;#x27;)&amp;lt;/script&amp;gt;</code></pre>
+
+            <h3>8.6 Cloud example</h3>
+            <p>Cloud software often depends on managed identities, secrets managers, storage permissions, network rules, and CI/CD pipelines. A secure cloud release asks:</p>
+            <ul>
+              <li>Which identity deploys the software?</li>
+              <li>Which identity runs the software?</li>
+              <li>Where are secrets stored?</li>
+              <li>Can the build artifact be verified?</li>
+              <li>Are logs available for security investigation?</li>
+              <li>Can vulnerable images or packages be blocked before deployment?</li>
+            </ul>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Insecure example: hardcoded secret</h3>
+            <pre><code class="language-python"># Do not use this pattern in real applications.
+# The secret is stored directly in source code.
+API_KEY = "demo-realistic-looking-key-123"
+
+def call_service():
+    # Anyone who can read the repository can read the key.
+    print("Calling service with", API_KEY)</code></pre>
+            <p>Why this is dangerous: source repositories are copied, forked, backed up, cached, indexed, reviewed, and sometimes leaked. Once a real secret is committed, deleting it from the latest version is not enough. The secret must be revoked and rotated.</p>
+
+            <h3>9.2 Better local teaching pattern: read from environment variable</h3>
+            <pre><code class="language-python">import os
+
+# Read a secret from the environment instead of hardcoding it.
+# This example is still simplified; production systems often use a secrets manager.
+API_KEY = os.environ.get("DEMO_API_KEY")
+
+if API_KEY is None:
+    # Fail closed: do not continue without required configuration.
+    raise RuntimeError("DEMO_API_KEY is not set")
+
+# Do not print secrets.
+print("API key loaded from environment")</code></pre>
+            <p>Line-by-line explanation:</p>
+            <ul>
+              <li><code>import os</code> loads Python’s operating-system interface module.</li>
+              <li><code>os.environ.get</code> reads an environment variable.</li>
+              <li>The code checks whether the variable exists before continuing.</li>
+              <li>The code prints only a safe status message, not the secret value.</li>
+            </ul>
+
+            <h3>9.3 Defensive code review helper</h3>
+            <p>This script searches only the current local lab folder for teaching patterns. It is not a professional scanner and must not be used against systems you do not own.</p>
+            <pre><code class="language-python">from pathlib import Path
+import re
+
+# Search patterns for local teaching only.
+PATTERNS = {
+    "possible_password": re.compile(r"password\s*=\s*['\"].+['\"]", re.IGNORECASE),
+    "possible_api_key": re.compile(r"api[_-]?key\s*=\s*['\"].+['\"]", re.IGNORECASE),
+    "debug_true": re.compile(r"debug\s*=\s*True", re.IGNORECASE),
+}
+
+# Only scan files in this folder.
+root = Path.cwd()
+
+for path in root.glob("*.py"):
+    text = path.read_text(encoding="utf-8", errors="replace")
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for name, pattern in PATTERNS.items():
+            if pattern.search(line):
+                print(f"{path}:{line_number}: {name}: {line.strip()}")</code></pre>
+            <p>Secure coding lesson: automated pattern matching can help find obvious mistakes, but it cannot understand all context. Human review and secret rotation are still required when a real secret is exposed.</p>
+
+            <h3>9.4 Safe error handling</h3>
+            <pre><code class="language-python">import logging
+
+logging.basicConfig(level=logging.INFO)
+
+class AuthorizationError(Exception):
+    """Raised when a user is not allowed to perform an action."""
+
+def read_grade(requesting_user_id: str, target_student_id: str) -&gt; str:
+    # Complete mediation: check authorization for this exact object access.
+    if requesting_user_id != target_student_id:
+        logging.warning(
+            "authorization_denied action=read_grade actor=%s target=%s",
+            requesting_user_id,
+            target_student_id,
+        )
+        # Return a generic error to the caller.
+        # Do not reveal whether the target record exists.
+        raise AuthorizationError("Access denied")
+
+    return "Demo grade record"
+
+try:
+    print(read_grade("S123456", "S654321"))
+except AuthorizationError as error:
+    print(str(error))</code></pre>
+            <p>Why this matters: logs should help defenders investigate, but user-facing errors should avoid leaking sensitive details.</p>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common attacks</h3>
+            <ul>
+              <li><strong>Input-based attacks:</strong> hostile input attempts to trigger injection, parsing errors, memory bugs, or business-logic flaws.</li>
+              <li><strong>Authorization attacks:</strong> attacker accesses another user’s object or performs a restricted action.</li>
+              <li><strong>Dependency attacks:</strong> attacker abuses a vulnerable or malicious third-party package.</li>
+              <li><strong>Secret exposure:</strong> API keys, tokens, or passwords leak through source code, logs, screenshots, or build output.</li>
+              <li><strong>Build tampering:</strong> attacker changes source, dependencies, or artifacts before release.</li>
+              <li><strong>Misconfiguration:</strong> debug mode, permissive CORS, public storage, weak headers, or overly broad cloud roles reach production.</li>
+            </ul>
+
+            <h3>Common vulnerabilities</h3>
+            <ul>
+              <li>Missing input validation.</li>
+              <li>Missing object-level authorization.</li>
+              <li>Hardcoded credentials.</li>
+              <li>Unsafe error messages.</li>
+              <li>Verbose logs containing secrets or personal data.</li>
+              <li>Outdated dependencies.</li>
+              <li>Weak session handling.</li>
+              <li>Insecure defaults.</li>
+              <li>Unprotected CI/CD secrets.</li>
+            </ul>
+
+            <h3>Defensive strategies</h3>
+            <ul>
+              <li>Write specific security requirements.</li>
+              <li>Threat model high-risk features before implementation.</li>
+              <li>Use safe framework defaults.</li>
+              <li>Perform peer review for security-sensitive code.</li>
+              <li>Use automated checks in CI/CD.</li>
+              <li>Maintain dependency inventories.</li>
+              <li>Protect secrets with secret managers and least privilege.</li>
+              <li>Sign and verify release artifacts where appropriate.</li>
+              <li>Log security-relevant events consistently.</li>
+            </ul>
+
+            <h3>Detection methods</h3>
+            <ul>
+              <li>SAST findings for unsafe patterns.</li>
+              <li>SCA alerts for vulnerable dependencies.</li>
+              <li>Secret-scanning alerts.</li>
+              <li>DAST findings against test environments.</li>
+              <li>Runtime logs showing authorization denials, unusual error rates, or unexpected input patterns.</li>
+              <li>CI/CD audit logs showing unusual build or release activity.</li>
+            </ul>
+
+            <h3>Mitigation</h3>
+            <ul>
+              <li>Patch vulnerable code and dependencies.</li>
+              <li>Rotate exposed secrets.</li>
+              <li>Add missing tests and monitoring.</li>
+              <li>Reduce privileges and attack surface.</li>
+              <li>Improve secure defaults and documentation.</li>
+              <li>Update threat models after incidents or architecture changes.</li>
+            </ul>
+
+            <h3>Best practices</h3>
+            <ul>
+              <li>Make security requirements testable.</li>
+              <li>Prefer well-maintained frameworks over custom security code.</li>
+              <li>Never trust client-side checks as the only enforcement.</li>
+              <li>Use central authorization and input-validation patterns.</li>
+              <li>Keep secrets out of source code and logs.</li>
+              <li>Make build and release evidence reproducible.</li>
+              <li>Treat security exceptions as temporary, owned, and tracked.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <h3>Banks</h3>
+            <p>Banks use secure software engineering for transaction systems, mobile banking, fraud detection, regulatory reporting, and customer identity systems. Access control, audit trails, change approval, secure coding, and segregation of duties are critical.</p>
+            <h3>Governments</h3>
+            <p>Government systems handle citizen records, public services, tax data, defense contracts, and critical infrastructure. Secure engineering supports resilience, procurement assurance, secure configuration, and vulnerability disclosure.</p>
+            <h3>Cloud providers</h3>
+            <p>Cloud providers build multi-tenant systems where one customer’s activity must not affect another customer’s confidentiality or integrity. Secure defaults, isolation, identity, logging, automated deployment controls, and secure supply chains are central.</p>
+            <h3>Healthcare</h3>
+            <p>Healthcare software handles clinical records, billing, medical devices, scheduling, and lab systems. Security failures can affect privacy, patient care, and operational continuity.</p>
+            <h3>Defense</h3>
+            <p>Defense systems require assurance, controlled changes, supply-chain scrutiny, secure communications, and resistance to sophisticated adversaries. Software provenance and tamper resistance matter heavily.</p>
+            <h3>Universities</h3>
+            <p>Universities operate learning systems, research platforms, identity systems, payment systems, and student records. Secure development reduces risks such as grade tampering, account compromise, research-data exposure, and service outages.</p>
+            <h3>Large enterprises</h3>
+            <p>Enterprises manage thousands of applications and dependencies. They need repeatable secure engineering processes, central policies, developer education, application inventories, vulnerability management, and secure CI/CD platforms.</p>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Secure software engineering is an active research area because software ecosystems are too large for manual inspection alone, and because human engineering behavior strongly affects security outcomes.</p>
+            <h3>Current research directions</h3>
+            <ul>
+              <li><strong>Usable security for developers:</strong> designing APIs, tools, and warnings that developers can understand and act on.</li>
+              <li><strong>Program analysis:</strong> improving static and dynamic analysis to reduce false positives and false negatives.</li>
+              <li><strong>Fuzzing:</strong> automatically generating inputs that find crashes, parser errors, and unexpected behavior.</li>
+              <li><strong>Formal methods:</strong> mathematically verifying properties of critical software.</li>
+              <li><strong>Software supply-chain security:</strong> improving dependency trust, build provenance, reproducible builds, and artifact integrity.</li>
+              <li><strong>AI-assisted coding security:</strong> studying whether code-generation tools introduce, detect, or fix vulnerabilities.</li>
+              <li><strong>Vulnerability prediction:</strong> using project history, code structure, and dependency data to prioritize review.</li>
+              <li><strong>Security metrics:</strong> finding useful measurements that improve decisions without creating perverse incentives.</li>
+            </ul>
+            <h3>Open problems</h3>
+            <ul>
+              <li>How can tools explain security findings clearly enough for beginners without oversimplifying?</li>
+              <li>How can organizations verify that a binary truly came from reviewed source code?</li>
+              <li>How can security be integrated into fast development without becoming ignored noise?</li>
+              <li>How can maintainers secure open-source projects with limited time and funding?</li>
+              <li>How should AI-generated code be reviewed, tested, and attributed?</li>
+            </ul>
+            <h3>Notable papers and research topics</h3>
+            <ul>
+              <li>Research on developer-centered security and why developers make security mistakes.</li>
+              <li>Research on fuzzing systems such as AFL-style coverage-guided fuzzing.</li>
+              <li>Research on reproducible builds and software transparency logs.</li>
+              <li>Research on vulnerability discovery, patch correctness, and automated repair.</li>
+              <li>Research on software supply-chain attacks and defenses.</li>
+            </ul>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>Heartbleed</h3>
+            <p><strong>What happened:</strong> Heartbleed was a serious vulnerability in OpenSSL’s TLS heartbeat implementation that could allow memory disclosure from affected systems.</p>
+            <p><strong>Root cause:</strong> a missing bounds check allowed a request to claim a larger payload size than was actually supplied.</p>
+            <p><strong>Impact:</strong> affected services risked leaking sensitive memory such as session data or key material.</p>
+            <p><strong>Lessons learned:</strong> memory safety, code review, testing, dependency inventory, and rapid patching all matter. A vulnerability in a widely used library can affect many systems.</p>
+
+            <h3>Equifax breach</h3>
+            <p><strong>What happened:</strong> attackers exploited an unpatched Apache Struts vulnerability in a public-facing application.</p>
+            <p><strong>Root cause:</strong> vulnerable dependency management, patching failure, asset visibility gaps, and detection gaps contributed to the incident.</p>
+            <p><strong>Impact:</strong> sensitive personal information of many individuals was exposed.</p>
+            <p><strong>Lessons learned:</strong> dependency inventories, patch governance, monitoring, and accountability are secure software engineering concerns, not only operations concerns.</p>
+
+            <h3>SolarWinds supply-chain compromise</h3>
+            <p><strong>What happened:</strong> attackers compromised the software build/distribution process of a widely used IT management product, resulting in trojanized updates.</p>
+            <p><strong>Root cause:</strong> a trusted supply-chain path was abused.</p>
+            <p><strong>Impact:</strong> downstream customers installed compromised software through a trusted update channel.</p>
+            <p><strong>Lessons learned:</strong> build system security, artifact integrity, provenance, monitoring, and supplier risk management are critical.</p>
+
+            <h3>Log4Shell</h3>
+            <p><strong>What happened:</strong> a vulnerability in the Log4j Java logging library created widespread emergency patching across many organizations.</p>
+            <p><strong>Root cause:</strong> unsafe feature behavior in a widely used dependency, combined with broad exposure and difficulty identifying all affected systems.</p>
+            <p><strong>Impact:</strong> organizations had to rapidly identify, patch, mitigate, and monitor affected applications.</p>
+            <p><strong>Lessons learned:</strong> SBOMs, dependency inventories, secure defaults, and rapid response capacity are essential.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <table>
+              <thead><tr><th>Misconception</th><th>Why it is incorrect</th></tr></thead>
+              <tbody>
+                <tr><td>“Security is handled after coding.”</td><td>Late fixes are more expensive and often miss design flaws.</td></tr>
+                <tr><td>“If tests pass, the software is secure.”</td><td>Tests only check what they are designed to check.</td></tr>
+                <tr><td>“A scanner will find everything.”</td><td>Tools miss context, business logic, and many design flaws.</td></tr>
+                <tr><td>“Open source means secure because everyone can review it.”</td><td>Visibility does not guarantee review quality, funding, or maintenance.</td></tr>
+                <tr><td>“Closed source means secure because attackers cannot see the code.”</td><td>Security by obscurity is weak; attackers can still test behavior or reverse engineer.</td></tr>
+                <tr><td>“Developers are the only people responsible.”</td><td>Security also depends on management, design, operations, procurement, and users.</td></tr>
+                <tr><td>“Security slows everything down.”</td><td>Poorly designed security can slow teams; good guardrails reduce rework and emergencies.</td></tr>
+                <tr><td>“Dependencies are someone else’s problem.”</td><td>If your product ships or runs the dependency, your users inherit the risk.</td></tr>
+                <tr><td>“No known vulnerabilities means no risk.”</td><td>Unknown vulnerabilities, insecure design, misconfiguration, and weak monitoring can still exist.</td></tr>
+                <tr><td>“Security requirements can be vague.”</td><td>Vague requirements cannot be tested or verified.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Secure software engineering is the practice of building, testing, releasing, and maintaining software so that it resists misuse and failure. It begins with clear requirements and threat models, continues through secure design and coding, and extends into testing, build security, deployment, monitoring, patching, and learning from incidents.</p>
+            <p>The most important idea is that secure software is not produced by one final scan. It is produced by repeated, evidence-backed decisions across the entire lifecycle.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <table>
+              <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+              <tbody>
+                <tr><td>Abuse case</td><td>A description of how a feature could be misused to cause harm.</td></tr>
+                <tr><td>Artifact</td><td>A file produced by a build process, such as a binary, package, or container image.</td></tr>
+                <tr><td>Build</td><td>The process that turns source code and dependencies into a runnable or deployable artifact.</td></tr>
+                <tr><td>CI/CD</td><td>Continuous integration and continuous delivery/deployment; automated workflows for building, testing, and releasing software.</td></tr>
+                <tr><td>Code review</td><td>Human inspection of source code before it is merged or released.</td></tr>
+                <tr><td>DAST</td><td>Dynamic application security testing; testing a running application from the outside.</td></tr>
+                <tr><td>Dependency</td><td>External software used by a project.</td></tr>
+                <tr><td>DevSecOps</td><td>Integration of security into development and operations workflows.</td></tr>
+                <tr><td>Fuzzing</td><td>Testing software with many generated inputs to discover crashes or unexpected behavior.</td></tr>
+                <tr><td>Requirement</td><td>A statement of what a system must do or how it must behave.</td></tr>
+                <tr><td>SAST</td><td>Static application security testing; analysis of source code or compiled code without running the application in production.</td></tr>
+                <tr><td>SBOM</td><td>Software bill of materials; an inventory of software components.</td></tr>
+                <tr><td>SCA</td><td>Software composition analysis; checking dependencies for known issues and metadata.</td></tr>
+                <tr><td>SDLC</td><td>Software development life cycle.</td></tr>
+                <tr><td>Secure by design</td><td>An approach where products are designed to be secure from the start, with safe defaults and reduced vulnerability classes.</td></tr>
+                <tr><td>Secure coding</td><td>Writing code using patterns that reduce vulnerabilities.</td></tr>
+                <tr><td>Security debt</td><td>Accumulated security risk from postponed fixes, weak design, old dependencies, or undocumented exceptions.</td></tr>
+                <tr><td>Supply chain</td><td>The people, tools, dependencies, systems, and processes involved in creating and distributing software.</td></tr>
+                <tr><td>Threat modeling</td><td>Structured analysis of what can go wrong and what controls are needed.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <div class="quiz-grid">
+              <div class="quiz-card" data-answer="B"><p><strong>1. What is secure software engineering?</strong></p><label class="quiz-option"><input type="radio" name="q1" value="A"> A. Installing antivirus after release</label><label class="quiz-option"><input type="radio" name="q1" value="B"> B. Building and maintaining software so it resists misuse and failure</label><label class="quiz-option"><input type="radio" name="q1" value="C"> C. Hiding source code from users</label><label class="quiz-option"><input type="radio" name="q1" value="D"> D. Removing all features</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. Security applies across the lifecycle.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>2. What is source code?</strong></p><label class="quiz-option"><input type="radio" name="q2" value="A"> A. A physical server</label><label class="quiz-option"><input type="radio" name="q2" value="B"> B. A network packet</label><label class="quiz-option"><input type="radio" name="q2" value="C"> C. Human-readable program instructions</label><label class="quiz-option"><input type="radio" name="q2" value="D"> D. A password manager</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Developers write source code.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>3. Which statement is a testable security requirement?</strong></p><label class="quiz-option"><input type="radio" name="q3" value="A"> A. Only authenticated students may view their own grade records</label><label class="quiz-option"><input type="radio" name="q3" value="B"> B. The system should be secure</label><label class="quiz-option"><input type="radio" name="q3" value="C"> C. The system should be nice</label><label class="quiz-option"><input type="radio" name="q3" value="D"> D. Security should happen later</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It defines subject, action, and object.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>4. What is an abuse case?</strong></p><label class="quiz-option"><input type="radio" name="q4" value="A"> A. A normal user story only</label><label class="quiz-option"><input type="radio" name="q4" value="B"> B. A programming language</label><label class="quiz-option"><input type="radio" name="q4" value="C"> C. A backup method</label><label class="quiz-option"><input type="radio" name="q4" value="D"> D. A description of how a feature could be misused</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. Abuse cases reveal attacker goals.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>5. What does least privilege mean?</strong></p><label class="quiz-option"><input type="radio" name="q5" value="A"> A. Give everyone administrator access</label><label class="quiz-option"><input type="radio" name="q5" value="B"> B. Give only the access needed for the task</label><label class="quiz-option"><input type="radio" name="q5" value="C"> C. Remove all logs</label><label class="quiz-option"><input type="radio" name="q5" value="D"> D. Disable authentication</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. Least privilege reduces blast radius.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>6. What does deny by default mean?</strong></p><label class="quiz-option"><input type="radio" name="q6" value="A"> A. Reject access unless explicitly allowed</label><label class="quiz-option"><input type="radio" name="q6" value="B"> B. Allow all access first</label><label class="quiz-option"><input type="radio" name="q6" value="C"> C. Store all data publicly</label><label class="quiz-option"><input type="radio" name="q6" value="D"> D. Trust the client</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It is safer to start closed.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>7. What is SAST?</strong></p><label class="quiz-option"><input type="radio" name="q7" value="A"> A. A password protocol</label><label class="quiz-option"><input type="radio" name="q7" value="B"> B. A cloud region</label><label class="quiz-option"><input type="radio" name="q7" value="C"> C. Static application security testing</label><label class="quiz-option"><input type="radio" name="q7" value="D"> D. A type of keyboard</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. SAST analyzes code or artifacts before runtime.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>8. What is DAST?</strong></p><label class="quiz-option"><input type="radio" name="q8" value="A"> A. Dynamic application security testing</label><label class="quiz-option"><input type="radio" name="q8" value="B"> B. Data arithmetic storage table</label><label class="quiz-option"><input type="radio" name="q8" value="C"> C. Directory authentication security token</label><label class="quiz-option"><input type="radio" name="q8" value="D"> D. Testing a running application from the outside</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. DAST examines runtime behavior. A is also the expansion, but D is the best description here.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>9. What does SCA usually analyze?</strong></p><label class="quiz-option"><input type="radio" name="q9" value="A"> A. Screen brightness</label><label class="quiz-option"><input type="radio" name="q9" value="B"> B. Dependencies and known vulnerabilities</label><label class="quiz-option"><input type="radio" name="q9" value="C"> C. User emotions</label><label class="quiz-option"><input type="radio" name="q9" value="D"> D. Printer toner</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. SCA helps manage component risk.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>10. What is an SBOM?</strong></p><label class="quiz-option"><input type="radio" name="q10" value="A"> A. An inventory of software components</label><label class="quiz-option"><input type="radio" name="q10" value="B"> B. A firewall rule</label><label class="quiz-option"><input type="radio" name="q10" value="C"> C. A keyboard shortcut</label><label class="quiz-option"><input type="radio" name="q10" value="D"> D. A password hash</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It is an ingredient list for software.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>11. Why are hardcoded secrets dangerous?</strong></p><label class="quiz-option"><input type="radio" name="q11" value="A"> A. They improve auditability</label><label class="quiz-option"><input type="radio" name="q11" value="B"> B. They make code faster</label><label class="quiz-option"><input type="radio" name="q11" value="C"> C. Anyone with repository access may read them and history may preserve them</label><label class="quiz-option"><input type="radio" name="q11" value="D"> D. They remove need for rotation</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Exposure may persist in history.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>12. What is complete mediation?</strong></p><label class="quiz-option"><input type="radio" name="q12" value="A"> A. Checking authorization once at installation</label><label class="quiz-option"><input type="radio" name="q12" value="B"> B. Checking authorization every time a protected object is accessed</label><label class="quiz-option"><input type="radio" name="q12" value="C"> C. Encrypting screenshots</label><label class="quiz-option"><input type="radio" name="q12" value="D"> D. Compressing logs</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. Each access needs a decision.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>13. What is fuzzing?</strong></p><label class="quiz-option"><input type="radio" name="q13" value="A"> A. Changing font size</label><label class="quiz-option"><input type="radio" name="q13" value="B"> B. Manually writing policy documents only</label><label class="quiz-option"><input type="radio" name="q13" value="C"> C. Encrypting databases</label><label class="quiz-option"><input type="radio" name="q13" value="D"> D. Testing software with many generated inputs</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. Fuzzing explores unexpected input behavior.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>14. Which is the best reason to threat model during design?</strong></p><label class="quiz-option"><input type="radio" name="q14" value="A"> A. Design flaws are cheaper to fix before implementation</label><label class="quiz-option"><input type="radio" name="q14" value="B"> B. It replaces all testing</label><label class="quiz-option"><input type="radio" name="q14" value="C"> C. It guarantees no vulnerabilities</label><label class="quiz-option"><input type="radio" name="q14" value="D"> D. It avoids documentation</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. Early design review reduces expensive rework.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>15. What is security debt?</strong></p><label class="quiz-option"><input type="radio" name="q15" value="A"> A. Money paid to attackers</label><label class="quiz-option"><input type="radio" name="q15" value="B"> B. A type of encryption key</label><label class="quiz-option"><input type="radio" name="q15" value="C"> C. Accumulated risk from postponed security work</label><label class="quiz-option"><input type="radio" name="q15" value="D"> D. A network cable</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Deferred work can become harder to fix later.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>16. What should happen when a real secret is committed?</strong></p><label class="quiz-option"><input type="radio" name="q16" value="A"> A. Delete only the latest line and do nothing else</label><label class="quiz-option"><input type="radio" name="q16" value="B"> B. Revoke and rotate the secret, then investigate exposure</label><label class="quiz-option"><input type="radio" name="q16" value="C"> C. Rename the file</label><label class="quiz-option"><input type="radio" name="q16" value="D"> D. Print it in logs</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. History and copies may preserve the secret.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>17. What does secure by design emphasize?</strong></p><label class="quiz-option"><input type="radio" name="q17" value="A"> A. Security built into product decisions from the beginning</label><label class="quiz-option"><input type="radio" name="q17" value="B"> B. Hiding all documentation</label><label class="quiz-option"><input type="radio" name="q17" value="C"> C. Blaming customers for defaults</label><label class="quiz-option"><input type="radio" name="q17" value="D"> D. Replacing code review with slogans</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It shifts responsibility toward safer products.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>18. What is artifact signing intended to support?</strong></p><label class="quiz-option"><input type="radio" name="q18" value="A"> A. Faster typing</label><label class="quiz-option"><input type="radio" name="q18" value="B"> B. Better screen colors</label><label class="quiz-option"><input type="radio" name="q18" value="C"> C. Removing all bugs</label><label class="quiz-option"><input type="radio" name="q18" value="D"> D. Integrity and authenticity of release artifacts</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. It helps verify what was built and released.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>19. Why is 100% line coverage not proof of security?</strong></p><label class="quiz-option"><input type="radio" name="q19" value="A"> A. Coverage is illegal</label><label class="quiz-option"><input type="radio" name="q19" value="B"> B. Tests may not include hostile or security-relevant behavior</label><label class="quiz-option"><input type="radio" name="q19" value="C"> C. Coverage deletes code</label><label class="quiz-option"><input type="radio" name="q19" value="D"> D. Coverage disables authentication</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. Coverage only says lines ran, not that security properties were verified.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>20. What is the best first step for a new high-risk feature?</strong></p><label class="quiz-option"><input type="radio" name="q20" value="A"> A. Ship immediately</label><label class="quiz-option"><input type="radio" name="q20" value="B"> B. Disable all logs</label><label class="quiz-option"><input type="radio" name="q20" value="C"> C. Define security requirements and threat model likely abuse</label><label class="quiz-option"><input type="radio" name="q20" value="D"> D. Store all credentials in source code</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. High-risk features need explicit security behavior before implementation.</p></div>
+            </div>
+
+            <h3>10 short questions</h3>
+            <ol>
+              <li>Define secure software engineering in your own words.</li>
+              <li>What is the difference between a bug and a vulnerability?</li>
+              <li>Give one example of a testable security requirement.</li>
+              <li>Why are abuse cases useful?</li>
+              <li>What is the difference between SAST and DAST?</li>
+              <li>Why is dependency inventory important?</li>
+              <li>What should a team do after discovering a hardcoded secret?</li>
+              <li>Explain secure defaults with one example.</li>
+              <li>Why should authorization be checked on every protected object access?</li>
+              <li>What is security debt?</li>
+            </ol>
+
+            <h3>5 long questions</h3>
+            <ol>
+              <li>Design a secure SDLC for a fictional university grade portal. Include requirements, design, coding, testing, release, operation, and learning stages.</li>
+              <li>Compare SAST, DAST, SCA, secret scanning, and fuzzing. Explain where each helps and where each fails.</li>
+              <li>Explain how secure by design differs from asking customers to configure security after installation.</li>
+              <li>Write a security review checklist for a pull request that changes authorization logic.</li>
+              <li>Analyze how a dependency vulnerability can become an organizational incident even when the organization did not write the vulnerable code.</li>
+            </ol>
+
+            <h3>Scenario-based questions</h3>
+            <ol>
+              <li>A developer adds an admin endpoint but says it is hidden. What security questions should you ask?</li>
+              <li>A scanner finds a high-severity dependency vulnerability in a library used only by test code. How should the team triage it?</li>
+              <li>A production error message reveals database table names. What is the risk and what should be changed?</li>
+              <li>A new feature allows students to download transcripts. What abuse cases should be considered?</li>
+              <li>A team has no SBOM and must respond to a major dependency vulnerability. What problems will appear?</li>
+            </ol>
+
+            <h3>Interview questions</h3>
+            <ol>
+              <li>How would you explain secure SDLC to a developer team?</li>
+              <li>What security checks should run in CI/CD?</li>
+              <li>How do you prioritize software vulnerabilities?</li>
+              <li>What are common signs of insecure design?</li>
+              <li>How do you prevent secrets from entering source control?</li>
+              <li>What is the difference between secure coding and secure architecture?</li>
+            </ol>
+
+            <h3>Critical thinking questions</h3>
+            <ol>
+              <li>Can too many security tools make software less secure? Explain.</li>
+              <li>When should a team block a release for a security issue?</li>
+              <li>How can metrics create bad incentives in secure software programs?</li>
+              <li>Why might a small open-source dependency create large enterprise risk?</li>
+              <li>How can organizations support developers without blaming them for systemic process failures?</li>
+            </ol>
+
+            <h3>Research questions</h3>
+            <ol>
+              <li>How can secure APIs be designed so developers naturally use them correctly?</li>
+              <li>How can build provenance be verified at large scale?</li>
+              <li>How can AI-generated code be evaluated for security defects?</li>
+              <li>What vulnerability metrics best predict real-world exploitation?</li>
+              <li>How can open-source maintainers receive useful security support without being overwhelmed?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title</h3>
+            <p><strong>Secure SDLC Review for a Fictional Grade Portal</strong></p>
+            <h3>Safety and authorization</h3>
+            <p>This lab uses only files you create locally. Do not scan public websites, public repositories, company repositories, classmates’ repositories, or third-party systems.</p>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Linux, macOS, or Windows terminal.</li>
+              <li>Python 3.10+.</li>
+              <li>Git installed.</li>
+              <li>Weeks 0–3 recommended.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Create a tiny fictional project.</li>
+              <li>Write functional and security requirements.</li>
+              <li>Identify abuse cases.</li>
+              <li>Run a local defensive pattern review.</li>
+              <li>Create a secure SDLC checklist.</li>
+              <li>Write a short remediation plan.</li>
+            </ul>
+            <h3>Steps</h3>
+            <ol>
+              <li>Create a folder named <code>secure-sdlc-lab</code>.</li>
+              <li>Create <code>requirements.md</code> with three functional requirements and three security requirements for a fictional grade portal.</li>
+              <li>Create <code>abuse-cases.md</code> with five abuse cases.</li>
+              <li>Create <code>app.py</code> containing the safe validation and authorization examples from this lesson.</li>
+              <li>Create <code>review.py</code> containing the local defensive code review helper.</li>
+              <li>Run the helper only inside your lab folder.</li>
+              <li>Create <code>sdlc-checklist.md</code> with controls for requirements, design, code, test, build, release, and operate stages.</li>
+              <li>Initialize Git, commit your files, and write a short report explaining what evidence your repository now contains.</li>
+            </ol>
+            <h3>Expected outcomes</h3>
+            <ul>
+              <li>You can define testable security requirements.</li>
+              <li>You can connect abuse cases to design and testing.</li>
+              <li>You can distinguish automated pattern review from full assurance.</li>
+              <li>You can explain how Git history supports review and evidence.</li>
+            </ul>
+            <h3>Deliverables</h3>
+            <ul>
+              <li><code>requirements.md</code></li>
+              <li><code>abuse-cases.md</code></li>
+              <li><code>app.py</code></li>
+              <li><code>review.py</code></li>
+              <li><code>sdlc-checklist.md</code></li>
+              <li>One-page lab report</li>
+            </ul>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li>NIST SP 800-218 — Secure Software Development Framework.</li>
+              <li>CISA Secure by Design guidance.</li>
+              <li>OWASP Software Assurance Maturity Model.</li>
+              <li>OWASP Application Security Verification Standard.</li>
+              <li>OWASP Secure Coding Practices Quick Reference Guide.</li>
+              <li>OWASP Top Ten and OWASP API Security Top Ten.</li>
+              <li>SLSA — Supply-chain Levels for Software Artifacts.</li>
+              <li>OpenSSF Scorecard and related software supply-chain security materials.</li>
+              <li>Research topics: program analysis, fuzzing, usable security for developers, formal methods, reproducible builds, provenance, and AI-assisted secure coding.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="../week-03/crypto-misuse-key-management-and-crypto-agility.html">← Lesson 3.5</a><a class="btn" href="index.html">Week 4 Overview</a><a class="btn btn-primary" href="requirements-abuse-cases-and-secure-design.html">Next: Lesson 4.2 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

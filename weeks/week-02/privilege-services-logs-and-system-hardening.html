@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 2.5: Privilege, Services, Logs, and System Hardening | MS Cybersecurity</title>
+  <meta name="description" content="Beginner-to-graduate lesson explaining privilege, services and daemons, startup behavior, ports, logs, audit trails, system hardening, baselines, drift, and safe hardening labs.">
+  <meta property="og:title" content="Lesson 2.5: Privilege, Services, Logs, and System Hardening">
+  <meta property="og:description" content="Learn privilege, services, logs, and system hardening from first principles with Linux, Windows, Python, network, web, and cloud examples in safe local labs.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Privilege, Services, Logs, and System Hardening","educationalLevel":"Graduate","learningResourceType":"Lesson","teaches":["Privilege","Least privilege","Services","Daemons","Systemd","Windows services","Ports","Logs","Audit trails","System hardening","Baselines","Configuration drift","Attack surface reduction","Server security","Endpoint hardening","Detection","Evidence"]}</script>
+</head>
+<body data-root="../../" data-page-id="week-02/lesson-02-05" data-title="Lesson 2.5: Privilege, Services, Logs, and System Hardening">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 2</a> / Lesson 2.5</div>
+      <header class="hero">
+        <div class="eyebrow">Week 2 · Operating Systems, Identity, and Access Control</div>
+        <h1>Lesson 2.5: Privilege, Services, Logs, and System Hardening</h1>
+        <p class="lead">A secure operating system is not secure only because passwords are strong or permissions exist. It also depends on which programs run, what privileges they have, which services listen for connections, what events are logged, and whether configuration stays hardened over time. This lesson connects identity, authorization, services, logs, and hardening into one defensive operating-system workflow.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>240–360 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 2.1–2.4 recommended</div>
+          <div class="meta-item"><strong>Practice time</strong>5–9 hours</div>
+        </div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview-box" class="card">
+            <h2>Week 2 Context</h2>
+            <p><strong>Overview:</strong> Week 2 explains how operating systems represent identity and enforce access. Lesson 2.5 closes the week by showing how access decisions are operationalized: privileged accounts, privileged processes, services, logs, audit trails, hardening baselines, and configuration review.</p>
+            <p><strong>Learning objectives:</strong> after this lesson you should be able to inspect local services, explain privilege risk, interpret basic logs, identify unnecessary exposure, write a safe hardening checklist, and produce a defensive OS review report.</p>
+            <p><strong>Required background:</strong> no previous system-administration experience is required, but Lessons 2.1–2.4 are recommended because this lesson builds on users, groups, authentication, authorization, permissions, and access-control models.</p>
+            <p><strong>Estimated reading time:</strong> 240–360 minutes. <strong>Difficulty:</strong> starts with everyday examples and ends with graduate-level thinking about measurable hardening, observability, and configuration drift.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p><strong>Plain-English idea:</strong> an operating system is safer when fewer powerful things are running, fewer doors are open, each running program has only the permissions it needs, important events are recorded, and configuration changes are controlled.</p>
+            <p><strong>Why this topic exists:</strong> real systems are not static. Administrators install software, services start automatically, users gain privileges, logs fill up, patches change behavior, and emergency fixes become permanent. Hardening exists because default and accumulated configurations are rarely ideal for security.</p>
+            <p><strong>Why it matters:</strong> attackers often do not need a spectacular new technique. They look for an exposed service, an overprivileged process, a forgotten admin account, a weak default configuration, missing logs, or an old package. Hardening reduces the number of easy paths into and through a system.</p>
+            <p><strong>Where it is used:</strong> laptops, servers, cloud virtual machines, containers, domain controllers, web servers, database servers, research lab machines, hospital workstations, industrial systems, and security-monitoring platforms.</p>
+            <p><strong>Who uses it:</strong> system administrators, security engineers, cloud engineers, DevOps teams, SOC analysts, auditors, incident responders, penetration testers working under authorization, compliance teams, and researchers studying secure configuration.</p>
+            <p><strong>Analogy:</strong> a building is not secure just because people have ID cards. Security also depends on which doors are unlocked, who has master keys, which alarms work, whether guards review logs, whether unused entrances are sealed, and whether someone checks that yesterday’s emergency shortcut was not left open forever.</p>
+            <details class="callout warning" open><summary>Safety boundary</summary><p>All demonstrations are local, fictional, or read-only. Do not disable security controls on real machines, change production services, collect other people’s logs, expose ports to the Internet, bypass privileges, or test systems without written authorization.</p></details>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <ul>
+              <li>Define privilege, privileged account, privileged process, service, daemon, service account, port, listener, log, audit log, telemetry, baseline, hardening, drift, and attack surface.</li>
+              <li>Explain why privilege is dangerous when it is unnecessary, permanent, hidden, or unaudited.</li>
+              <li>Distinguish a user account, service account, process identity, local administrator, root, SYSTEM, sudo, UAC, and just-in-time privilege.</li>
+              <li>Explain what services and daemons do and why unnecessary services increase attack surface.</li>
+              <li>Inspect local services and listening ports using safe Linux and Windows commands.</li>
+              <li>Explain why logs are security evidence, not just troubleshooting output.</li>
+              <li>Identify important log sources: authentication logs, service logs, system logs, audit logs, application logs, network logs, and cloud activity logs.</li>
+              <li>Write small defensive scripts that summarize fictional or local log data.</li>
+              <li>Create a beginner-safe hardening checklist for a fictional classroom server.</li>
+              <li>Discuss open research problems in least-privilege automation, log quality, secure configuration, drift detection, and explainable hardening recommendations.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <h3>3.1 Operating system</h3>
+            <p>An <strong>operating system</strong> manages hardware and provides controlled services to programs. It decides how programs use CPU, memory, files, devices, users, groups, permissions, and network interfaces.</p>
+            <h3>3.2 Process</h3>
+            <p>A <strong>process</strong> is a running program. Security depends on process identity because a program can usually do only what its process privileges allow.</p>
+            <h3>3.3 User and group</h3>
+            <p>A <strong>user</strong> is an identity. A <strong>group</strong> collects identities so permissions can be assigned more easily. Services also often run under identities.</p>
+            <h3>3.4 Authentication and authorization</h3>
+            <p><strong>Authentication</strong> proves identity. <strong>Authorization</strong> decides whether that identity can perform an action. <strong>Privilege</strong> is the authority actually available to perform powerful actions.</p>
+            <h3>3.5 Command line safety</h3>
+            <p>Commands in this lesson are designed for local learning environments. Prefer read-only commands first. Do not copy commands that change services, firewall settings, logs, accounts, or production configurations unless an instructor explicitly approves the environment and rollback plan.</p>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+
+            <h3>4.1 Privilege</h3>
+            <p><strong>Privilege</strong> is special authority to do something sensitive. Examples include installing software, changing system files, reading protected logs, creating users, opening low-numbered ports, changing firewall rules, loading drivers, stopping security tools, or resetting passwords.</p>
+            <p><strong>Intuition:</strong> a normal key opens one office. A master key opens many doors. Privilege is the digital equivalent of stronger keys.</p>
+            <p><strong>Security idea:</strong> privilege should be minimal, temporary when possible, assigned to the right identity, monitored, and reviewed.</p>
+
+            <h3>4.2 Privileged accounts</h3>
+            <p>A <strong>privileged account</strong> can perform sensitive administrative tasks. On Linux, <code>root</code> is the traditional superuser. On Windows, members of local or domain administrator groups have powerful administrative rights. In cloud environments, owner/admin roles can change infrastructure, identity, billing-related settings, keys, and logs.</p>
+            <p><strong>Common mistake:</strong> using an admin account for daily browsing, email, and ordinary work. If malware compromises that session, it may inherit powerful permissions.</p>
+
+            <h3>4.3 Privileged processes</h3>
+            <p>A <strong>privileged process</strong> is a running program with elevated authority. A web server running as root or SYSTEM is riskier than a web server running under a restricted service account. If the web server is exploited, the attacker may gain the privileges of that process.</p>
+            <p><strong>Rule of thumb:</strong> assume every network-facing service might eventually face hostile input. Give it the least privilege needed.</p>
+
+            <h3>4.4 User privilege vs process privilege</h3>
+            <p>Students often say, “Alice has permission, so the program has permission.” That is incomplete. A program usually runs as a process under a user, service account, or system identity. The system checks the process token, user ID, groups, capabilities, permissions, and policy context.</p>
+            <p><strong>Example:</strong> Alice may be an administrator, but a browser tab should not automatically run with full administrator power. Modern systems try to separate ordinary work from elevated tasks.</p>
+
+            <h3>4.5 Linux root</h3>
+            <p><strong>root</strong> is the traditional Linux superuser. Root can override many normal file permissions, manage services, install packages, change system configuration, inspect protected logs, and create or delete users.</p>
+            <p><strong>Security meaning:</strong> root access is equivalent to near-total control of the local system. Root should be used only when required and should be auditable.</p>
+
+            <h3>4.6 sudo</h3>
+            <p><strong>sudo</strong> allows authorized users to run specific commands with elevated privileges. It is safer than always working as root because elevation can be limited, logged, and performed only for specific tasks.</p>
+            <p><strong>Analogy:</strong> instead of carrying the master key all day, you request it only when doing authorized maintenance, and the request is recorded.</p>
+
+            <h3>4.7 Windows Administrator, SYSTEM, and UAC</h3>
+            <p>Windows has administrator accounts, service accounts, and special local identities such as <strong>LocalSystem</strong>. LocalSystem is extremely powerful on the local machine and can act as the computer on the network. <strong>User Account Control</strong>, or UAC, helps separate normal user activity from administrative elevation.</p>
+            <p><strong>Security meaning:</strong> a service running as LocalSystem needs careful justification. If that service is compromised, the attacker may get extensive local control.</p>
+
+            <h3>4.8 Just-in-time and just-enough administration</h3>
+            <p><strong>Just-in-time</strong> privilege grants elevated access only for a limited time. <strong>Just-enough administration</strong> grants only the specific administrative actions required. These approaches reduce standing privilege and make unusual access easier to review.</p>
+
+            <h3>4.9 Service</h3>
+            <p>A <strong>service</strong> is a background program that provides functionality. Examples include a web server, database server, SSH server, DNS resolver, print spooler, update service, logging service, and endpoint security agent.</p>
+            <p><strong>Why services matter:</strong> services may run automatically, accept network input, hold privileged access, and continue running even when no user is logged in.</p>
+
+            <h3>4.10 Daemon</h3>
+            <p>A <strong>daemon</strong> is the Unix/Linux term for a background service. Examples include <code>sshd</code>, <code>cron</code>, <code>systemd-journald</code>, and <code>nginx</code>.</p>
+
+            <h3>4.11 Service account</h3>
+            <p>A <strong>service account</strong> is an identity used by a service or application rather than a human. Good service accounts have narrow permissions, non-interactive login restrictions when possible, clear ownership, credential rotation, and logging.</p>
+            <p><strong>Bad pattern:</strong> one shared high-privilege service account used by many unrelated systems. It becomes hard to know which service performed an action.</p>
+
+            <h3>4.12 Service startup state</h3>
+            <p>Services usually have a startup configuration. A service might be enabled at boot, disabled, manually started, masked, delayed, or triggered by an event. A disabled unnecessary service reduces future exposure. An enabled forgotten service can become a hidden attack surface.</p>
+
+            <h3>4.13 Listening port</h3>
+            <p>A <strong>listening port</strong> is a network endpoint where a service waits for connections. For example, SSH often listens on TCP port 22, HTTP on TCP port 80, and HTTPS on TCP port 443.</p>
+            <p><strong>Important distinction:</strong> a service can be installed but not running; running but not listening on the network; listening only on localhost; or listening on all network interfaces. These states have different risk.</p>
+
+            <h3>4.14 Attack surface</h3>
+            <p><strong>Attack surface</strong> is the set of ways an attacker can interact with a system. Users, network ports, APIs, files, scheduled jobs, services, browser plugins, exposed dashboards, credentials, and management interfaces all contribute to attack surface.</p>
+            <p><strong>Hardening goal:</strong> reduce unnecessary attack surface without breaking required business functions.</p>
+
+            <h3>4.15 Log</h3>
+            <p>A <strong>log</strong> is a record of events. Logs may record logins, failed logins, service starts, configuration changes, network connections, file access, crashes, alerts, application errors, and administrative actions.</p>
+            <p><strong>Security meaning:</strong> logs provide evidence. Without logs, defenders may not know what happened, when it happened, who was involved, or how far an incident spread.</p>
+
+            <h3>4.16 Audit log</h3>
+            <p>An <strong>audit log</strong> records security-relevant events for accountability and investigation. Examples include account creation, group membership changes, privilege elevation, service installation, policy changes, authentication events, and access to sensitive objects.</p>
+            <p><strong>Difference from ordinary logs:</strong> ordinary logs may help troubleshoot. Audit logs are deliberately selected to support accountability, detection, and investigation.</p>
+
+            <h3>4.17 Telemetry</h3>
+            <p><strong>Telemetry</strong> is machine-generated data collected for monitoring and analysis. Logs are one form of telemetry. Metrics, traces, endpoint events, flow records, alerts, and cloud activity events are also telemetry.</p>
+
+            <h3>4.18 Log quality</h3>
+            <p>A log is useful only if it has enough context. Good security logs should include accurate time, source, actor, action, target, result, error reason when safe, host, process, and correlation identifiers.</p>
+            <p><strong>Bad log:</strong> <code>Error happened</code>. <strong>Better log:</strong> <code>2026-06-28T10:14:33Z login_failed user=amina source_ip=192.0.2.55 reason=bad_password host=lab-web-01</code>.</p>
+
+            <h3>4.19 Time synchronization</h3>
+            <p>Incident timelines depend on correct clocks. If server A is five minutes fast and server B is seven minutes slow, investigators may draw wrong conclusions. Systems should use reliable time synchronization.</p>
+
+            <h3>4.20 Log retention</h3>
+            <p><strong>Retention</strong> means how long logs are kept. Short retention may save storage but lose evidence. Long retention may help investigations but increases storage, privacy, and protection requirements.</p>
+
+            <h3>4.21 Log integrity</h3>
+            <p>Attackers may try to delete or alter logs. Defenders use centralized logging, restricted write permissions, append-only designs, backups, integrity checks, and monitoring for logging gaps.</p>
+
+            <h3>4.22 System hardening</h3>
+            <p><strong>System hardening</strong> is the process of reducing unnecessary risk in a system configuration. It usually includes removing unnecessary software, disabling unneeded services, limiting privileges, applying patches, enforcing secure authentication, configuring logging, protecting secrets, setting firewall rules, and documenting approved configuration.</p>
+
+            <h3>4.23 Baseline</h3>
+            <p>A <strong>baseline</strong> is an approved starting configuration. A baseline might specify required settings for password policy, service states, logging, firewall rules, package versions, file permissions, and security agents.</p>
+            <p><strong>Why it matters:</strong> without a baseline, “secure” becomes subjective. With a baseline, teams can compare actual state to expected state.</p>
+
+            <h3>4.24 Configuration drift</h3>
+            <p><strong>Configuration drift</strong> happens when systems gradually move away from the approved baseline. Drift can occur because of emergency changes, manual fixes, forgotten services, temporary firewall openings, local admin changes, or failed updates.</p>
+
+            <h3>4.25 Patch management</h3>
+            <p><strong>Patch management</strong> is the process of identifying, testing, deploying, and verifying software updates. Patching reduces known vulnerabilities, but it can also introduce outages if done without planning and rollback.</p>
+
+            <h3>4.26 Secure configuration is not one command</h3>
+            <p>Hardening is not a magic script. It is a cycle: know the asset, define the baseline, apply controls, test function, log events, monitor drift, review exceptions, and improve based on threats and incidents.</p>
+
+            <h3>4.27 Break-glass access</h3>
+            <p><strong>Break-glass access</strong> is emergency administrative access used when normal access paths fail. It should be rare, strongly protected, monitored, documented, and reviewed after use.</p>
+
+            <h3>4.28 Change control</h3>
+            <p><strong>Change control</strong> records what changed, why it changed, who approved it, when it happened, how it was tested, and how it can be rolled back. Change control helps distinguish authorized maintenance from suspicious activity.</p>
+
+            <h3>4.29 Hardening trade-off</h3>
+            <p>Hardening can break functionality if applied blindly. For example, disabling a printing service is sensible on a database server but not on a print server. Security engineering requires reducing unnecessary risk while preserving required mission function.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>5.1 Defensive chain</h3>
+            <pre class="mermaid"><code>flowchart LR
+  A[User or service identity] --> B[Process starts]
+  B --> C[Process receives privileges]
+  C --> D[Service listens or performs task]
+  D --> E[Events are logged]
+  E --> F[Logs are reviewed and retained]
+  F --> G[Hardening decisions improve baseline]
+  G --> B</code></pre>
+
+            <h3>5.2 Service exposure model</h3>
+            <pre class="mermaid"><code>flowchart TD
+  S[Installed service] --> R{Running?}
+  R -- No --> L[Lower immediate exposure]
+  R -- Yes --> P{Listening on network?}
+  P -- No --> Local[Local-only exposure]
+  P -- Yes --> IF{Bound to which interface?}
+  IF -- 127.0.0.1 only --> Loop[Localhost only]
+  IF -- Internal network --> Internal[Internal exposure]
+  IF -- 0.0.0.0 or public --> Public[High exposure if reachable]
+  Public --> H[Require patching, authentication, logging, firewall, and monitoring]</code></pre>
+
+            <h3>5.3 Log pipeline architecture</h3>
+            <pre class="mermaid"><code>flowchart LR
+  A[Endpoints] --> C[Local logs]
+  B[Servers] --> C
+  D[Cloud services] --> E[Cloud activity logs]
+  F[Network devices] --> G[Flow and firewall logs]
+  C --> H[Central log collector]
+  E --> H
+  G --> H
+  H --> I[Storage and retention]
+  I --> J[Detection rules]
+  J --> K[Alerts]
+  K --> L[Investigation and response]</code></pre>
+
+            <h3>5.4 Hardening workflow</h3>
+            <pre class="mermaid"><code>flowchart TD
+  A[Inventory asset] --> B[Classify role and sensitivity]
+  B --> C[Select baseline]
+  C --> D[Remove unnecessary software]
+  D --> E[Disable unnecessary services]
+  E --> F[Limit privileges]
+  F --> G[Configure logs and audit]
+  G --> H[Test required function]
+  H --> I{Function still works?}
+  I -- No --> J[Document exception and adjust]
+  I -- Yes --> K[Monitor drift]
+  J --> K
+  K --> L[Review periodically]</code></pre>
+
+            <h3>5.5 Decision tree for a suspicious service</h3>
+            <pre class="mermaid"><code>flowchart TD
+  A[Found unfamiliar service] --> B{Is it approved in baseline?}
+  B -- Yes --> C[Verify owner, version, privilege, logs]
+  B -- No --> D{Is there a documented change ticket?}
+  D -- Yes --> E[Validate need and risk]
+  D -- No --> F[Treat as suspicious]
+  F --> G[Collect evidence]
+  G --> H[Escalate to instructor or security team]
+  E --> I{Can privilege or exposure be reduced?}
+  I -- Yes --> J[Recommend hardening]
+  I -- No --> K[Document risk acceptance]</code></pre>
+
+            <h3>5.6 System state timeline</h3>
+            <pre class="mermaid"><code>timeline
+  title Example investigation timeline
+  09:00 : System baseline says SSH disabled
+  10:15 : Package update installed OpenSSH server
+  10:17 : Service enabled at boot
+  10:18 : Firewall rule added
+  10:21 : Failed login burst begins
+  10:26 : Admin disables service and collects logs
+  10:45 : Change review identifies unauthorized exposure</code></pre>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <pre class="mermaid"><code>mindmap
+  root((Privilege, Services, Logs, Hardening))
+    Privilege
+      root
+      administrator
+      sudo
+      SYSTEM
+      service account
+      just-in-time
+      least privilege
+    Services
+      daemon
+      startup state
+      listener
+      port
+      exposed interface
+      dependency
+    Logs
+      authentication
+      audit
+      service
+      application
+      network
+      cloud activity
+      retention
+      integrity
+    Hardening
+      baseline
+      patching
+      disable unused services
+      remove software
+      firewall
+      configuration drift
+      change control
+    Security outcomes
+      smaller attack surface
+      better detection
+      faster response
+      lower blast radius</code></pre>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>7.1 Attack surface reduction percentage</h3>
+            <p>A simple training metric is the percentage of unnecessary exposed services removed.</p>
+            <p><strong>Formula:</strong></p>
+            <pre><code class="language-text">Attack surface reduction = (Removed exposed services / Original exposed services) × 100%</code></pre>
+            <p><strong>Worked example:</strong> a lab server has 8 network-listening services. You confirm 3 are unnecessary and disable them in the authorized lab.</p>
+            <pre><code class="language-text">Reduction = (3 / 8) × 100% = 37.5%</code></pre>
+            <p><strong>Interpretation:</strong> this does not prove the server is secure. It only measures one concrete reduction in exposed service count.</p>
+
+            <h3>7.2 Simple risk score</h3>
+            <p>Risk is often approximated for prioritization using likelihood and impact.</p>
+            <pre><code class="language-text">Risk score = Likelihood × Impact</code></pre>
+            <p>Use a 1–5 scale for beginner exercises. A public, unneeded admin service might have likelihood 4 and impact 5.</p>
+            <pre><code class="language-text">Risk = 4 × 5 = 20</code></pre>
+            <p>If the service is disabled or restricted to localhost, likelihood may drop to 1 or 2. The impact of a compromise may remain high, but reduced exposure lowers practical risk.</p>
+
+            <h3>7.3 Log storage sizing</h3>
+            <p>Security logging requires storage planning.</p>
+            <pre><code class="language-text">Daily storage = Events per day × Average event size
+Retention storage = Daily storage × Retention days × Replication factor</code></pre>
+            <p><strong>Worked example:</strong> a small server produces 500,000 events per day. Average event size is 700 bytes. Logs are retained for 90 days with two copies.</p>
+            <pre><code class="language-text">Daily storage = 500,000 × 700 = 350,000,000 bytes ≈ 350 MB
+Retention storage = 350 MB × 90 × 2 = 63,000 MB ≈ 63 GB</code></pre>
+            <p><strong>Security interpretation:</strong> logging everything forever is not free. Teams must balance detection value, privacy, cost, and retention requirements.</p>
+
+            <h3>7.4 Mean time to detect and respond</h3>
+            <p><strong>Mean time to detect</strong>, or MTTD, estimates how long it takes to notice an incident. <strong>Mean time to respond</strong>, or MTTR, estimates how long it takes to contain or resolve it.</p>
+            <pre><code class="language-text">MTTD = Sum of detection times / Number of incidents
+MTTR = Sum of response times / Number of incidents</code></pre>
+            <p>If three lab incidents are detected after 10, 20, and 30 minutes:</p>
+            <pre><code class="language-text">MTTD = (10 + 20 + 30) / 3 = 20 minutes</code></pre>
+            <p>Better logging and alerting should reduce MTTD, but too many noisy alerts can increase analyst fatigue.</p>
+
+            <h3>7.5 Detection precision</h3>
+            <p>Detection rules create true positives and false positives.</p>
+            <pre><code class="language-text">Precision = True positives / (True positives + False positives)</code></pre>
+            <p>If a rule produces 12 useful alerts and 28 false alerts:</p>
+            <pre><code class="language-text">Precision = 12 / (12 + 28) = 0.30 = 30%</code></pre>
+            <p>A low-precision rule may still be useful for severe threats, but it needs tuning, enrichment, or a better investigation workflow.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <details open><summary>Linux examples</summary>
+              <p><strong>Read-only service inventory:</strong></p>
+              <pre><code class="language-bash"># Show services known to systemd.
+# --type=service limits output to services.
+# --state=running shows currently running services only.
+systemctl list-units --type=service --state=running
+
+# Show enabled services that may start during boot.
+# This helps identify persistent background functionality.
+systemctl list-unit-files --type=service | grep enabled
+
+# Show listening TCP and UDP sockets with process information when permitted.
+# -t TCP, -u UDP, -l listening, -n numeric, -p process.
+ss -tulnp
+
+# Read recent system journal entries without changing anything.
+journalctl -n 50 --no-pager
+
+# Show authentication-related logs on many Ubuntu/Debian systems.
+# Permission may be required; use only on your own lab VM.
+sudo tail -n 50 /var/log/auth.log</code></pre>
+              <p><strong>What to observe:</strong> service name, whether it starts at boot, which port it listens on, which user it runs as, and where it logs events.</p>
+            </details>
+
+            <details><summary>Windows examples</summary>
+              <pre><code class="language-powershell"># List services with name, display name, and status.
+Get-Service | Select-Object Name, DisplayName, Status | Sort-Object Status, Name
+
+# Show services that are currently running.
+Get-Service | Where-Object {$_.Status -eq "Running"}
+
+# Show listening TCP ports.
+Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess
+
+# Read recent security log events on your own lab machine.
+# Administrative rights may be required.
+Get-WinEvent -LogName Security -MaxEvents 20
+
+# Read recent service control manager events from the System log.
+Get-WinEvent -LogName System -MaxEvents 20 | Where-Object {$_.ProviderName -like "*Service Control*"}</code></pre>
+              <p><strong>What to observe:</strong> service status, startup behavior, process owner, listening port, event source, event ID, timestamp, and whether audit policy captures relevant events.</p>
+            </details>
+
+            <details><summary>Python examples</summary>
+              <p>Python can safely summarize local or fictional logs. It should not be used to scan real networks without authorization.</p>
+              <pre><code class="language-python">from collections import Counter
+from pathlib import Path
+
+# This file is fictional. Create it yourself during the lab.
+log_path = Path("fictional-auth.log")
+
+# Read the log file as text. errors="replace" prevents decoding crashes.
+lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+
+# Count failed login attempts by username.
+failed_users = Counter()
+
+for line in lines:
+    # Only inspect lines that contain the training phrase.
+    if "login_failed" in line:
+        # Split key=value fields separated by spaces.
+        fields = dict(part.split("=", 1) for part in line.split() if "=" in part)
+        # Use "unknown" when the username field is missing.
+        user = fields.get("user", "unknown")
+        failed_users[user] += 1
+
+print("Failed login counts:")
+for user, count in failed_users.most_common():
+    print(f"{user}: {count}")</code></pre>
+            </details>
+
+            <details><summary>Network examples</summary>
+              <p><strong>Safe localhost idea:</strong> a developer may run a test web server on <code>127.0.0.1</code>. That means only the local machine should reach it. Binding a service to <code>0.0.0.0</code> may expose it to all interfaces, depending on firewall and network placement.</p>
+              <pre><code class="language-bash"># Start a temporary local-only web server in the current directory.
+# Do this only in a harmless training folder.
+python3 -m http.server 8000 --bind 127.0.0.1
+
+# In another terminal, confirm that a process is listening locally.
+ss -tulnp | grep 8000</code></pre>
+              <p><strong>Security lesson:</strong> local-only development services should not accidentally become network-exposed services.</p>
+            </details>
+
+            <details><summary>Web examples</summary>
+              <p>Web applications often depend on background services: web server, application runtime, database, cache, queue, and logging agent. Hardening means each component has narrow permissions and clear logs.</p>
+              <ul>
+                <li>The web server should not run as root after binding to a port.</li>
+                <li>The application account should not have database administrator rights.</li>
+                <li>The database should not listen publicly unless there is a justified and protected architecture.</li>
+                <li>Authentication failures and administrative actions should be logged.</li>
+                <li>Logs should avoid storing raw passwords, session tokens, or sensitive personal data.</li>
+              </ul>
+            </details>
+
+            <details><summary>Cloud examples</summary>
+              <p>In cloud systems, hardening includes virtual machine images, IAM roles, security groups, storage access, activity logs, patching, secrets, and metadata-service controls.</p>
+              <ul>
+                <li>A virtual machine role should not have full account administrator rights if it only reads one storage bucket.</li>
+                <li>A security group should expose only required ports to required sources.</li>
+                <li>Cloud activity logs should be enabled before an incident occurs.</li>
+                <li>Golden images and infrastructure-as-code can reduce drift.</li>
+                <li>Temporary credentials are safer than long-lived static keys when properly governed.</li>
+              </ul>
+            </details>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Safe Bash hardening inventory script</h3>
+            <p>This script does not change configuration. It collects a small local inventory for your own lab machine.</p>
+            <pre><code class="language-bash">#!/usr/bin/env bash
+# Use bash as the script interpreter.
+
+set -u
+# Treat unset variables as errors to avoid accidental empty values.
+
+echo "== Hostname =="
+# Print the machine name so the report identifies the system.
+hostname
+
+echo "== Kernel =="
+# Show the operating-system kernel version.
+uname -a
+
+echo "== Running services =="
+# List currently running systemd services.
+systemctl list-units --type=service --state=running --no-pager
+
+echo "== Listening sockets =="
+# Show listening TCP/UDP sockets using numeric addresses and ports.
+ss -tuln
+
+echo "== Recent journal entries =="
+# Show the latest 30 local journal entries without paging.
+journalctl -n 30 --no-pager</code></pre>
+            <p><strong>Common mistakes:</strong> running random hardening scripts from the Internet, executing destructive commands without snapshots, assuming output means risk without understanding service role, and publishing logs that contain sensitive data.</p>
+
+            <h3>9.2 Python service review helper</h3>
+            <p>This example compares a fictional service inventory against a fictional approved baseline.</p>
+            <pre><code class="language-python"># Import csv so the script can read comma-separated training files.
+import csv
+
+# Approved service names for a fictional classroom server.
+approved_services = {"ssh", "nginx", "systemd-journald"}
+
+# Open the fictional inventory file created in the lab.
+with open("fictional-services.csv", newline="") as file:
+    # DictReader reads each row as a dictionary using column names.
+    rows = list(csv.DictReader(file))
+
+# Review each service row.
+for row in rows:
+    # Read service name from the current row.
+    name = row["service"]
+    # Read whether the service is running.
+    state = row["state"]
+    # Read the account or user that runs the service.
+    account = row["account"]
+
+    # A service is unexpected if it is not in the approved baseline.
+    if name not in approved_services:
+        print(f"REVIEW: {name} is not in the approved baseline")
+
+    # A network-facing service running as root deserves review.
+    if account == "root" and row.get("listening", "no") == "yes":
+        print(f"HIGH RISK REVIEW: {name} is listening and runs as root")
+
+    # Disabled services are lower immediate exposure but may still matter.
+    if state == "disabled":
+        print(f"INFO: {name} is disabled")</code></pre>
+            <p><strong>Secure coding practice:</strong> the script reads a local training CSV only. It does not scan networks, change services, or assume every unexpected service is malicious. It produces review prompts, not automatic destructive action.</p>
+
+            <h3>9.3 PowerShell local service summary</h3>
+            <pre><code class="language-powershell"># Get all services from the local lab computer.
+$services = Get-Service
+
+# Select only services that are currently running.
+$running = $services | Where-Object {$_.Status -eq "Running"}
+
+# Count running services.
+$count = $running.Count
+
+# Print a clear summary line.
+Write-Output "Running services: $count"
+
+# Show the first 20 running services in a compact table.
+$running | Select-Object -First 20 Name, DisplayName, Status</code></pre>
+            <p><strong>Common mistake:</strong> confusing service display names with service names. Scripts should use stable service names when possible.</p>
+
+            <h3>9.4 Safe systemd unit reading exercise</h3>
+            <p>Reading a unit file is safer than editing it. This example shows a simplified training unit, not a command to install a service.</p>
+            <pre><code class="language-ini">[Unit]
+# Human-readable description shown by systemd tools.
+Description=Fictional Training Web Service
+
+[Service]
+# Run the service as a restricted account instead of root.
+User=training-web
+# Start a harmless local application command.
+ExecStart=/usr/bin/python3 -m http.server 8000 --bind 127.0.0.1
+# Restart only if the service fails unexpectedly.
+Restart=on-failure
+
+[Install]
+# Define the target that would start this service during boot if enabled.
+WantedBy=multi-user.target</code></pre>
+            <p><strong>Security interpretation:</strong> a service unit should make privilege, command path, restart behavior, and network binding understandable. Production units need additional hardening options and change review.</p>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>10.1 Common attacks</h3>
+            <ul>
+              <li><strong>Privilege escalation:</strong> attacker starts with limited access and gains higher privileges.</li>
+              <li><strong>Service exploitation:</strong> attacker targets a vulnerable network-facing service.</li>
+              <li><strong>Default service abuse:</strong> unnecessary service is installed, enabled, and forgotten.</li>
+              <li><strong>Weak service account abuse:</strong> a service account has excessive permissions or long-lived secrets.</li>
+              <li><strong>Log tampering:</strong> attacker deletes, alters, disables, or floods logs to hide activity.</li>
+              <li><strong>Living-off-the-land:</strong> attacker uses trusted system tools such as shells, scripting engines, service managers, and admin utilities.</li>
+              <li><strong>Configuration rollback abuse:</strong> insecure old settings reappear after restore or failed update.</li>
+            </ul>
+
+            <h3>10.2 Common vulnerabilities</h3>
+            <ul>
+              <li>Unpatched services.</li>
+              <li>Publicly reachable admin interfaces.</li>
+              <li>Services running as root, administrator, or SYSTEM without need.</li>
+              <li>Excessive sudo or administrator membership.</li>
+              <li>Weak or shared service account credentials.</li>
+              <li>Missing authentication logs.</li>
+              <li>Insufficient audit policy.</li>
+              <li>World-writable sensitive directories.</li>
+              <li>Unmonitored startup entries and scheduled tasks.</li>
+              <li>Baseline exceptions that never expire.</li>
+            </ul>
+
+            <h3>10.3 Defensive strategies</h3>
+            <ul>
+              <li>Inventory assets, software, services, users, groups, and ports.</li>
+              <li>Disable or remove what is not required.</li>
+              <li>Run services under dedicated least-privilege accounts.</li>
+              <li>Use just-in-time elevation for administrative actions.</li>
+              <li>Restrict management interfaces to approved networks and administrators.</li>
+              <li>Enable useful audit logging before incidents occur.</li>
+              <li>Centralize important logs and protect log integrity.</li>
+              <li>Patch and verify versions.</li>
+              <li>Monitor drift from approved baselines.</li>
+              <li>Document exceptions with owners and expiry dates.</li>
+            </ul>
+
+            <h3>10.4 Detection methods</h3>
+            <ul>
+              <li>Alert when a new service is installed or enabled.</li>
+              <li>Alert when a service starts listening on a new port.</li>
+              <li>Alert when administrator group membership changes.</li>
+              <li>Alert when audit logging is disabled or log volume suddenly drops.</li>
+              <li>Alert when a service account is used interactively.</li>
+              <li>Alert on repeated failed logins followed by success.</li>
+              <li>Alert on unexpected changes to startup locations, scheduled tasks, or systemd units.</li>
+            </ul>
+
+            <h3>10.5 Mitigation and best practices</h3>
+            <ul>
+              <li>Start with a baseline appropriate to the system role.</li>
+              <li>Do not apply hardening blindly; test business function after each major change.</li>
+              <li>Prefer deny by default for network access.</li>
+              <li>Separate human admin accounts from daily-use accounts.</li>
+              <li>Give each service its own identity where practical.</li>
+              <li>Use configuration management or infrastructure-as-code for repeatability.</li>
+              <li>Review privileges and service states periodically.</li>
+              <li>Keep logs useful, protected, synchronized, and retained long enough for investigations.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <h3>Banks</h3>
+            <p>Banks use hardening to protect payment systems, teller workstations, ATMs, databases, identity systems, transaction logs, and fraud-monitoring platforms. They care strongly about least privilege, audit trails, change control, and segregation of duties.</p>
+            <h3>Governments</h3>
+            <p>Government systems often use formal baselines, centralized logging, privileged-access management, configuration scanning, and audit requirements. Sensitive systems may need stricter service control and mandatory policy enforcement.</p>
+            <h3>Cloud providers</h3>
+            <p>Cloud providers manage hardening at massive scale. They rely on golden images, automated patching pipelines, telemetry, identity boundaries, hardened hypervisors, least-privilege service roles, and continuous configuration checks.</p>
+            <h3>Healthcare</h3>
+            <p>Healthcare organizations need logs for patient-record access, service uptime for clinical care, and careful privilege control because availability and privacy both matter. Over-hardening that breaks clinical workflows can create safety risk.</p>
+            <h3>Defense</h3>
+            <p>Defense environments emphasize strict control of privileged access, approved configurations, auditability, compartmentalization, removable-media controls, and continuous monitoring.</p>
+            <h3>Universities</h3>
+            <p>Universities operate diverse systems: student portals, research clusters, labs, libraries, identity providers, and personal devices. Their challenge is balancing openness for research with hardening for sensitive systems.</p>
+            <h3>Large enterprises</h3>
+            <p>Enterprises use endpoint management, EDR, centralized logging, vulnerability management, privileged-access management, service catalogs, and configuration compliance dashboards to reduce drift across thousands of machines.</p>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Hardening is still an active research area because secure configuration is context-dependent, large systems change quickly, and humans struggle to interpret thousands of settings.</p>
+            <h3>Current research directions</h3>
+            <ul>
+              <li><strong>Automated least privilege:</strong> inferring the minimum permissions needed by applications and services without breaking function.</li>
+              <li><strong>Configuration verification:</strong> proving that a system configuration satisfies a security policy.</li>
+              <li><strong>Drift detection:</strong> detecting meaningful baseline deviations while ignoring harmless changes.</li>
+              <li><strong>Log quality measurement:</strong> identifying which events should be logged and whether logs contain enough context for investigation.</li>
+              <li><strong>Attack reconstruction:</strong> reconstructing incident timelines from incomplete, noisy, or tampered logs.</li>
+              <li><strong>Explainable security recommendations:</strong> explaining why a setting is risky instead of only flagging it as noncompliant.</li>
+              <li><strong>Cloud-scale policy analysis:</strong> reasoning about effective privilege across IAM, networks, storage, serverless functions, containers, and identity federation.</li>
+            </ul>
+            <h3>Open problems</h3>
+            <ul>
+              <li>How can tools recommend least privilege without producing unsafe automatic changes?</li>
+              <li>How can organizations measure hardening effectiveness beyond checklist completion?</li>
+              <li>How can defenders detect malicious service creation without drowning in administrative noise?</li>
+              <li>How can systems preserve useful logs while respecting privacy and data minimization?</li>
+              <li>How can baseline exceptions expire safely without breaking operations?</li>
+            </ul>
+            <p><strong>Graduate-level insight:</strong> hardening is not only a technical task. It is a socio-technical control system involving people, policy, automation, usability, economics, and adversarial adaptation.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>13.1 Mirai botnet and default/weak device configuration</h3>
+            <p><strong>What happened:</strong> Mirai infected large numbers of Internet-connected devices and used them for distributed denial-of-service attacks. Many devices were reachable with default or weak credentials and exposed management services.</p>
+            <p><strong>Root cause:</strong> insecure default configurations, exposed services, weak credentials, poor update practices, and limited device hardening.</p>
+            <p><strong>Impact:</strong> compromised IoT devices became botnet nodes that could disrupt Internet services.</p>
+            <p><strong>Lessons learned:</strong> change defaults, disable unnecessary remote services, patch devices, restrict network exposure, and monitor unusual outbound behavior.</p>
+
+            <h3>13.2 Log4Shell and exposed vulnerable services</h3>
+            <p><strong>What happened:</strong> a critical vulnerability in the widely used Log4j logging library affected many Java applications. Internet-facing services received widespread scanning and exploitation attempts.</p>
+            <p><strong>Root cause:</strong> vulnerable library behavior combined with broad dependency use, exposed applications, incomplete asset/software inventories, and uneven patch visibility.</p>
+            <p><strong>Impact:</strong> organizations had to rapidly inventory, patch, mitigate, monitor, and investigate affected systems.</p>
+            <p><strong>Lessons learned:</strong> know what software is running, reduce exposure, patch quickly, retain logs, and use layered mitigations when immediate patching is not possible.</p>
+
+            <h3>13.3 Overprivileged services and blast radius</h3>
+            <p><strong>What happens in many incidents:</strong> an attacker compromises a web application or service, then inherits the service account’s permissions. If the account can read all databases, write to storage, and access secrets, the blast radius is large.</p>
+            <p><strong>Root cause:</strong> convenience-based permissions, shared service accounts, missing role separation, and lack of access review.</p>
+            <p><strong>Impact:</strong> one application flaw can become full environment compromise.</p>
+            <p><strong>Lessons learned:</strong> isolate services, separate duties, rotate credentials, use scoped tokens, and monitor unusual service-account behavior.</p>
+
+            <h3>13.4 Missing logs during incident response</h3>
+            <p><strong>What happens:</strong> defenders suspect compromise but cannot reconstruct the timeline because logs were disabled, overwritten, too short-lived, unsynchronized, or stored only on the compromised host.</p>
+            <p><strong>Root cause:</strong> logging treated as optional troubleshooting rather than security evidence.</p>
+            <p><strong>Impact:</strong> longer investigations, uncertain containment, weak legal evidence, and unclear lessons learned.</p>
+            <p><strong>Lessons learned:</strong> enable security-relevant logs before incidents, centralize important events, protect log integrity, and test whether logs answer investigative questions.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <table><thead><tr><th>Misconception</th><th>Why it is incorrect</th></tr></thead><tbody>
+              <tr><td>“If a service is installed, it is exposed.”</td><td>Installed, running, listening, and reachable are different states.</td></tr>
+              <tr><td>“Root/admin is needed for convenience.”</td><td>Convenience is not a security justification. Use elevation only when required.</td></tr>
+              <tr><td>“Logs automatically make us secure.”</td><td>Logs help only if they are useful, protected, reviewed, retained, and actionable.</td></tr>
+              <tr><td>“Hardening means disable everything.”</td><td>Hardening means disable unnecessary risk while preserving required function.</td></tr>
+              <tr><td>“A firewall fixes vulnerable services.”</td><td>A firewall can reduce reachability, but the service may still be vulnerable to allowed users or local attackers.</td></tr>
+              <tr><td>“No alert means no attack.”</td><td>Missing telemetry, weak rules, or attacker evasion can hide activity.</td></tr>
+              <tr><td>“Baseline compliance equals security.”</td><td>Baselines are starting points. Threats, architecture, exceptions, and operations still matter.</td></tr>
+              <tr><td>“Temporary admin access can be forgotten.”</td><td>Temporary access often becomes permanent risk unless it expires and is reviewed.</td></tr>
+              <tr><td>“Centralized logs are always safe.”</td><td>Central log systems also need access control, integrity protection, retention, monitoring, and privacy controls.</td></tr>
+              <tr><td>“Service accounts are not real accounts.”</td><td>Service accounts are identities and can be abused like human accounts, often with greater persistence.</td></tr>
+            </tbody></table>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Privilege controls how much power an identity or process has. Services and daemons provide useful background functions but can create exposed attack paths. Logs and audit records provide the evidence needed for detection, investigation, accountability, and recovery. System hardening ties these ideas together by reducing unnecessary software, unnecessary services, excessive privileges, weak configuration, poor logging, and unmanaged drift.</p>
+            <p>The central lesson is simple but demanding: know what should exist, know what actually exists, reduce what is unnecessary, monitor what remains, and document why exceptions are allowed.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <dl>
+              <dt>Attack surface</dt><dd>The set of ways an attacker can interact with or influence a system.</dd>
+              <dt>Audit log</dt><dd>A security-relevant record used for accountability, detection, and investigation.</dd>
+              <dt>Baseline</dt><dd>An approved reference configuration for a system role.</dd>
+              <dt>Break-glass access</dt><dd>Emergency access used when normal administrative paths fail.</dd>
+              <dt>Configuration drift</dt><dd>Movement away from an approved baseline over time.</dd>
+              <dt>Daemon</dt><dd>A Unix/Linux background service process.</dd>
+              <dt>Hardening</dt><dd>Reducing unnecessary system risk through secure configuration.</dd>
+              <dt>Just-enough administration</dt><dd>Granting only the specific administrative actions required.</dd>
+              <dt>Just-in-time privilege</dt><dd>Granting elevated access only for a limited period.</dd>
+              <dt>Least privilege</dt><dd>Providing only the permissions needed for an approved task.</dd>
+              <dt>Listener</dt><dd>A service endpoint waiting for network connections.</dd>
+              <dt>LocalSystem</dt><dd>A highly privileged Windows service identity.</dd>
+              <dt>Log retention</dt><dd>The duration for which logs are stored.</dd>
+              <dt>Patch management</dt><dd>The process of identifying, testing, deploying, and verifying software updates.</dd>
+              <dt>Privilege</dt><dd>Special authority to perform sensitive actions.</dd>
+              <dt>Privileged account</dt><dd>An account with administrative or otherwise sensitive authority.</dd>
+              <dt>Privileged process</dt><dd>A running program with elevated authority.</dd>
+              <dt>Service</dt><dd>A background program that provides functionality to users, systems, or other programs.</dd>
+              <dt>Service account</dt><dd>An identity used by an application, service, or workload instead of a human.</dd>
+              <dt>Telemetry</dt><dd>Machine-generated data collected for monitoring and analysis.</dd>
+            </dl>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <ol>
+              <li><strong>What is privilege?</strong><br>A. A username only<br>B. Special authority to perform sensitive actions<br>C. A log file<br>D. A network cable<br><em>Answer: B</em></li>
+              <li><strong>Which Linux account traditionally has broad superuser power?</strong><br>A. guest<br>B. root<br>C. nobody<br>D. student<br><em>Answer: B</em></li>
+              <li><strong>What is a daemon?</strong><br>A. A background Unix/Linux service<br>B. A password hash<br>C. A router<br>D. A database table<br><em>Answer: A</em></li>
+              <li><strong>Why can unnecessary services be risky?</strong><br>A. They increase attack surface<br>B. They make screens brighter<br>C. They remove logs automatically<br>D. They prevent patching<br><em>Answer: A</em></li>
+              <li><strong>What does a listening port indicate?</strong><br>A. A service may be waiting for network connections<br>B. A file has been deleted<br>C. A user changed password<br>D. A disk is full<br><em>Answer: A</em></li>
+              <li><strong>Which is the safest general approach for privileges?</strong><br>A. Everyone is administrator<br>B. Shared admin account for all users<br>C. Least privilege<br>D. Disable all accounts<br><em>Answer: C</em></li>
+              <li><strong>What is an audit log mainly used for?</strong><br>A. Wallpaper storage<br>B. Accountability and investigation<br>C. CPU cooling<br>D. Password display<br><em>Answer: B</em></li>
+              <li><strong>What is configuration drift?</strong><br>A. A system moving away from approved baseline<br>B. A faster CPU<br>C. A cable problem only<br>D. A new keyboard layout<br><em>Answer: A</em></li>
+              <li><strong>What does hardening try to reduce?</strong><br>A. Necessary business function<br>B. Unnecessary risk<br>C. All logging<br>D. All authentication<br><em>Answer: B</em></li>
+              <li><strong>Why should logs have accurate timestamps?</strong><br>A. To make fonts consistent<br>B. To build reliable incident timelines<br>C. To compress files<br>D. To hide events<br><em>Answer: B</em></li>
+              <li><strong>What is a service account?</strong><br>A. An identity used by a service or application<br>B. A paper invoice<br>C. A browser bookmark<br>D. A monitor setting<br><em>Answer: A</em></li>
+              <li><strong>Which service state usually creates more immediate network risk?</strong><br>A. Installed but disabled<br>B. Deleted<br>C. Running and publicly reachable<br>D. Documented only<br><em>Answer: C</em></li>
+              <li><strong>What does sudo help provide?</strong><br>A. Controlled elevation for authorized commands<br>B. Wireless encryption<br>C. File compression<br>D. Web design<br><em>Answer: A</em></li>
+              <li><strong>What should be done before applying major hardening changes?</strong><br>A. Ignore users<br>B. Test and plan rollback<br>C. Delete all logs<br>D. Disable all authentication<br><em>Answer: B</em></li>
+              <li><strong>What is log retention?</strong><br>A. How long logs are kept<br>B. How users are named<br>C. Which screen is active<br>D. A password rule only<br><em>Answer: A</em></li>
+              <li><strong>Which is a sign of possible suspicious activity?</strong><br>A. New unapproved service installed<br>B. User reads public documentation<br>C. Clock displays time<br>D. Keyboard is plugged in<br><em>Answer: A</em></li>
+              <li><strong>What is a baseline?</strong><br>A. Approved reference configuration<br>B. Random default settings<br>C. A malware family<br>D. A backup cable<br><em>Answer: A</em></li>
+              <li><strong>Why centralize important logs?</strong><br>A. To make deletion by a compromised host harder<br>B. To remove all evidence<br>C. To stop authentication<br>D. To expose secrets<br><em>Answer: A</em></li>
+              <li><strong>What is break-glass access?</strong><br>A. Emergency administrative access<br>B. A password-reset email only<br>C. A browser cache<br>D. A database index<br><em>Answer: A</em></li>
+              <li><strong>What is the best description of hardening?</strong><br>A. One universal command<br>B. A continuous risk-reduction process<br>C. Disabling every feature<br>D. Ignoring business needs<br><em>Answer: B</em></li>
+            </ol>
+
+            <h3>10 Short Questions</h3>
+            <ol>
+              <li>Define privilege in one sentence.</li>
+              <li>Why is a network-facing service running as root risky?</li>
+              <li>What is the difference between a service being installed and listening?</li>
+              <li>Name three useful security log fields.</li>
+              <li>Why does time synchronization matter for incident response?</li>
+              <li>What is the purpose of a hardening baseline?</li>
+              <li>Give one example of configuration drift.</li>
+              <li>What is one risk of shared service accounts?</li>
+              <li>Why should logs be protected from modification?</li>
+              <li>Why should hardening changes be tested?</li>
+            </ol>
+
+            <h3>5 Long Questions</h3>
+            <ol>
+              <li>Explain how least privilege applies to human administrators, service accounts, and network-facing processes.</li>
+              <li>Design a hardening checklist for a fictional university web server and justify each item.</li>
+              <li>Explain how logs support detection, investigation, compliance, and lessons learned after an incident.</li>
+              <li>Compare the risks of disabling too little versus hardening too aggressively.</li>
+              <li>Describe a full configuration-drift management process for a small organization.</li>
+            </ol>
+
+            <h3>Scenario-Based Questions</h3>
+            <ol>
+              <li>A lab server unexpectedly starts listening on TCP port 8080. What evidence should you collect before making conclusions?</li>
+              <li>A service account used by a web application can read every database. What could go wrong and how would you reduce risk?</li>
+              <li>Authentication logs stop arriving from one server. What possible explanations should you consider?</li>
+              <li>A developer asks to run a temporary admin dashboard on a public IP for one day. What conditions and controls would you require?</li>
+              <li>An emergency firewall exception was created during an outage. What should happen after the outage ends?</li>
+            </ol>
+
+            <h3>Interview Questions</h3>
+            <ol>
+              <li>How do you find listening services on Linux and Windows?</li>
+              <li>What is the difference between root and sudo?</li>
+              <li>What makes a log useful for security investigation?</li>
+              <li>What is configuration drift and how do you detect it?</li>
+              <li>How would you harden a new server without breaking production?</li>
+            </ol>
+
+            <h3>Critical Thinking Questions</h3>
+            <ol>
+              <li>Can a system be too hardened? Give an example.</li>
+              <li>Should every event be logged? Explain the trade-offs.</li>
+              <li>Who should approve exceptions to a hardening baseline?</li>
+              <li>How can automation make hardening safer or more dangerous?</li>
+              <li>When is accepting risk more reasonable than eliminating it?</li>
+            </ol>
+
+            <h3>Research Questions</h3>
+            <ol>
+              <li>How can machine learning help prioritize hardening recommendations without unsafe automation?</li>
+              <li>How can we measure whether a hardening baseline actually reduces real-world compromise?</li>
+              <li>How can defenders detect stealthy log tampering reliably?</li>
+              <li>How can cloud IAM effective privilege be explained to humans?</li>
+              <li>How can systems collect enough logs for security while minimizing privacy exposure?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title</h3>
+            <p><strong>Local OS Hardening Review for a Fictional Classroom Server</strong></p>
+            <h3>Safety and authorization</h3>
+            <ul>
+              <li>Use only your own lab VM or personal test machine.</li>
+              <li>Do not scan public IP addresses.</li>
+              <li>Do not modify production services.</li>
+              <li>Do not collect other people’s logs.</li>
+              <li>Use snapshots before changing anything.</li>
+            </ul>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Week 0 lab environment.</li>
+              <li>Basic Linux or Windows command-line access.</li>
+              <li>Text editor.</li>
+              <li>Python 3 for the optional log analysis step.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Inventory running services.</li>
+              <li>Identify listening ports.</li>
+              <li>Review recent local logs.</li>
+              <li>Compare findings against a fictional baseline.</li>
+              <li>Write least-privilege and hardening recommendations.</li>
+            </ul>
+
+            <h3>Part A: Create a fictional baseline</h3>
+            <pre><code class="language-markdown"># Fictional Classroom Server Baseline
+
+Approved services:
+- ssh: remote administration from lab network only
+- nginx: classroom web content
+- systemd-journald: local logging
+
+Approved listening ports:
+- 22/tcp on lab network only
+- 80/tcp for classroom web content
+
+Required logs:
+- authentication failures
+- successful administrative login
+- service start/stop
+- configuration changes
+
+Privilege rules:
+- no daily-use admin accounts
+- service accounts must not be shared
+- web service must not run as root after startup</code></pre>
+
+            <h3>Part B: Collect local read-only evidence</h3>
+            <pre><code class="language-bash">mkdir -p lesson-2-5-lab
+cd lesson-2-5-lab
+
+# Collect running services.
+systemctl list-units --type=service --state=running --no-pager > running-services.txt
+
+# Collect listening sockets.
+ss -tuln > listening-sockets.txt
+
+# Collect recent logs.
+journalctl -n 100 --no-pager > recent-journal.txt
+
+# Record system identity for your report.
+hostname > hostname.txt
+uname -a > kernel.txt</code></pre>
+
+            <h3>Part C: Create fictional log data</h3>
+            <pre><code class="language-text">2026-06-28T09:00:01Z event=login_success user=admin source=127.0.0.1 host=classroom-01
+2026-06-28T09:05:15Z event=service_started service=nginx account=www-data host=classroom-01
+2026-06-28T09:10:44Z event=login_failed user=root source=192.0.2.55 host=classroom-01
+2026-06-28T09:10:55Z event=login_failed user=root source=192.0.2.55 host=classroom-01
+2026-06-28T09:11:05Z event=login_failed user=root source=192.0.2.55 host=classroom-01
+2026-06-28T09:20:00Z event=service_started service=unknown-dashboard account=root host=classroom-01</code></pre>
+            <p>Save it as <code>fictional-auth.log</code>.</p>
+
+            <h3>Part D: Analyze fictional logs with Python</h3>
+            <pre><code class="language-python">from collections import Counter
+from pathlib import Path
+
+log_file = Path("fictional-auth.log")
+lines = log_file.read_text(encoding="utf-8").splitlines()
+
+event_counts = Counter()
+root_failures = 0
+root_services = []
+
+for line in lines:
+    fields = dict(part.split("=", 1) for part in line.split() if "=" in part)
+    event = fields.get("event", "unknown")
+    event_counts[event] += 1
+
+    if event == "login_failed" and fields.get("user") == "root":
+        root_failures += 1
+
+    if event == "service_started" and fields.get("account") == "root":
+        root_services.append(fields.get("service", "unknown"))
+
+print("Event counts:", event_counts)
+print("Failed root logins:", root_failures)
+print("Services started as root:", root_services)</code></pre>
+
+            <h3>Part E: Write the report</h3>
+            <pre><code class="language-markdown"># Lesson 2.5 Hardening Review Report
+
+## Scope
+This review used my own local lab machine and fictional logs only.
+
+## Service Inventory
+Summarize running services and identify anything unfamiliar.
+
+## Listening Ports
+List listening ports and explain whether each seems expected.
+
+## Privilege Review
+Identify any services or accounts that appear overprivileged.
+
+## Log Review
+Summarize useful events, missing context, and suspicious patterns.
+
+## Hardening Recommendations
+Prioritize 5 recommendations using likelihood and impact.
+
+## Exceptions
+Document anything that should remain enabled and why.
+
+## Limitations
+State what cannot be concluded from this small local review.</code></pre>
+
+            <h3>Expected outcomes</h3>
+            <ul>
+              <li>You can safely inventory services and listening sockets.</li>
+              <li>You can explain the risk of overprivileged services.</li>
+              <li>You can distinguish useful logs from weak logs.</li>
+              <li>You can compare actual state to a baseline.</li>
+              <li>You can write a practical hardening recommendation report.</li>
+            </ul>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li><a href="https://csrc.nist.gov/pubs/sp/800/123/final">NIST SP 800-123: Guide to General Server Security</a>.</li>
+              <li><a href="https://csrc.nist.gov/pubs/sp/800/92/final">NIST SP 800-92: Guide to Computer Security Log Management</a>.</li>
+              <li><a href="https://www.cisecurity.org/controls/cis-controls-list">CIS Critical Security Controls v8.1</a>.</li>
+              <li><a href="https://www.cisecurity.org/controls/audit-log-management">CIS Control 8: Audit Log Management</a>.</li>
+              <li><a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models">Microsoft: Implementing Least-Privilege Administrative Models</a>.</li>
+              <li><a href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations">Microsoft: System Audit Policy Recommendations</a>.</li>
+              <li><a href="https://learn.microsoft.com/en-us/windows/win32/services/localsystem-account">Microsoft: LocalSystem Account</a>.</li>
+              <li><a href="https://www.freedesktop.org/software/systemd/man/latest/systemctl.html">systemd documentation: systemctl</a>.</li>
+              <li><a href="https://man7.org/linux/man-pages/man8/ss.8.html">Linux manual page: ss</a>.</li>
+              <li><a href="https://man7.org/linux/man-pages/man1/journalctl.1.html">Linux manual page: journalctl</a>.</li>
+              <li><a href="https://www.cisa.gov/news-events/news/apache-log4j-vulnerability-guidance">CISA: Apache Log4j Vulnerability Guidance</a>.</li>
+              <li><a href="https://www.cloudflare.com/learning/ddos/glossary/mirai-botnet/">Cloudflare Learning Center: Mirai Botnet</a>.</li>
+              <li>Research topics: least-privilege inference, configuration compliance, cloud policy analysis, log tamper detection, telemetry quality, and automated hardening explanation.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="authorization-permissions-and-access-control-models.html">← Lesson 2.4</a><a class="btn" href="index.html">Week 2 Overview</a><a class="btn btn-primary" href="../week-03/cryptography-from-first-principles.html">Next: Lesson 3.1 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><script>hljs.highlightAll();</script>
+</body>
+</html>

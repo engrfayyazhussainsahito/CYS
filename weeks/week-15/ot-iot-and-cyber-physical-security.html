@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 15.4: OT, IoT, and Cyber-Physical Security | MS Cybersecurity</title>
+  <meta name="description" content="Operational technology, IoT, ICS, cyber-physical security, safety, availability, segmentation, remote access, firmware, vendor support, passive monitoring, and secure lifecycle governance.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-15-lesson-4" data-title="Lesson 15.4: OT, IoT, and Cyber-Physical Security">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 15</a> / Lesson 15.4</div>
+      <header class="hero"><div class="eyebrow">Week 15 · Lesson 15.4</div><h1>OT, IoT, and Cyber-Physical Security</h1><p class="lead">OT, IoT, and cyber-physical systems are not just ordinary IT assets with unusual labels. They can affect pumps, valves, motors, cameras, doors, elevators, medical devices, environmental controls, production lines, vehicles, sensors, and safety processes. Security decisions must respect safety, availability, engineering ownership, vendor constraints, physical access, firmware lifecycle, and operational change control.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>95–130 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Advanced MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 4, 7, 10, 11, 12, 14, and Lessons 15.1–15.3 recommended</div><div class="meta-item"><strong>Lab mode</strong>Safe local triage using fictional cyber-physical asset records</div></div></header>
+
+      <div class="callout"><strong>Safety boundary:</strong> This lesson teaches defensive risk management and architecture. It does not teach PLC programming, protocol manipulation, live device discovery, exploitation, bypassing safety controls, interfering with medical/industrial/building systems, or scanning real OT/IoT networks. All practical work uses fictional local data only.</div>
+
+      <div class="lesson-layout">
+        <article class="lesson-content">
+          <section id="objectives"><h2>1. Learning Objectives</h2><p>By the end of this lesson, you should be able to:</p><ul><li>Distinguish enterprise IT, OT, ICS, IIoT, IoT, embedded systems, and broader cyber-physical systems.</li><li>Explain why safety, availability, process integrity, and engineering ownership change security decisions.</li><li>Identify common OT and IoT asset classes, trust boundaries, failure modes, and evidence sources.</li><li>Describe passive discovery, segmentation, remote-access governance, vendor support, and firmware lifecycle at a high level.</li><li>Evaluate cyber-physical risk without using intrusive scanning or live testing methods.</li><li>Separate safety impact, operational impact, privacy impact, and cybersecurity impact in risk statements.</li><li>Build a defensive control roadmap for fictional OT/IoT environments using owner, evidence, and lifecycle information.</li></ul></section>
+
+          <section id="research-basis"><h2>2. Research Basis</h2><p>This lesson is grounded in authoritative OT/IoT guidance rather than generic IT assumptions. NIST SP 800-82 Rev. 3 defines OT broadly as systems and devices that interact with the physical environment or manage devices that do, and it emphasizes performance, reliability, and safety requirements. NIST SP 800-213 frames IoT device adoption in the context of organizational and system risk management. NISTIR 8259 describes foundational cybersecurity activities for IoT device manufacturers before devices are sold to customers. CISA’s Cross-Sector Cybersecurity Performance Goals provide baseline cybersecurity practices for critical infrastructure across IT and OT owners. ISA/IEC 62443 provides a standards family for industrial automation and control systems that bridges operations, IT, and process safety.</p><ul><li><a href="https://csrc.nist.gov/pubs/sp/800/82/r3/final">NIST SP 800-82 Rev. 3 — Guide to Operational Technology Security.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/213/final">NIST SP 800-213 — IoT Device Cybersecurity Guidance for the Federal Government.</a></li><li><a href="https://csrc.nist.gov/pubs/ir/8259/final">NISTIR 8259 — Foundational Cybersecurity Activities for IoT Device Manufacturers.</a></li><li><a href="https://www.cisa.gov/cross-sector-cybersecurity-performance-goals">CISA Cross-Sector Cybersecurity Performance Goals.</a></li><li><a href="https://www.cisa.gov/topics/industrial-control-systems">CISA Industrial Control Systems resources.</a></li><li><a href="https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards">ISA/IEC 62443 series of standards.</a></li></ul></section>
+
+          <section id="definitions"><h2>3. Definitions That Matter</h2><p>The vocabulary matters because different device classes have different owners, risks, and change procedures.</p><table><thead><tr><th>Term</th><th>Meaning</th><th>Security implication</th></tr></thead><tbody><tr><td>OT</td><td>Systems that monitor or control physical processes and equipment.</td><td>Availability, safety, process integrity, and engineering approval often dominate.</td></tr><tr><td>ICS</td><td>Industrial control systems such as SCADA, DCS, PLC-based control, and process-control environments.</td><td>Unauthorized change can affect physical production, utilities, transportation, or safety.</td></tr><tr><td>IoT</td><td>Network-connected devices with sensing, actuation, embedded compute, or remote management.</td><td>Security depends on procurement, updateability, identity, cloud services, and lifecycle support.</td></tr><tr><td>IIoT</td><td>Industrial IoT used in manufacturing, energy, utilities, logistics, and other operational contexts.</td><td>Often bridges operational data with analytics, cloud, maintenance, and enterprise systems.</td></tr><tr><td>Cyber-physical system</td><td>A system where digital logic can influence physical outcomes.</td><td>Risk analysis must include physical harm, environmental impact, production loss, and public trust.</td></tr></tbody></table></section>
+
+          <section id="it-assumptions"><h2>4. Why Ordinary IT Assumptions Break</h2><p>Many IT controls still matter in OT and IoT, but their implementation changes. A routine vulnerability scan may be acceptable on a corporate web subnet and unacceptable on fragile industrial equipment. A patch that is normal on a laptop may require vendor validation, a maintenance window, a rollback plan, spare parts, and process-safety review. A device with a weak operating system may still be essential to production or patient care.</p><p>The most dangerous mistake is importing IT urgency without operational context. The second most dangerous mistake is using operational fragility as an excuse to accept permanent insecurity. Mature programs avoid both extremes: they document assets, owners, dependencies, safe test methods, approved changes, compensating controls, and long-term modernization plans.</p></section>
+
+          <section id="asset-classes"><h2>5. Common Asset Classes</h2><ul><li><strong>Control devices:</strong> PLCs, RTUs, controllers, drives, relays, actuators, and embedded controllers.</li><li><strong>Supervisory systems:</strong> SCADA servers, HMIs, engineering workstations, historians, and process servers.</li><li><strong>Safety and protection systems:</strong> safety instrumented systems, physical access controls, emergency controls, alarms, and monitoring systems.</li><li><strong>Building and facilities systems:</strong> HVAC, elevators, badge readers, lighting, fire systems, cameras, and environmental sensors.</li><li><strong>Medical and clinical IoT:</strong> networked clinical devices, device management consoles, biomedical engineering tools, and vendor support paths.</li><li><strong>Enterprise IoT:</strong> printers, cameras, sensors, conference-room devices, smart displays, and specialized appliances.</li><li><strong>Industrial data bridges:</strong> historians, MES integrations, edge gateways, analytics connectors, cloud collectors, and maintenance platforms.</li></ul></section>
+
+          <section id="risk-model"><h2>6. Cyber-Physical Risk Model</h2><p>Cyber-physical risk must include more than confidentiality, integrity, and availability. It should also include safety, process integrity, environmental impact, regulatory exposure, production continuity, privacy, vendor dependency, maintenance feasibility, and recovery realism.</p><div class="mermaid">flowchart TD
+  A[Asset or process] --> B[Physical function]
+  A --> C[Digital access path]
+  A --> D[Data flow]
+  B --> E[Safety and operational impact]
+  C --> F[Identity, remote access, segmentation, and monitoring]
+  D --> G[Privacy, retention, analytics, and third-party sharing]
+  E --> H[Risk owner decision]
+  F --> H
+  G --> H
+  H --> I[Safe control roadmap]
+</div><p>A useful risk statement names the device or process, physical consequence, digital exposure, owner, current evidence, safe next step, and unresolved uncertainty. Vague statements such as “OT is insecure” or “IoT is risky” do not support funding or safe operations.</p></section>
+
+          <section id="safety-first"><h2>7. Safety and Availability First Does Not Mean Security Last</h2><p>OT and cyber-physical environments often prioritize safety and availability because outages can cause physical harm, production loss, environmental impact, or service disruption. That does not mean security is optional. It means security controls must be selected and sequenced so they reduce risk without creating unsafe instability.</p><p>For example, a control program might begin with asset inventory, network zoning, read-only monitoring, remote-access review, backup validation, and vendor account cleanup before attempting firmware updates or architectural redesign. Safety and reliability become design constraints, not reasons for inaction.</p></section>
+
+          <section id="inventory"><h2>8. Asset Inventory and Ownership</h2><p>Security teams often underestimate how hard OT/IoT inventory is. Devices may be installed by facilities, biomedical engineering, vendors, production teams, contractors, or acquisition projects. Some are not joined to normal directories. Some have long lifecycles, unusual protocols, no agents, or vendor-managed cloud control planes.</p><p>A useful inventory should record at least: asset identity, physical location, process/function, owner, vendor, model, firmware/software version, network zone, remote-access path, data produced, safety impact, backup/restore method, support status, change window, and compensating controls. “Found by scanner” is not enough; the inventory must be validated by operational owners.</p></section>
+
+          <section id="discovery"><h2>9. Discovery: Prefer Passive and Documentation-First</h2><p>In ordinary IT environments, active scanning may be routine. In OT and fragile IoT environments, scanning can create unacceptable risk if devices or networks are sensitive to malformed traffic, timing, protocol behavior, or unexpected connection volume. Discovery should therefore begin with documentation, procurement records, network diagrams, switch/router/firewall records, passive monitoring, vendor records, and operations interviews.</p><div class="callout"><strong>Rule:</strong> Do not run active discovery against OT/IoT/cyber-physical environments unless the method, timing, target range, rollback path, and operational owner approval are documented and tested.</div></section>
+
+          <section id="segmentation"><h2>10. Segmentation, Zones, and Conduits</h2><p>Segmentation is a core OT and IoT defense, but it must reflect process function, safety boundaries, data flows, and maintenance paths. A flat network allows a compromised camera, workstation, vendor laptop, analytics integration, or cloud connector to become a path toward critical control systems.</p><p>Common patterns include separate IoT VLANs, OT zones, industrial DMZs, historian replication zones, jump hosts, application proxies, one-way data flows where appropriate, and strict firewall rules between enterprise IT and process-control networks. Segmentation without monitoring and owner review becomes a diagram, not a control.</p></section>
+
+          <section id="remote-access"><h2>11. Remote Access and Vendor Support</h2><p>Remote access is often necessary for maintenance, emergency support, managed building systems, clinical devices, industrial platforms, and vendor diagnostics. It is also one of the highest-risk pathways when it relies on shared accounts, always-on VPNs, weak MFA, undocumented vendor portals, unmanaged laptops, or incomplete session logs.</p><p>Strong remote-access governance includes named identities, MFA, time-bound approval, least privilege, emergency disablement, session logging, vendor contract obligations, allowed support windows, and review of what the vendor can see or change. The business question is not “Can the vendor connect?” It is “Who approved this connection, for what system, during what window, with what evidence, and how do we revoke it?”</p></section>
+
+          <section id="firmware"><h2>12. Firmware, Patch, and End-of-Life Reality</h2><p>OT and IoT patching is constrained by compatibility, certification, vendor validation, spare parts, downtime windows, regulatory restrictions, and sometimes the absence of vendor support. This makes lifecycle planning essential. Unsupported devices should not disappear into an exception spreadsheet forever; they need compensating controls, replacement funding, network restrictions, monitoring, and business-owner visibility.</p><p>A mature lifecycle record includes current version, vendor support status, known vulnerabilities, safe update path, test environment, backup/restore procedure, rollback criteria, maintenance window, owner approval, and post-change verification. For some devices, isolation and compensating controls are safer than immediate patching, but the decision must be documented.</p></section>
+
+          <section id="monitoring"><h2>13. Monitoring and Detection</h2><p>OT/IoT monitoring should begin with understanding normal operations. Useful telemetry may include network flows, historian logs, HMI login events, jump-host sessions, vendor remote-access records, engineering workstation activity, controller configuration-change events, firmware/version records, cloud portal audit logs, and physical-access logs. Detection must consider operational context; a command that is normal during a maintenance window may be suspicious during production operations.</p><p>Passive monitoring is often safer than active probing, but it still needs governance. Decide which data is collected, where it is stored, who can view it, how long it is retained, how privacy-sensitive footage or sensor data is handled, and how alerts are triaged with operations.</p></section>
+
+          <section id="iot-procurement"><h2>14. IoT Procurement and Secure Lifecycle</h2><p>IoT security begins before purchase. Procurement should ask whether the device supports unique identity, secure configuration, software update, vulnerability disclosure, logging, data protection, access control, secure default settings, support lifecycle disclosure, and safe decommissioning. Cheap devices become expensive when they lack updateability, logging, vendor accountability, or integration with enterprise controls.</p><p>Procurement should also assess the vendor cloud service: administrators, MFA, audit logs, data location, tenant isolation, API security, retention, breach notification, subcontractors, end-of-life handling, and account recovery. The device is only one part of the product ecosystem.</p></section>
+
+          <section id="privacy"><h2>15. Privacy and Data Protection</h2><p>Cyber-physical systems often collect data about people: video, badge access, location, occupancy, biometrics, patient device data, building use, worker activity, and vehicle or wearable telemetry. Treating this only as “device security” misses privacy, retention, lawful basis, labor, clinical, and contractual issues.</p><p>Security teams should work with privacy and legal owners to define data minimization, retention, access controls, auditability, notice/consent obligations where applicable, and restrictions on secondary use. More sensors can improve operations and safety, but they can also create unnecessary surveillance, breach impact, and governance risk.</p></section>
+
+          <section id="incident-response"><h2>16. Incident Response in Cyber-Physical Environments</h2><p>Incident response must be coordinated with operations. Standard IT actions such as isolating a host, resetting credentials, shutting down a service, forcing updates, or collecting volatile evidence can have physical consequences. Response plans should define who can stop a process, who can approve isolation, which systems have safety dependencies, how to communicate with operations, and what evidence can be collected without disrupting safety.</p><p>Runbooks should include operational contacts, vendor contacts, safe containment options, manual fallback procedures, escalation thresholds, evidence sources, regulatory and safety reporting paths, and recovery validation. Exercises are essential because many failure points appear only when operations, engineering, security, facilities, safety, and executives must coordinate under pressure.</p></section>
+
+          <section id="architecture-pattern"><h2>17. Reference Defensive Architecture Pattern</h2><div class="mermaid">flowchart LR
+  IT[Enterprise IT Zone] --> FW1[Firewall / Policy Boundary]
+  FW1 --> DMZ[Industrial or IoT DMZ]
+  DMZ --> HIST[Historian / Broker / Proxy]
+  DMZ --> JUMP[Managed Jump Host]
+  JUMP --> FW2[Controlled OT Boundary]
+  FW2 --> OT[OT / Device Zone]
+  OT --> PLC[Controllers and Devices]
+  OT --> HMI[HMI / Engineering Workstation]
+  VENDOR[Vendor Support] --> MFA[MFA + Approval + Logging]
+  MFA --> DMZ
+  OT --> MON[Passive Monitoring]
+  MON --> SOC[Security Monitoring]
+</div><p>This pattern is illustrative, not universal. The point is to reduce direct enterprise-to-control-system access, concentrate remote support through governed points, replicate data through controlled boundaries, preserve operational ownership, and collect enough telemetry for incident response.</p></section>
+
+          <section id="anti-patterns"><h2>18. Common Failure Modes</h2><ul><li><strong>Flat network:</strong> IoT, corporate endpoints, servers, and control devices share broad reachability.</li><li><strong>Shared vendor accounts:</strong> no accountability, weak offboarding, and poor forensic evidence.</li><li><strong>Always-on remote access:</strong> support pathways remain open outside maintenance windows.</li><li><strong>Scanner-first inventory:</strong> active discovery is attempted before safety and owner validation.</li><li><strong>Patch-only thinking:</strong> lifecycle, segmentation, monitoring, backup, and vendor constraints are ignored.</li><li><strong>Unowned exceptions:</strong> unsupported devices remain indefinitely with no compensating controls or retirement date.</li><li><strong>IT-only incident response:</strong> containment actions are taken without operations or safety coordination.</li><li><strong>Cloud blind spot:</strong> vendor portals and IoT cloud tenants are ignored in identity, logging, and breach planning.</li><li><strong>Privacy blind spot:</strong> cameras, badges, sensors, and medical/worker data are treated only as technical logs.</li></ul></section>
+
+          <section id="case-study"><h2>19. Case Study: Building Automation Meets Enterprise Risk</h2><p>A company adds smart HVAC, badge readers, cameras, and occupancy sensors across several offices. Facilities owns the project, the vendor manages cloud administration, and IT only sees “a few devices on a VLAN.” Months later, security discovers shared vendor accounts, weak MFA exceptions, unknown firmware versions, video retention beyond policy, and a routing path from the building-management server toward corporate services.</p><p>The useful response is not panic scanning or immediate shutdown. The better sequence is owner alignment, inventory validation, vendor portal review, network path verification, MFA and named accounts, log retention, segmentation cleanup, firmware support review, privacy/retention review, and a staged change plan approved by facilities, IT, privacy, and business owners.</p></section>
+
+          <section id="lab"><h2>20. Safe Local Lab: OT/IoT/Cyber-Physical Risk Triage</h2><p>This lab uses fictional asset records to practice triage. It does not interact with devices, networks, cloud portals, protocols, vendors, or real systems.</p><h3>Step 1 — Save the fictional data as <code>cps_assets.json</code></h3><pre><code>[
+  {
+    &quot;asset_id&quot;: &quot;CPS-1504-001&quot;,
+    &quot;name&quot;: &quot;Water Treatment PLC Cell&quot;,
+    &quot;environment&quot;: &quot;municipal_utility_ot&quot;,
+    &quot;asset_type&quot;: &quot;plc_control_cell&quot;,
+    &quot;business_owner&quot;: &quot;Water Operations&quot;,
+    &quot;engineering_owner&quot;: &quot;Controls Engineering&quot;,
+    &quot;safety_owner&quot;: &quot;Plant Safety Officer&quot;,
+    &quot;data_or_process&quot;: &quot;chemical dosing and pump control&quot;,
+    &quot;safety_impact&quot;: &quot;high&quot;,
+    &quot;availability_requirement&quot;: &quot;continuous_operation&quot;,
+    &quot;connectivity&quot;: [&quot;engineering_workstation&quot;, &quot;ot_switch&quot;, &quot;historian_replication_to_dmz&quot;],
+    &quot;remote_access&quot;: &quot;vendor_vpn_with_manual_enablement&quot;,
+    &quot;known_constraints&quot;: [&quot;change window quarterly&quot;, &quot;firmware update requires vendor validation&quot;, &quot;process cannot stop without failover&quot;],
+    &quot;current_controls&quot;: [&quot;ot_network_segmentation&quot;, &quot;physical_access_control&quot;, &quot;manual_vendor_access_approval&quot;, &quot;offline_backup&quot;],
+    &quot;evidence_available&quot;: [&quot;asset_register_entry&quot;, &quot;network_zone_diagram&quot;, &quot;last_backup_record&quot;],
+    &quot;open_gaps&quot;: [&quot;firmware baseline stale&quot;, &quot;no tested restore procedure&quot;, &quot;vendor account review overdue&quot;, &quot;no passive monitoring evidence&quot;],
+    &quot;recommended_mode&quot;: &quot;operations-led risk review before any technical change&quot;
+  },
+  {
+    &quot;asset_id&quot;: &quot;CPS-1504-002&quot;,
+    &quot;name&quot;: &quot;Smart Building HVAC Controller Fleet&quot;,
+    &quot;environment&quot;: &quot;corporate_facilities_iot&quot;,
+    &quot;asset_type&quot;: &quot;building_automation_controller&quot;,
+    &quot;business_owner&quot;: &quot;Facilities&quot;,
+    &quot;engineering_owner&quot;: &quot;Building Systems Vendor&quot;,
+    &quot;safety_owner&quot;: &quot;Facilities Safety Lead&quot;,
+    &quot;data_or_process&quot;: &quot;temperature control and occupancy scheduling&quot;,
+    &quot;safety_impact&quot;: &quot;medium&quot;,
+    &quot;availability_requirement&quot;: &quot;business_hours_high&quot;,
+    &quot;connectivity&quot;: [&quot;building_management_server&quot;, &quot;vendor_cloud_portal&quot;, &quot;corporate_network_vlan&quot;],
+    &quot;remote_access&quot;: &quot;vendor_cloud_admin_portal&quot;,
+    &quot;known_constraints&quot;: [&quot;vendor-managed firmware&quot;, &quot;shared facility operations account historically used&quot;],
+    &quot;current_controls&quot;: [&quot;vlan_segmentation&quot;, &quot;vendor_contract_security_clause&quot;],
+    &quot;evidence_available&quot;: [&quot;asset_inventory_partial&quot;, &quot;contract_addendum&quot;],
+    &quot;open_gaps&quot;: [&quot;shared account&quot;, &quot;cloud admin logs not retained&quot;, &quot;inventory missing firmware versions&quot;, &quot;network path to corporate services unclear&quot;],
+    &quot;recommended_mode&quot;: &quot;inventory and access governance first&quot;
+  },
+  {
+    &quot;asset_id&quot;: &quot;CPS-1504-003&quot;,
+    &quot;name&quot;: &quot;Hospital Infusion Pump Segment&quot;,
+    &quot;environment&quot;: &quot;clinical_iot&quot;,
+    &quot;asset_type&quot;: &quot;medical_iot_device_group&quot;,
+    &quot;business_owner&quot;: &quot;Clinical Engineering&quot;,
+    &quot;engineering_owner&quot;: &quot;Biomedical Engineering&quot;,
+    &quot;safety_owner&quot;: &quot;Patient Safety Committee&quot;,
+    &quot;data_or_process&quot;: &quot;medication delivery support and device telemetry&quot;,
+    &quot;safety_impact&quot;: &quot;high&quot;,
+    &quot;availability_requirement&quot;: &quot;patient_care_critical&quot;,
+    &quot;connectivity&quot;: [&quot;clinical_wireless&quot;, &quot;device_management_console&quot;, &quot;ehr_interface&quot;],
+    &quot;remote_access&quot;: &quot;manufacturer_support_on_approval&quot;,
+    &quot;known_constraints&quot;: [&quot;regulated medical devices&quot;, &quot;patching depends on manufacturer guidance&quot;, &quot;clinical workflow constraints&quot;],
+    &quot;current_controls&quot;: [&quot;clinical_network_segmentation&quot;, &quot;manufacturer_support_process&quot;, &quot;device_management_console&quot;, &quot;patient_safety_change_review&quot;],
+    &quot;evidence_available&quot;: [&quot;device_inventory&quot;, &quot;maintenance_schedule&quot;, &quot;clinical_change_record&quot;],
+    &quot;open_gaps&quot;: [&quot;wireless certificate rotation unclear&quot;, &quot;support session evidence incomplete&quot;, &quot;exception inventory not reconciled&quot;],
+    &quot;recommended_mode&quot;: &quot;patient-safety and biomedical-led control validation&quot;
+  },
+  {
+    &quot;asset_id&quot;: &quot;CPS-1504-004&quot;,
+    &quot;name&quot;: &quot;Warehouse Camera and Sensor Network&quot;,
+    &quot;environment&quot;: &quot;enterprise_iot&quot;,
+    &quot;asset_type&quot;: &quot;camera_sensor_fleet&quot;,
+    &quot;business_owner&quot;: &quot;Logistics Operations&quot;,
+    &quot;engineering_owner&quot;: &quot;IT Infrastructure&quot;,
+    &quot;safety_owner&quot;: &quot;Warehouse Safety Lead&quot;,
+    &quot;data_or_process&quot;: &quot;physical security video and occupancy sensors&quot;,
+    &quot;safety_impact&quot;: &quot;low&quot;,
+    &quot;availability_requirement&quot;: &quot;operationally_important&quot;,
+    &quot;connectivity&quot;: [&quot;iot_vlan&quot;, &quot;video_management_system&quot;, &quot;cloud_management_portal&quot;],
+    &quot;remote_access&quot;: &quot;cloud_management_portal&quot;,
+    &quot;known_constraints&quot;: [&quot;mixed device models&quot;, &quot;some devices near end of support&quot;],
+    &quot;current_controls&quot;: [&quot;iot_vlan&quot;, &quot;central_video_management&quot;, &quot;device_password_policy&quot;],
+    &quot;evidence_available&quot;: [&quot;inventory_export&quot;, &quot;support_lifecycle_report&quot;, &quot;admin_account_list&quot;],
+    &quot;open_gaps&quot;: [&quot;three devices unsupported&quot;, &quot;cloud tenant MFA exception&quot;, &quot;retention schedule not linked to privacy policy&quot;],
+    &quot;recommended_mode&quot;: &quot;lifecycle cleanup and privacy-aware monitoring review&quot;
+  },
+  {
+    &quot;asset_id&quot;: &quot;CPS-1504-005&quot;,
+    &quot;name&quot;: &quot;Factory Historian and MES Integration&quot;,
+    &quot;environment&quot;: &quot;manufacturing_ot_it_convergence&quot;,
+    &quot;asset_type&quot;: &quot;historian_mes_integration&quot;,
+    &quot;business_owner&quot;: &quot;Manufacturing Operations&quot;,
+    &quot;engineering_owner&quot;: &quot;Industrial Systems Engineering&quot;,
+    &quot;safety_owner&quot;: &quot;EHS Manager&quot;,
+    &quot;data_or_process&quot;: &quot;production telemetry replication to analytics platform&quot;,
+    &quot;safety_impact&quot;: &quot;medium&quot;,
+    &quot;availability_requirement&quot;: &quot;production_shift_high&quot;,
+    &quot;connectivity&quot;: [&quot;plant_floor_network&quot;, &quot;ot_dmz&quot;, &quot;enterprise_analytics_api&quot;],
+    &quot;remote_access&quot;: &quot;jump_host_for_authorized_engineers&quot;,
+    &quot;known_constraints&quot;: [&quot;legacy historian version&quot;, &quot;analytics team requests broad data access&quot;],
+    &quot;current_controls&quot;: [&quot;ot_dmz&quot;, &quot;jump_host&quot;, &quot;read_only_replication&quot;, &quot;change_advisory_review&quot;],
+    &quot;evidence_available&quot;: [&quot;data_flow_diagram&quot;, &quot;jump_host_log_sample&quot;, &quot;replication_configuration&quot;],
+    &quot;open_gaps&quot;: [&quot;analytics API token long-lived&quot;, &quot;data classification incomplete&quot;, &quot;jump host log retention short&quot;],
+    &quot;recommended_mode&quot;: &quot;data-flow assurance and token lifecycle improvement&quot;
+  }
+]
+</code></pre><h3>Step 2 — Save the analyzer as <code>cps_risk_triage_lab.py</code></h3><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;Safe local OT/IoT/cyber-physical risk triage lab.
+
+This script analyzes fictional asset records only. It performs no network
+activity, scanning, protocol interaction, authentication, vendor access,
+configuration changes, or real safety/security assessment.
+&quot;&quot;&quot;
+import json
+from pathlib import Path
+
+SAFETY_WEIGHTS = {&quot;high&quot;: 5, &quot;medium&quot;: 3, &quot;low&quot;: 1, &quot;none&quot;: 0}
+AVAILABILITY_WEIGHTS = {
+    &quot;continuous_operation&quot;: 4,
+    &quot;patient_care_critical&quot;: 4,
+    &quot;production_shift_high&quot;: 3,
+    &quot;business_hours_high&quot;: 2,
+    &quot;operationally_important&quot;: 1,
+}
+
+CRITICAL_GAP_TERMS = [
+    &quot;restore&quot;, &quot;vendor&quot;, &quot;shared account&quot;, &quot;firmware&quot;, &quot;unsupported&quot;,
+    &quot;logs not retained&quot;, &quot;support session&quot;, &quot;long-lived&quot;, &quot;network path&quot;,
+    &quot;passive monitoring&quot;, &quot;account review&quot;, &quot;certificate&quot;, &quot;retention&quot;
+]
+
+REQUIRED_EVIDENCE = [
+    &quot;asset&quot;, &quot;diagram&quot;, &quot;inventory&quot;, &quot;change&quot;, &quot;backup&quot;, &quot;log&quot;, &quot;contract&quot;,
+    &quot;maintenance&quot;, &quot;configuration&quot;, &quot;data_flow&quot;
+]
+
+
+def normalize(text):
+    return str(text).lower().replace(&quot;-&quot;, &quot;_&quot;).replace(&quot; &quot;, &quot;_&quot;)
+
+
+def evidence_score(asset):
+    evidence_blob = &quot; &quot;.join(normalize(item) for item in asset.get(&quot;evidence_available&quot;, []))
+    hits = [term for term in REQUIRED_EVIDENCE if term in evidence_blob]
+    return len(hits), hits
+
+
+def score_asset(asset):
+    score = 0
+    reasons = []
+
+    safety = normalize(asset.get(&quot;safety_impact&quot;, &quot;none&quot;))
+    safety_score = SAFETY_WEIGHTS.get(safety, 0)
+    score += safety_score
+    if safety_score &gt;= 5:
+        reasons.append(&quot;High safety impact: technical action needs operations/safety ownership and change control.&quot;)
+    elif safety_score &gt;= 3:
+        reasons.append(&quot;Medium safety impact: availability and process consequences must be reviewed before change.&quot;)
+
+    availability = normalize(asset.get(&quot;availability_requirement&quot;, &quot;&quot;))
+    availability_score = AVAILABILITY_WEIGHTS.get(availability, 0)
+    score += availability_score
+    if availability_score &gt;= 3:
+        reasons.append(&quot;High availability requirement: avoid untested scanning, patching, rebooting, or configuration changes.&quot;)
+
+    gaps = asset.get(&quot;open_gaps&quot;, [])
+    score += len(gaps)
+    gap_blob = &quot; &quot;.join(g.lower() for g in gaps)
+    critical_matches = [term for term in CRITICAL_GAP_TERMS if term in gap_blob]
+    score += len(critical_matches)
+    if gaps:
+        reasons.append(&quot;Open gaps require owner review: &quot; + &quot;; &quot;.join(gaps) + &quot;.&quot;)
+    if critical_matches:
+        reasons.append(&quot;Critical gap themes present: &quot; + &quot;, &quot;.join(sorted(set(critical_matches))) + &quot;.&quot;)
+
+    connectivity = asset.get(&quot;connectivity&quot;, [])
+    if any(&quot;cloud&quot; in normalize(item) for item in connectivity):
+        score += 1
+        reasons.append(&quot;Cloud or vendor portal connectivity adds identity, logging, contract, and data-location dependencies.&quot;)
+    if any(&quot;corporate&quot; in normalize(item) or &quot;enterprise&quot; in normalize(item) for item in connectivity):
+        score += 1
+        reasons.append(&quot;IT/OT connectivity needs boundary, data-flow, and blast-radius review.&quot;)
+
+    if asset.get(&quot;remote_access&quot;) and asset[&quot;remote_access&quot;].lower() not in {&quot;none&quot;, &quot;not_allowed&quot;}:
+        score += 2
+        reasons.append(&quot;Remote access exists and must be explicitly approved, logged, time-bound, and reviewed.&quot;)
+
+    evidence_count, hits = evidence_score(asset)
+    if evidence_count &lt; 3:
+        score += 2
+        reasons.append(&quot;Evidence is thin; decisions should start with inventory, diagrams, owners, and current-state records.&quot;)
+    else:
+        reasons.append(&quot;Available evidence categories: &quot; + &quot;, &quot;.join(sorted(set(hits))) + &quot;.&quot;)
+
+    if any(&quot;unsupported&quot; in g.lower() or &quot;end of support&quot; in c.lower() for g in gaps for c in asset.get(&quot;known_constraints&quot;, []) + gaps):
+        score += 2
+        reasons.append(&quot;Unsupported or near-end-of-support components need lifecycle and compensating-control decisions.&quot;)
+
+    return score, reasons
+
+
+def band(score):
+    if score &gt;= 18:
+        return &quot;red&quot;
+    if score &gt;= 11:
+        return &quot;amber&quot;
+    return &quot;green&quot;
+
+
+def recommended_actions(asset, risk_band):
+    actions = []
+    if risk_band == &quot;red&quot;:
+        actions.append(&quot;Do not begin technical change with an IT-only plan; convene operations, engineering, safety, security, and vendor owners first.&quot;)
+    elif risk_band == &quot;amber&quot;:
+        actions.append(&quot;Prioritize owner validation, evidence cleanup, and low-disruption control improvements before invasive work.&quot;)
+    else:
+        actions.append(&quot;Maintain controls and schedule periodic lifecycle, logging, and access-review checks.&quot;)
+
+    gaps = &quot; &quot;.join(asset.get(&quot;open_gaps&quot;, [])).lower()
+    if &quot;firmware&quot; in gaps or &quot;unsupported&quot; in gaps:
+        actions.append(&quot;Create a firmware/support lifecycle plan with vendor validation, rollback, and maintenance-window criteria.&quot;)
+    if &quot;vendor&quot; in gaps or asset.get(&quot;remote_access&quot;):
+        actions.append(&quot;Review vendor and remote access: named accounts, MFA, approval, time bounds, session logging, and emergency disablement.&quot;)
+    if &quot;restore&quot; in gaps or &quot;backup&quot; in gaps:
+        actions.append(&quot;Validate backups and restoration in a safe test process before relying on recovery claims.&quot;)
+    if &quot;shared account&quot; in gaps:
+        actions.append(&quot;Replace shared administration with accountable identities or documented compensating controls.&quot;)
+    if &quot;privacy&quot; in gaps or &quot;retention&quot; in gaps or &quot;video&quot; in asset.get(&quot;data_or_process&quot;, &quot;&quot;).lower():
+        actions.append(&quot;Check privacy, retention, and data-minimization requirements with the appropriate owner.&quot;)
+    if &quot;long-lived&quot; in gaps or &quot;token&quot; in gaps:
+        actions.append(&quot;Reduce long-lived integration credentials through rotation, scoping, monitoring, and owner review.&quot;)
+    actions.append(&quot;Use passive discovery and documentation-first validation unless operations approves a tested active method.&quot;)
+    return actions
+
+
+def analyze(assets):
+    results = []
+    summary = {&quot;red&quot;: 0, &quot;amber&quot;: 0, &quot;green&quot;: 0}
+    for asset in assets:
+        score, reasons = score_asset(asset)
+        risk_band = band(score)
+        summary[risk_band] += 1
+        results.append({
+            &quot;asset_id&quot;: asset[&quot;asset_id&quot;],
+            &quot;name&quot;: asset[&quot;name&quot;],
+            &quot;asset_type&quot;: asset[&quot;asset_type&quot;],
+            &quot;environment&quot;: asset[&quot;environment&quot;],
+            &quot;score&quot;: score,
+            &quot;risk_band&quot;: risk_band,
+            &quot;reasons&quot;: reasons,
+            &quot;recommended_actions&quot;: recommended_actions(asset, risk_band),
+            &quot;safe_boundary&quot;: &quot;Fictional triage only; no scanning, protocol interaction, authentication, vendor access, or configuration change.&quot;
+        })
+    results.sort(key=lambda item: (item[&quot;score&quot;], item[&quot;asset_id&quot;]), reverse=True)
+    return {&quot;summary&quot;: summary, &quot;assets&quot;: results}
+
+
+def main():
+    assets = json.loads(Path(&quot;cps_assets.json&quot;).read_text())
+    print(json.dumps(analyze(assets), indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre><h3>Step 3 — Optional local test file</h3><pre><code>#!/usr/bin/env python3
+import importlib.util
+import json
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location(&quot;cps_risk_triage_lab&quot;, &quot;cps_risk_triage_lab.py&quot;)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+assets = json.loads(Path(&quot;cps_assets.json&quot;).read_text())
+report = module.analyze(assets)
+
+water = next(item for item in report[&quot;assets&quot;] if item[&quot;asset_id&quot;] == &quot;CPS-1504-001&quot;)
+hvac = next(item for item in report[&quot;assets&quot;] if item[&quot;asset_id&quot;] == &quot;CPS-1504-002&quot;)
+hospital = next(item for item in report[&quot;assets&quot;] if item[&quot;asset_id&quot;] == &quot;CPS-1504-003&quot;)
+warehouse = next(item for item in report[&quot;assets&quot;] if item[&quot;asset_id&quot;] == &quot;CPS-1504-004&quot;)
+
+assert water[&quot;risk_band&quot;] == &quot;red&quot;
+assert any(&quot;safety&quot; in reason.lower() for reason in water[&quot;reasons&quot;])
+assert any(&quot;passive&quot; in action.lower() for action in water[&quot;recommended_actions&quot;])
+assert hvac[&quot;risk_band&quot;] in {&quot;amber&quot;, &quot;red&quot;}
+assert any(&quot;shared&quot; in action.lower() for action in hvac[&quot;recommended_actions&quot;])
+assert hospital[&quot;risk_band&quot;] in {&quot;amber&quot;, &quot;red&quot;}
+assert warehouse[&quot;risk_band&quot;] in {&quot;amber&quot;, &quot;green&quot;}
+assert report[&quot;summary&quot;][&quot;red&quot;] &gt;= 1
+print(&quot;OT/IoT/cyber-physical triage lab tests passed&quot;)
+</code></pre><h3>Expected learning outcome</h3><p>The output should show that high-safety, high-availability systems with remote access, stale firmware, restore gaps, and vendor-account issues require operations-led review before technical change. The exercise reinforces that cyber-physical security starts with safe decision-making, owner alignment, and evidence quality.</p></section>
+
+          <section id="checklist"><h2>21. OT/IoT/Cyber-Physical Security Checklist</h2><ul><li>Do we know the physical process, safety impact, owner, vendor, location, firmware version, and support status for each device or system?</li><li>Are OT, IoT, facilities, clinical, and embedded systems included in governance rather than hidden outside IT?</li><li>Are active discovery, scanning, patching, and isolation methods approved by operations before use?</li><li>Is remote access named, MFA-protected, time-bound, logged, approved, and revocable?</li><li>Are network zones, conduits, DMZs, jump hosts, and data brokers documented and monitored?</li><li>Are vendor cloud portals, management APIs, and support sessions included in logging and incident response?</li><li>Are firmware, support lifecycle, backup, restore, and spare-part constraints tracked?</li><li>Are privacy, retention, and data-use requirements defined for cameras, badges, sensors, clinical devices, and worker telemetry?</li><li>Do runbooks include operations, engineering, safety, vendor, privacy, legal, and executive contacts where appropriate?</li></ul></section>
+
+          <section id="quiz"><h2>22. Self-Assessment</h2><div class="quiz" data-quiz><div class="question"><p><strong>1. Why can active scanning be risky in OT environments?</strong></p><label><input type="radio" name="q1" value="a"> Because OT devices are always more secure than IT devices.</label><label><input type="radio" name="q1" value="b" data-correct="true"> Because fragile devices, timing-sensitive processes, legacy protocols, or unexpected traffic can affect availability or safety.</label><label><input type="radio" name="q1" value="c"> Because scanning is never useful in any environment.</label></div><div class="question"><p><strong>2. What should remote vendor access include?</strong></p><label><input type="radio" name="q2" value="a" data-correct="true"> Named identities, MFA, approval, time bounds, least privilege, session logging, and revocation.</label><label><input type="radio" name="q2" value="b"> A permanent shared VPN account for convenience.</label><label><input type="radio" name="q2" value="c"> No logging, because vendors are trusted.</label></div><div class="question"><p><strong>3. What is the strongest first step for unknown IoT risk?</strong></p><label><input type="radio" name="q3" value="a"> Exploit a sample device to prove it is risky.</label><label><input type="radio" name="q3" value="b" data-correct="true"> Build a validated inventory with owners, firmware, network path, vendor support, data flows, and current controls.</label><label><input type="radio" name="q3" value="c"> Ignore it until a breach occurs.</label></div><div class="question"><p><strong>4. Why does privacy matter in cyber-physical security?</strong></p><label><input type="radio" name="q4" value="a"> It does not; sensors only create technical data.</label><label><input type="radio" name="q4" value="b" data-correct="true"> Cameras, badges, sensors, clinical devices, and telemetry can collect sensitive data about people and require governance.</label><label><input type="radio" name="q4" value="c"> Privacy applies only to email systems.</label></div><button class="btn quiz-submit" type="button">Check answers</button><div class="quiz-result" aria-live="polite"></div></div></section>
+
+          <section id="deliverables"><h2>23. Deliverables</h2><ul><li>A cyber-physical asset inventory template with owner, process, safety impact, firmware, support status, network zone, remote access, and evidence.</li><li>A risk statement for one fictional OT or IoT system that separates safety, availability, privacy, and cybersecurity impact.</li><li>A remote-access governance checklist for vendor and maintenance pathways.</li><li>A lifecycle plan for unsupported or hard-to-patch devices with compensating controls and owner decisions.</li><li>Output from the safe local Python lab.</li></ul></section>
+
+          <section id="further-reading"><h2>24. Further Reading</h2><ul><li><a href="https://csrc.nist.gov/pubs/sp/800/82/r3/final">NIST SP 800-82 Rev. 3 — Guide to Operational Technology Security.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/213/final">NIST SP 800-213 — IoT Device Cybersecurity Guidance for the Federal Government.</a></li><li><a href="https://csrc.nist.gov/pubs/ir/8259/final">NISTIR 8259 — Foundational Cybersecurity Activities for IoT Device Manufacturers.</a></li><li><a href="https://csrc.nist.gov/pubs/ir/8425/final">NISTIR 8425 — Profile of the IoT Core Baseline for Consumer IoT Products.</a></li><li><a href="https://www.cisa.gov/topics/industrial-control-systems">CISA — Industrial Control Systems.</a></li><li><a href="https://www.cisa.gov/resources-tools/resources/cybersecurity-best-practices-industrial-control-systems">CISA — Cybersecurity Best Practices for Industrial Control Systems.</a></li><li><a href="https://www.cisa.gov/cross-sector-cybersecurity-performance-goals">CISA — Cross-Sector Cybersecurity Performance Goals.</a></li><li><a href="https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards">ISA/IEC 62443 Series of Standards.</a></li></ul></section>
+        </article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div>
+
+      <div class="prev-next"><a class="btn" href="zero-trust-at-scale-sase-and-identity-centric-architecture.html">← Lesson 15.3</a><a class="btn btn-primary" href="secure-by-design-cyber-resilience-and-future-ready-programs.html">Lesson 15.5 →</a></div>
+      <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

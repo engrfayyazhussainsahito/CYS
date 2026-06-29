@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 7.1: Network Security from First Principles | MS Cybersecurity</title>
+  <meta name="description" content="Network security from first principles: devices, packets, IP, TCP, UDP, ports, DNS, routing, firewalls, segmentation, monitoring, safe packet inspection, and defensive network design.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-07-01" data-title="Lesson 7.1: Network Security from First Principles">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 7</a> / Lesson 7.1</div>
+    <header class="hero"><div class="eyebrow">Week 7 · Network Security</div><h1>Lesson 7.1: Network Security from First Principles</h1><p class="lead">This lesson teaches network security from zero. You will start with devices, packets, addresses, ports, routing, and protocols, then move toward firewalls, segmentation, monitoring, detection, and safe defensive network analysis.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>360–540 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Week 0 networking helps, but key ideas are reintroduced</div><div class="meta-item"><strong>Practice time</strong>6–10 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="Network security layers illustration"><svg viewBox="0 0 980 520" role="img" aria-labelledby="svg-title svg-desc"><title id="svg-title">Network security from first principles</title><desc id="svg-desc">A user device sends packets through a switch, router, firewall, service network, and monitoring layer.</desc><defs><linearGradient id="netGrad71" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7aa7ff"/><stop offset="100%" stop-color="#42d6b5"/></linearGradient><marker id="arrow71" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#42d6b5"/></marker></defs><rect x="32" y="42" width="916" height="400" rx="34" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><g fill="var(--bg)" stroke="var(--border)" stroke-width="3"><rect x="70" y="145" width="130" height="94" rx="18"/><rect x="250" y="145" width="130" height="94" rx="18"/><rect x="430" y="145" width="130" height="94" rx="18"/><rect x="610" y="145" width="130" height="94" rx="18"/><rect x="790" y="145" width="110" height="94" rx="18"/></g><g font-family="Arial" fill="var(--text)" text-anchor="middle"><text x="135" y="178" font-size="17">Host</text><text x="135" y="205" font-size="13">app + socket</text><text x="315" y="178" font-size="17">Switch</text><text x="315" y="205" font-size="13">local network</text><text x="495" y="178" font-size="17">Router</text><text x="495" y="205" font-size="13">path choice</text><text x="675" y="178" font-size="17">Firewall</text><text x="675" y="205" font-size="13">policy</text><text x="845" y="178" font-size="17">Service</text><text x="845" y="205" font-size="13">ports/logs</text></g><g stroke="#42d6b5" stroke-width="4" marker-end="url(#arrow71)"><line x1="203" y1="192" x2="246" y2="192"/><line x1="383" y1="192" x2="426" y2="192"/><line x1="563" y1="192" x2="606" y2="192"/><line x1="743" y1="192" x2="786" y2="192"/></g><rect x="155" y="305" width="670" height="66" rx="33" fill="url(#netGrad71)" opacity="0.22"/><text x="490" y="344" font-family="Arial" font-size="18" fill="var(--text)" text-anchor="middle">Security rule: allow only required flows, observe what happens, and reduce blast radius</text></svg></div></section>
+
+    <div class="content-grid"><article class="lesson-content card">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>A <strong>network</strong> is a group of devices that can exchange data using shared rules. Your laptop, phone, router, cloud server, printer, database, and identity provider can all be network participants. <strong>Network security</strong> is the discipline of controlling, protecting, observing, and improving those communications.</p>
+<p>Plain English first: network security asks four basic questions. Who should be able to talk? What should they be able to talk to? How should the conversation be protected? How will we know when something abnormal happens?</p>
+<p>This topic exists because almost every useful system communicates. A web app talks to a database. A phone talks to a Wi-Fi access point. A hospital device talks to a monitoring system. A cloud function talks to a storage service. Communication creates value, but it also creates paths for mistakes and attackers.</p>
+<h3>Why this matters</h3><ul><li>Network reachability can turn a small bug into an organization-wide breach.</li><li>Firewalls and segmentation reduce unnecessary exposure.</li><li>Packet and flow logs help defenders reconstruct what happened.</li><li>Misconfigured network rules are common in cloud and enterprise environments.</li><li>Availability attacks such as denial-of-service target network capacity and service reachability.</li></ul>
+<h3>Where it is used</h3><p>Network security is used in homes, universities, banks, hospitals, government agencies, defense networks, cloud providers, industrial systems, and internet service providers. It appears in Wi-Fi security, datacenter routing, virtual private clouds, zero trust architectures, firewalls, intrusion detection systems, secure remote access, and network monitoring.</p>
+<h3>Who uses it</h3><ul><li><strong>Network engineers</strong> design routing, switching, addressing, segmentation, and availability.</li><li><strong>Security engineers</strong> design firewall rules, network controls, and monitoring.</li><li><strong>SOC analysts</strong> investigate alerts from packet captures, flow logs, DNS logs, proxy logs, and IDS events.</li><li><strong>Cloud engineers</strong> configure security groups, network ACLs, private subnets, gateways, and service endpoints.</li><li><strong>Researchers</strong> study internet measurement, denial-of-service defense, encrypted traffic analysis, routing security, and protocol weaknesses.</li></ul>
+<div class="callout warning"><strong>Safety boundary:</strong> network scanning, traffic capture, and testing can affect privacy, reliability, and legality. This lesson uses only local-host, your own machine, or explicitly authorized course-lab examples. Do not scan, sniff, probe, or map public networks or third-party systems without written permission.</div>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Define host, link, packet, frame, IP address, subnet, route, gateway, port, socket, protocol, DNS, firewall, segmentation, IDS, IPS, VPN, NAT, telemetry, east-west traffic, and north-south traffic.</li>
+<li>Explain the difference between physical connectivity, logical addressing, transport ports, and application protocols.</li>
+<li>Describe how a packet moves through a simple network.</li>
+<li>Compare TCP and UDP at a beginner-friendly level.</li>
+<li>Explain how DNS, HTTP, TLS, and certificates relate to network security.</li>
+<li>Identify trust boundaries in a small network design.</li>
+<li>Explain firewall default-deny thinking and rule-review logic.</li>
+<li>Interpret basic local network information on Linux and Windows.</li>
+<li>Use safe local packet inspection and log analysis to understand network behavior.</li>
+<li>Produce a simple network security diagram and defensive review report.</li>
+</ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2>
+<p>No prior networking background is assumed. The following concepts are introduced before use:</p>
+<ul><li><strong>Device:</strong> a computer, phone, server, router, switch, printer, virtual machine, or cloud workload.</li><li><strong>Data:</strong> information represented as bits and bytes.</li><li><strong>Rule/protocol:</strong> an agreed format for communication, like a grammar for machines.</li><li><strong>Address:</strong> information that helps identify where data should go.</li><li><strong>Service:</strong> a program that waits for requests, such as a web server or database.</li><li><strong>Authorization:</strong> permission to perform an action. Technical ability is not permission.</li></ul>
+<p>Analogy: a network is like a city delivery system. Devices are buildings. Addresses identify buildings. Roads carry traffic. Intersections forward traffic. A firewall is like a guarded checkpoint. Logs are delivery records. Encryption is a sealed envelope. Segmentation is separating neighborhoods so one local incident does not spread everywhere.</p>
+</section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 Hosts, clients, servers, and peers</h3><p>A <strong>host</strong> is any device or system connected to a network. A <strong>client</strong> initiates a request, such as a browser asking for a page. A <strong>server</strong> waits for requests, such as a web server listening on a port. A <strong>peer</strong> can act as both client and server depending on the protocol.</p>
+<h3>4.2 Links, switches, routers, and gateways</h3><p>A <strong>link</strong> connects network devices. Ethernet and Wi-Fi are common link technologies. A <strong>switch</strong> connects devices in a local network. A <strong>router</strong> forwards traffic between networks. A <strong>gateway</strong> is the next device used to reach another network, often the router that leads out of a local subnet.</p>
+<h3>4.3 Frames, packets, segments, and messages</h3><p>Different layers use different names for units of data. A link layer often uses <strong>frames</strong>. The IP layer uses <strong>packets</strong>. TCP uses <strong>segments</strong>. Application protocols use <strong>messages</strong>, such as HTTP requests and responses. The idea is always similar: data plus metadata needed to move or interpret it.</p>
+<h3>4.4 Layering</h3><p>Layering separates responsibilities. An application does not need to know how Wi-Fi radio signals work. IP does not need to know the meaning of an HTTP form. This separation helps engineering, but it also means security has to consider every layer.</p>
+<table><thead><tr><th>Layer</th><th>Question</th><th>Examples</th><th>Security focus</th></tr></thead><tbody><tr><td>Link</td><td>How does one local hop move data?</td><td>Ethernet, Wi-Fi</td><td>Wi-Fi encryption, VLANs, local spoofing risks</td></tr><tr><td>Internet</td><td>Where should packets go?</td><td>IPv4, IPv6, ICMP</td><td>routing, filtering, source/destination exposure</td></tr><tr><td>Transport</td><td>Which process conversation is this?</td><td>TCP, UDP</td><td>ports, connection state, availability</td></tr><tr><td>Application</td><td>What does the data mean?</td><td>DNS, HTTP, SSH, TLS</td><td>authentication, encryption, protocol abuse, logs</td></tr></tbody></table>
+<h3>4.5 IP addresses</h3><p>An <strong>IP address</strong> identifies an interface at the internet layer. IPv4 addresses look like <code>192.0.2.10</code>. IPv6 addresses look like <code>2001:db8::10</code>. Addresses help routers forward packets toward destinations.</p>
+<h3>4.6 Subnets and CIDR</h3><p>A <strong>subnet</strong> is a range of IP addresses treated as one local network. <strong>CIDR</strong> notation writes the network prefix length after a slash. Example: <code>192.168.10.0/24</code> means the first 24 bits identify the network, leaving 8 bits for host addresses.</p>
+<h3>4.7 Ports and sockets</h3><p>A <strong>port</strong> is a number used by transport protocols to identify an application endpoint. A web server commonly listens on TCP port 80 for HTTP or TCP port 443 for HTTPS. A <strong>socket</strong> is commonly described as protocol + local address + local port, and sometimes remote address + remote port for an active connection.</p>
+<h3>4.8 TCP</h3><p><strong>Transmission Control Protocol</strong>, or TCP, provides a reliable ordered byte stream between endpoints. It uses connection setup, acknowledgments, retransmission, flow control, and congestion control. It is used by many protocols where correctness matters, such as HTTPS and SSH.</p>
+<h3>4.9 UDP</h3><p><strong>User Datagram Protocol</strong>, or UDP, sends datagrams without TCP-style connection setup or reliability. Applications can build their own reliability if needed. UDP is used where low latency or simple request/response behavior matters, such as DNS, voice/video, and QUIC-based protocols.</p>
+<h3>4.10 DNS</h3><p><strong>Domain Name System</strong>, or DNS, maps human-friendly names to network information. For example, a name can resolve to IP addresses. DNS is security-relevant because attackers and malware often use names for command-and-control, phishing infrastructure, or evasive hosting. Defenders use DNS logs for detection and investigation.</p>
+<h3>4.11 Routing</h3><p><strong>Routing</strong> is the process of choosing paths for packets. A local host usually sends non-local traffic to a default gateway. Large networks use routing protocols and policies to move traffic across many networks. A route is not a trust decision by itself; it is a forwarding decision.</p>
+<h3>4.12 NAT</h3><p><strong>Network Address Translation</strong>, or NAT, rewrites network addresses, commonly allowing many private internal devices to share one public address. NAT is not the same as a firewall. It can reduce direct inbound reachability in common home setups, but security still requires explicit policy, patching, authentication, monitoring, and segmentation.</p>
+<h3>4.13 Firewalls</h3><p>A <strong>firewall</strong> enforces rules about allowed or denied traffic. Rules may consider source, destination, protocol, port, connection state, user identity, application identity, or content. Strong policy starts with <strong>default deny</strong>: block what is not explicitly needed.</p>
+<h3>4.14 Stateful filtering</h3><p>A <strong>stateful firewall</strong> tracks connection state. For example, it can allow response traffic for a connection that an internal client initiated without allowing arbitrary inbound traffic. This reduces rule complexity but does not remove the need to understand allowed flows.</p>
+<h3>4.15 Network segmentation</h3><p><strong>Segmentation</strong> separates systems into zones. Example zones: user devices, servers, databases, management systems, backups, development, production, and guest Wi-Fi. Segmentation reduces blast radius. If one user device is compromised, it should not automatically reach every database.</p>
+<h3>4.16 VLANs, subnets, and security zones</h3><p>A <strong>VLAN</strong> can separate local link-layer broadcast domains. A <strong>subnet</strong> separates IP ranges. A <strong>security zone</strong> is a policy concept: systems with similar trust and control requirements. These often align but are not identical. A design can be technically segmented but still insecure if firewall rules allow everything between zones.</p>
+<h3>4.17 North-south and east-west traffic</h3><p><strong>North-south traffic</strong> enters or leaves an environment, such as internet-to-web-server traffic. <strong>East-west traffic</strong> moves inside an environment, such as app-server-to-database traffic. Modern attacks often move laterally through east-west paths, so internal traffic also needs control and monitoring.</p>
+<h3>4.18 VPNs and secure remote access</h3><p>A <strong>Virtual Private Network</strong>, or VPN, creates a protected tunnel across another network. VPNs can protect traffic and enable remote access, but they also extend network reachability. Strong authentication, device posture, least privilege, logging, and segmentation are still necessary.</p>
+<h3>4.19 IDS, IPS, and network monitoring</h3><p>An <strong>Intrusion Detection System</strong> observes traffic or logs and raises alerts. An <strong>Intrusion Prevention System</strong> can block or modify traffic. Monitoring also includes flow logs, DNS logs, proxy logs, firewall logs, packet captures, and application logs. Detection should be tuned to reduce false positives and false negatives.</p>
+<h3>4.20 Network telemetry</h3><p><strong>Telemetry</strong> means observable data about system behavior. Network telemetry may include source address, destination address, ports, protocol, byte counts, timestamps, DNS names, TLS metadata, user identity from a proxy, and alert labels. Encrypted traffic hides content but still leaves useful metadata.</p>
+<h3>4.21 Zero Trust networking</h3><p>Zero Trust is not a single product. In network terms, it means not trusting traffic merely because it is inside a perimeter. Access should be based on identity, device state, application context, least privilege, continuous evaluation, and monitoring.</p>
+<h3>4.22 Availability and denial of service</h3><p><strong>Availability</strong> means systems are usable when needed. Network security includes resilience against congestion, misconfiguration, floods, route failures, DNS outages, and denial-of-service attacks. Defenses include capacity planning, rate limits, upstream filtering, anycast/CDN designs, redundancy, and incident response.</p>
+<h3>4.23 The core network security question</h3><p>For every flow, ask: Which source needs to reach which destination, on which protocol and port, for what business purpose, with what authentication, through which controls, and with what logging?</p>
+</section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>Packet journey through a small network</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  App[Browser application] --> Socket[TCP socket]
+  Socket --> IP[IP packet]
+  IP --> NIC[Network interface]
+  NIC --> Switch[Switch]
+  Switch --> Router[Default gateway / router]
+  Router --> FW[Firewall policy]
+  FW --> Server[Web server]
+  Server --> Logs[Server and network logs]
+</pre></div>
+<h3>Layered communication</h3><div class="diagram"><pre class="mermaid">flowchart TB
+  Application[Application: HTTP, DNS, SSH] --> Transport[Transport: TCP or UDP ports]
+  Transport --> Internet[Internet: IPv4 or IPv6 addresses]
+  Internet --> Link[Link: Ethernet or Wi-Fi frames]
+  Link --> Physical[Physical/radio/cable medium]
+</pre></div>
+<h3>Segmentation architecture</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Internet((Internet)) --> Edge[Edge firewall]
+  Edge --> Web[Web zone]
+  Web --> App[Application zone]
+  App --> DB[Database zone]
+  Admin[Admin network] --> Mgmt[Management zone]
+  Mgmt --> App
+  Mgmt --> DB
+  Guest[Guest Wi-Fi] -. blocked .-> DB
+  Web --> Logs[Central logging]
+  App --> Logs
+  DB --> Logs
+</pre></div>
+<h3>Firewall decision tree</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  Flow[Proposed network flow] --> Need{Business need documented?}
+  Need -- No --> Deny[Deny by default]
+  Need -- Yes --> Min{Narrow source, destination, protocol, port?}
+  Min -- No --> Refine[Refine scope]
+  Min -- Yes --> Auth{Authentication and service hardening present?}
+  Auth -- No --> Fix[Fix control gap]
+  Auth -- Yes --> Log{Logging and owner defined?}
+  Log -- No --> Add[Add monitoring and owner]
+  Log -- Yes --> Approve[Approve time-bound rule and review]
+</pre></div>
+<h3>TCP connection sequence</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant F as Firewall
+  participant S as Server
+  C->>F: TCP SYN to allowed destination:port
+  F->>S: Forward SYN if policy allows
+  S-->>F: SYN-ACK
+  F-->>C: Return traffic allowed by state
+  C->>S: ACK and application data
+  S-->>C: Response data
+</pre></div>
+<h3>Network incident timeline</h3><div class="diagram"><pre class="mermaid">timeline
+  title Network investigation timeline
+  08:00 : New firewall rule deployed
+  08:10 : Unexpected inbound attempts increase
+  08:18 : IDS alert triggered
+  08:25 : Analyst reviews flow and DNS logs
+  08:40 : Rule narrowed and owner contacted
+  09:00 : Monitoring confirms traffic reduced
+</pre></div>
+<h3>State diagram for a network service</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> Closed
+  Closed --> Listening: service starts
+  Listening --> Connected: client accepted
+  Connected --> Logging: request handled
+  Logging --> Listening: connection closed
+  Listening --> Blocked: firewall denies unauthorized source
+  Connected --> Alerted: suspicious behavior detected
+  Alerted --> Investigating
+  Investigating --> Hardened: rule or config updated
+</pre></div>
+<h3>ASCII network diagram</h3><pre><code>Allowed lab network only:
+
+  [Your laptop]
+       |
+  127.0.0.1 / localhost
+       |
+  [Toy service running locally]
+       |
+  [Local logs and packet capture]
+
+Not allowed:
+  Random public IPs, employer systems, university production systems,
+  cloud tenants you do not own, or any third-party target without written scope.
+</code></pre>
+</section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Network Security))
+    Foundations
+      Hosts
+      Packets
+      IP addresses
+      Ports
+      Protocols
+    Connectivity
+      Switches
+      Routers
+      Gateways
+      DNS
+    Controls
+      Firewalls
+      Segmentation
+      VPNs
+      Secure remote access
+    Monitoring
+      Flow logs
+      DNS logs
+      IDS alerts
+      Packet captures
+    Risks
+      Exposure
+      Lateral movement
+      Misconfiguration
+      Denial of service
+    Practice
+      Local inspection
+      Diagrams
+      Rule review
+      Evidence-based reporting
+</pre></div></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Bits, bytes, and address size</h3><p>A bit is either 0 or 1. A byte is 8 bits. If a field has <em>n</em> bits, it can represent <code>2^n</code> values.</p><p>IPv4 addresses are 32 bits, so the theoretical address space is <code>2^32 = 4,294,967,296</code> values. IPv6 addresses are 128 bits, so the theoretical address space is <code>2^128</code>, an enormous number.</p>
+<h3>7.2 CIDR worked example</h3><p>In <code>192.168.10.0/24</code>, 24 bits are the network prefix. IPv4 has 32 bits total, so host bits = <code>32 - 24 = 8</code>. Number of addresses = <code>2^8 = 256</code>. In many traditional IPv4 subnets, two addresses are reserved for network and broadcast, leaving 254 usable host addresses. Modern contexts vary, especially point-to-point and cloud-specific networks, so always check the platform rules.</p>
+<h3>7.3 Port range</h3><p>TCP and UDP port numbers are 16-bit values. Number of possible values = <code>2^16 = 65,536</code>, ranging from 0 to 65,535. Port 443 is commonly used for HTTPS, but a port number alone does not prove what application is really running.</p>
+<h3>7.4 Simple risk scoring</h3><p>A simple teaching formula is:</p><pre><code>Risk score = likelihood × impact</code></pre><p>Example: if an exposed database port has likelihood 4/5 and impact 5/5, the teaching score is <code>4 × 5 = 20</code>. This is not a complete enterprise risk model; it is a beginner tool for reasoning.</p>
+<h3>7.5 Availability calculation</h3><p>If a service is up for 99.9% of a month, downtime is approximately 0.1% of the month. For a 30-day month: <code>30 × 24 × 60 = 43,200</code> minutes. Downtime = <code>0.001 × 43,200 = 43.2</code> minutes.</p>
+</section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2>
+<div class="callout"><strong>Lab rule:</strong> run these only on your own machine or an explicitly approved lab VM.</div>
+<h3>Linux examples</h3><pre><code class="language-bash"># Show IP addresses on your own machine
+ip addr
+
+# Show the route table and default gateway
+ip route
+
+# Show listening TCP and UDP sockets
+ss -tuln
+
+# Resolve a name using the system resolver
+getent hosts example.com
+
+# Capture only localhost traffic for a short local experiment
+# Stop with Ctrl+C. Do not capture networks you do not own or administer.
+sudo tcpdump -i lo -n</code></pre>
+<h3>Windows examples</h3><pre><code class="language-powershell"># Show IP configuration
+ipconfig /all
+
+# Show route table
+route print
+
+# Show active connections and listening ports
+netstat -ano
+
+# Resolve a name
+Resolve-DnsName example.com
+
+# Show basic firewall profiles
+Get-NetFirewallProfile</code></pre>
+<h3>Python example: safe local port check</h3><pre><code class="language-python">import socket
+
+# This checks only localhost. It is safe for a course lab.
+host = "127.0.0.1"
+ports = [22, 80, 443, 8000, 8080]
+
+for port in ports:
+    # create_connection tries to open a TCP connection with a timeout
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            print(f"localhost:{port} is reachable")
+    except OSError:
+        print(f"localhost:{port} is not reachable")</code></pre>
+<p><strong>Line explanation:</strong> <code>import socket</code> loads Python networking functions. <code>host</code> is set to localhost so the script does not touch external systems. <code>ports</code> is a small list of local ports. <code>create_connection</code> attempts a TCP connection. The <code>timeout</code> prevents long waits. <code>except OSError</code> handles refused or unavailable ports without crashing.</p>
+<h3>Network example</h3><pre><code class="language-bash"># Start a local web server in one terminal
+python3 -m http.server 8000 --bind 127.0.0.1
+
+# In another terminal, request it
+curl -v http://127.0.0.1:8000/</code></pre>
+<h3>Web example</h3><p>The browser connects to a host and port. For <code>http://127.0.0.1:8000/</code>, the host is <code>127.0.0.1</code>, the port is <code>8000</code>, and the application protocol is HTTP.</p>
+<h3>Cloud example</h3><p>In a cloud virtual network, a public web tier might allow inbound TCP 443 from the internet, an app tier might allow traffic only from the web tier, and a database tier might allow traffic only from the app tier. The key security question is not “is the cloud secure?” but “which identities, services, subnets, security groups, and routes create reachability?”</p>
+</section>
+
+<section id="code-examples"><h2>9. Code Examples</h2>
+<h3>9.1 Parse simple firewall-like rules</h3><pre><code class="language-python">rules = [
+    {"source": "web", "destination": "app", "port": 443, "action": "allow"},
+    {"source": "app", "destination": "db", "port": 5432, "action": "allow"},
+    {"source": "guest", "destination": "db", "port": 5432, "action": "deny"},
+]
+
+for rule in rules:
+    source = rule["source"]
+    destination = rule["destination"]
+    port = rule["port"]
+    action = rule["action"]
+    print(f"{action.upper()}: {source} -> {destination} on TCP/{port}")</code></pre>
+<p>This example uses dictionaries to represent simplified rules. Real firewall rules include more fields, ordering behavior, state, logging, owners, change records, and exceptions. The security habit is to treat rules as policy decisions that require justification.</p>
+<h3>9.2 Defensive log summarizer</h3><pre><code class="language-python">from collections import Counter
+
+sample_flows = [
+    "10.0.1.5 10.0.2.10 443 allow",
+    "10.0.1.5 10.0.2.10 443 allow",
+    "10.0.9.22 10.0.3.7 5432 deny",
+    "10.0.9.22 10.0.3.8 5432 deny",
+]
+
+counter = Counter()
+
+for line in sample_flows:
+    src, dst, port, action = line.split()
+    if action == "deny":
+        counter[src] += 1
+
+for src, count in counter.items():
+    print(f"{src} had {count} denied connection attempts")</code></pre>
+<p>This code counts denied connection attempts by source. It is defensive because it analyzes toy logs rather than probing systems. Common mistakes include storing sensitive payloads unnecessarily, ignoring time windows, and treating one denied packet as proof of compromise.</p>
+<h3>Secure coding practices</h3><ul><li>Keep network tools scoped to localhost or approved lab ranges.</li><li>Use timeouts so scripts do not hang.</li><li>Log evidence without storing secrets or full sensitive payloads.</li><li>Handle errors explicitly.</li><li>Document authorization and scope before testing.</li></ul>
+</section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li><strong>Reconnaissance:</strong> discovering hosts, services, names, and paths.</li><li><strong>Unauthorized access:</strong> reaching services that should not be exposed.</li><li><strong>Lateral movement:</strong> moving from one internal system to another.</li><li><strong>Man-in-the-middle:</strong> intercepting or altering traffic when protections fail.</li><li><strong>DNS abuse:</strong> phishing, command-and-control, tunneling, or malicious domains.</li><li><strong>Denial of service:</strong> exhausting bandwidth, state tables, application capacity, or DNS dependencies.</li><li><strong>Misconfiguration abuse:</strong> exploiting overly broad security groups, open management ports, or permissive routing.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li>Flat networks with little segmentation.</li><li>Open management interfaces.</li><li>Default or unnecessary services.</li><li>Overly broad firewall rules such as “any to any.”</li><li>Weak Wi-Fi or remote-access configuration.</li><li>Missing logs or short retention.</li><li>No owner or review process for firewall exceptions.</li></ul>
+<h3>Defensive strategies</h3><ul><li>Default deny and least exposure.</li><li>Segment by trust, function, and sensitivity.</li><li>Use strong authentication for administrative access.</li><li>Encrypt traffic where confidentiality and integrity matter.</li><li>Harden and patch exposed services.</li><li>Collect flow logs, DNS logs, firewall logs, and application logs.</li><li>Review rules and remove stale access.</li></ul>
+<h3>Detection methods</h3><ul><li>Unusual connection attempts across many ports.</li><li>Unexpected east-west traffic.</li><li>Denied traffic spikes.</li><li>New external destinations.</li><li>High-volume DNS lookups or suspicious domain patterns.</li><li>Traffic to known-bad infrastructure from threat intelligence.</li><li>Changes to firewall, routing, or cloud security-group rules.</li></ul>
+<h3>Mitigation and best practices</h3><p>Network controls should be layered. A firewall should not be the only control. Combine segmentation, identity-aware access, secure configuration, endpoint hardening, encryption, monitoring, tested backups, incident response, and documented ownership.</p>
+</section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><ul>
+<li><strong>Banks:</strong> separate internet banking, payment systems, core banking, user networks, administrator networks, and audit systems. Network logs support fraud investigations and regulatory evidence.</li>
+<li><strong>Governments:</strong> use segmentation, secure gateways, monitoring, and strict change control to protect citizen services and sensitive internal systems.</li>
+<li><strong>Cloud providers:</strong> expose network controls through virtual private clouds, security groups, network ACLs, private endpoints, load balancers, DDoS protection, and flow logs.</li>
+<li><strong>Healthcare:</strong> protect patient portals, medical devices, imaging systems, and hospital operations. Availability and safety are critical.</li>
+<li><strong>Defense:</strong> network security includes mission assurance, classified/unclassified separation, tactical networks, supply-chain constraints, and strong monitoring.</li>
+<li><strong>Universities:</strong> balance openness for research with segmentation for administrative, finance, identity, and student systems.</li>
+<li><strong>Large enterprises:</strong> manage thousands of sites, cloud networks, remote workers, VPNs, zero trust access, branch offices, and monitoring pipelines.</li>
+</ul></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2>
+<p>Network security research is active because networks keep changing. Important areas include encrypted traffic analysis, privacy-preserving telemetry, routing security, BGP hijack detection, DDoS mitigation, DNS abuse measurement, programmable data planes, software-defined networking, zero trust architectures, network verification, cloud misconfiguration detection, and security of 5G/edge/IoT networks.</p>
+<p>Open problems include detecting malicious behavior when payloads are encrypted, reducing alert fatigue, proving that network policies match intended architecture, preventing route hijacks at internet scale, protecting low-resource devices, and balancing monitoring with privacy.</p>
+<p>Notable research directions to explore include internet measurement, formal verification of network policies, intrusion detection under encryption, large-scale botnet behavior, and secure routing. Students should read papers critically: identify the threat model, dataset, assumptions, limitations, and whether the proposed method works outside the research environment.</p>
+</section>
+
+<section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Case Study 1: Mirai botnet and exposed IoT devices</h3><p><strong>What happened:</strong> large numbers of internet-connected devices were abused to generate massive distributed denial-of-service traffic. <strong>Root cause:</strong> many devices were reachable, weakly managed, and poorly secured. <strong>Impact:</strong> major internet services experienced disruption. <strong>Lessons:</strong> exposed devices, default credentials, weak lifecycle management, and lack of segmentation can create internet-scale harm.</p>
+<h3>Case Study 2: Colonial Pipeline operational disruption</h3><p><strong>What happened:</strong> a ransomware incident led to major fuel-distribution disruption. <strong>Root cause:</strong> public reporting indicates compromised remote-access credentials played a role, while the broader lesson is that identity, remote access, segmentation, monitoring, and incident response interact. <strong>Impact:</strong> operational interruption and public consequences. <strong>Lessons:</strong> network security is not only packets; it includes identity boundaries, remote access, operational resilience, and business continuity.</p>
+<h3>Case Study 3: Misconfigured cloud exposure</h3><p><strong>What happened:</strong> many incidents involve databases, storage services, or admin panels exposed to the internet by permissive network rules. <strong>Root cause:</strong> overly broad inbound access, unclear ownership, missing review, or misunderstanding of cloud defaults. <strong>Impact:</strong> data exposure, unauthorized access, and regulatory consequences. <strong>Lessons:</strong> cloud network controls need design review, automated checks, and continuous monitoring.</p>
+</section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul>
+<li><strong>“NAT is a firewall.”</strong> NAT translates addresses. It is not a complete security policy.</li>
+<li><strong>“Inside the network means trusted.”</strong> Internal systems can be compromised, misconfigured, or abused.</li>
+<li><strong>“If traffic is encrypted, defenders are blind.”</strong> Payloads may be hidden, but metadata, endpoints, timing, DNS, certificates, and logs still matter.</li>
+<li><strong>“Open port means vulnerability.”</strong> A port means a service may be reachable. Vulnerability depends on the service, configuration, authentication, exposure, and context.</li>
+<li><strong>“Closed port means secure.”</strong> Network filtering helps, but software, identity, endpoint, and operational controls still matter.</li>
+<li><strong>“A firewall fixes bad architecture.”</strong> Firewalls enforce policy; they do not replace secure design, patching, or monitoring.</li>
+<li><strong>“Scanning is harmless.”</strong> Scanning can trigger alarms, degrade fragile systems, invade privacy, or violate law and policy.</li>
+</ul></section>
+
+<section id="summary"><h2>15. Summary</h2><p>Network security begins with understanding communication. Devices exchange packets using protocols. Addresses help packets find destinations. Ports connect traffic to services. DNS maps names to network information. Routers move packets, firewalls enforce policy, segmentation reduces blast radius, and monitoring creates evidence. The main defender habit is precise flow reasoning: allow what is needed, deny what is not, observe important behavior, and review changes continuously.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl>
+<dt>Host</dt><dd>A device or system connected to a network.</dd><dt>Packet</dt><dd>A unit of network data with addressing and control information.</dd><dt>IP address</dt><dd>An internet-layer address used for packet forwarding.</dd><dt>Subnet</dt><dd>A range of IP addresses treated as a network.</dd><dt>CIDR</dt><dd>Classless Inter-Domain Routing notation for network prefixes, such as /24.</dd><dt>Port</dt><dd>A transport-layer number identifying an application endpoint.</dd><dt>Socket</dt><dd>A network endpoint commonly represented by protocol, address, and port.</dd><dt>TCP</dt><dd>Transmission Control Protocol; a reliable ordered byte-stream protocol.</dd><dt>UDP</dt><dd>User Datagram Protocol; a datagram protocol without TCP-style reliability.</dd><dt>DNS</dt><dd>Domain Name System; maps names to network information.</dd><dt>Router</dt><dd>A device or system that forwards traffic between networks.</dd><dt>Gateway</dt><dd>The next-hop device used to reach another network.</dd><dt>Firewall</dt><dd>A control that allows, denies, or inspects traffic based on policy.</dd><dt>Segmentation</dt><dd>Separating networks or zones to reduce unnecessary reachability.</dd><dt>IDS</dt><dd>Intrusion Detection System; detects suspicious activity or policy violations.</dd><dt>IPS</dt><dd>Intrusion Prevention System; can block or modify suspicious traffic.</dd><dt>Telemetry</dt><dd>Observable data collected from systems or networks.</dd><dt>East-west traffic</dt><dd>Traffic moving inside an environment.</dd><dt>North-south traffic</dt><dd>Traffic entering or leaving an environment.</dd><dt>Default deny</dt><dd>A policy stance that blocks traffic unless explicitly allowed.</dd></dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2>
+<h3>20 MCQs</h3><ol class="quiz-list"><li><p>What is a network in the simplest useful sense?</p><ol type="A"><li>A set of devices that can exchange data using agreed rules</li><li>Only a Wi-Fi password</li><li>Only a firewall appliance</li><li>Only a cloud bill</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a packet?</p><ol type="A"><li>A small unit of data plus addressing/control information</li><li>A password database</li><li>A type of malware only</li><li>A physical laptop</li></ol><details><summary>Answer</summary>A</details></li><li><p>Which layer is IP mainly associated with in the TCP/IP model?</p><ol type="A"><li>Internet layer</li><li>Application layer only</li><li>Physical keyboard layer</li><li>User identity layer</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does TCP mainly provide compared with UDP?</p><ol type="A"><li>Reliable ordered byte-stream delivery between endpoints</li><li>Automatic encryption by itself</li><li>User authentication by itself</li><li>Permanent anonymity</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a port number used for?</p><ol type="A"><li>Identifying a network service or application endpoint on a host</li><li>Identifying a screen resolution</li><li>Hashing a password</li><li>Formatting a disk</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does DNS normally do?</p><ol type="A"><li>Map names such as example.test to network addresses</li><li>Encrypt every packet</li><li>Replace firewalls</li><li>Store user passwords</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is network segmentation?</p><ol type="A"><li>Separating networks or zones to reduce unnecessary reachability</li><li>Putting every device on one flat network</li><li>Disabling logs</li><li>Using one password everywhere</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a firewall policy?</p><ol type="A"><li>Rules for how traffic should be allowed, denied, or inspected</li><li>A list of employee birthdays</li><li>A password hash</li><li>A compiler warning</li></ol><details><summary>Answer</summary>A</details></li><li><p>Which principle says services should not be reachable unless needed?</p><ol type="A"><li>Default deny / least exposure</li><li>Open everything first</li><li>Security by rumor</li><li>No logging</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is an attack surface?</p><ol type="A"><li>The set of reachable places an attacker could try to interact with</li><li>Only the outside of a computer case</li><li>Only the amount of RAM</li><li>Only a keyboard shortcut</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a safe target for beginner network inspection?</p><ol type="A"><li>Your own local machine or course lab network</li><li>A random public IP address</li><li>A bank network</li><li>Your university production network without written permission</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does a packet capture show?</p><ol type="A"><li>Observed network traffic metadata and possibly payloads depending on protocol and encryption</li><li>All deleted files automatically</li><li>Every user password automatically</li><li>A legal authorization letter</li></ol><details><summary>Answer</summary>A</details></li><li><p>Why is encryption not the same as network security?</p><ol type="A"><li>Encryption protects data in transit but does not replace access control, segmentation, logging, or hardening</li><li>Because encryption is useless</li><li>Because encryption opens firewall ports</li><li>Because encryption disables routing</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does NAT usually do?</p><ol type="A"><li>Translate private addresses to another address, commonly for internet access sharing</li><li>Prove user identity</li><li>Remove the need for patching</li><li>Detect every intrusion</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is an IDS?</p><ol type="A"><li>A system that detects suspicious activity or policy violations</li><li>A guaranteed blocker of all attacks</li><li>A disk format</li><li>A cryptographic key</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is the main limitation of allow-by-port thinking?</p><ol type="A"><li>The service behind the port and its context matter more than the number alone</li><li>Ports have no meaning</li><li>All ports are equally safe</li><li>Closed ports are always vulnerable</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is east-west traffic?</p><ol type="A"><li>Traffic between internal systems</li><li>Traffic from a monitor to a keyboard</li><li>Only undersea cable traffic</li><li>Only email</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is north-south traffic?</p><ol type="A"><li>Traffic entering or leaving an environment</li><li>Traffic only between two internal databases</li><li>Only Bluetooth traffic</li><li>Only printed reports</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a common detection signal for reconnaissance in a lab?</p><ol type="A"><li>Many connection attempts to many ports or hosts in a short time</li><li>A single normal DNS lookup</li><li>A user opening one local file</li><li>A screen brightness change</li></ol><details><summary>Answer</summary>A</details></li><li><p>What should a network security report include?</p><ol type="A"><li>Scope, diagram, assets, trust boundaries, allowed flows, findings, evidence, and remediation</li><li>Only a list of scary port numbers</li><li>Only tool names</li><li>Only guesses without evidence</li></ol><details><summary>Answer</summary>A</details></li></ol>
+<h3>10 short questions</h3><ol><li>Define a host in your own words.</li><li>What is the difference between an IP address and a port?</li><li>Why does segmentation reduce blast radius?</li><li>Why is DNS useful to defenders?</li><li>What is a default gateway?</li><li>What is the difference between TCP and UDP?</li><li>Why should firewall rules have owners?</li><li>What is east-west traffic?</li><li>What is a safe packet-capture target for this course?</li><li>Why is encryption not enough by itself?</li></ol>
+<h3>5 long questions</h3><ol><li>Design a segmented network for a small university portal with web, application, database, administrator, and logging zones.</li><li>Explain how a browser request reaches a web server from DNS lookup to TCP connection and HTTP request.</li><li>Compare firewall, IDS, IPS, and WAF controls. What does each do well, and where does each fail?</li><li>Explain how network logs support incident response after suspicious internal movement.</li><li>Discuss the trade-off between network monitoring and privacy.</li></ol>
+<h3>Scenario-based questions</h3><ol><li>A database accepts connections from the whole internet. What risks exist, and how would you redesign access?</li><li>A guest Wi-Fi network can reach internal file shares. What controls should be added?</li><li>A new firewall rule allows <code>any</code> source to reach an admin panel. What questions must be asked before approval?</li><li>Flow logs show one workstation connecting to many internal hosts on many ports. What could this indicate?</li><li>A service must be reachable by remote workers. Compare VPN and identity-aware proxy approaches at a high level.</li></ol>
+<h3>Interview questions</h3><ol><li>Explain TCP to a non-technical manager.</li><li>What does “default deny” mean?</li><li>How would you review a firewall rule request?</li><li>What logs would you collect for network detection?</li><li>What is the difference between vulnerability scanning and network monitoring?</li></ol>
+<h3>Critical thinking questions</h3><ol><li>Can a highly segmented network still be insecure? Explain.</li><li>When might blocking traffic create more risk than allowing it?</li><li>How can encrypted traffic both improve and complicate security?</li><li>What assumptions are hidden in a “trusted internal network” model?</li><li>How should defenders avoid collecting more network data than they need?</li></ol>
+<h3>Research questions</h3><ol><li>How can defenders detect malicious behavior in encrypted traffic without breaking privacy?</li><li>What are the limits of machine learning for intrusion detection?</li><li>How can formal methods verify network policy correctness?</li><li>How does BGP routing security affect organizations that do not operate ISPs?</li><li>How should zero trust networking be evaluated empirically?</li></ol>
+</section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Lab: Local Network Inventory and Defensive Flow Review</h3><p><strong>Prerequisites:</strong> your own laptop or course VM, terminal access, and no external targets. Optional: Python 3.</p><p><strong>Objectives:</strong> identify local addresses, routes, listening services, DNS behavior, and a simple localhost HTTP flow; produce a defensive network diagram and rule-review memo.</p>
+<h3>Part A: Local inventory</h3><ol><li>On Linux, run <code>ip addr</code>, <code>ip route</code>, and <code>ss -tuln</code>. On Windows, run <code>ipconfig /all</code>, <code>route print</code>, and <code>netstat -ano</code>.</li><li>Record only non-sensitive observations: interface names, private IP ranges, default gateway concept, and listening local services.</li><li>Do not publish public IP addresses, MAC addresses, usernames, tokens, or private network details from real environments.</li></ol>
+<h3>Part B: Local service</h3><ol><li>Create an empty lab folder.</li><li>Run <code>python3 -m http.server 8000 --bind 127.0.0.1</code>.</li><li>Open <code>http://127.0.0.1:8000/</code> in a browser or use <code>curl -v</code>.</li><li>Observe that the service is bound to localhost, not all interfaces.</li></ol>
+<h3>Part C: Safe packet observation</h3><ol><li>Capture only loopback traffic if permitted on your OS.</li><li>Request the local page again.</li><li>Stop capture immediately after the test.</li><li>Describe the observed source, destination, protocol, and port.</li></ol>
+<h3>Part D: Flow policy memo</h3><p>Create a short report with: diagram, allowed flows, denied flows, risks, logging needs, and recommended hardening. Expected outcome: you can explain your own small lab network without scanning anything external.</p>
+</section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li>IETF RFC 8200 — Internet Protocol Version 6 specification.</li><li>IETF RFC 9293 — Transmission Control Protocol specification.</li><li>NIST SP 800-41 Rev. 1 — Guidelines on Firewalls and Firewall Policy.</li><li>NIST SP 800-115 — Technical Guide to Information Security Testing and Assessment.</li><li>NIST SP 800-207 — Zero Trust Architecture.</li><li>MITRE ATT&amp;CK — Network service discovery, lateral movement, and command-and-control behavior categories.</li><li>Wireshark documentation — packet analysis concepts for authorized environments.</li><li>Cloud provider documentation on virtual private networks, security groups, network ACLs, flow logs, and private endpoints.</li><li>Research topics: encrypted traffic analysis, routing security, DDoS defense, network verification, and privacy-preserving telemetry.</li></ul></section>
+
+</article><aside class="toc card"><h2>On this page</h2><nav id="toc"></nav></aside></div>
+<div class="prev-next"><a class="btn" href="../week-06/web-security-testing-and-secure-deployment.html">← Lesson 6.5</a><a class="btn btn-primary" href="tcp-ip-dns-and-routing-security.html">Lesson 7.2 →</a></div></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

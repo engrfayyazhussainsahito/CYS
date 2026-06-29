@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 3.2: Randomness, Keys, Hashes, and MACs | MS Cybersecurity</title>
+  <meta name="description" content="Learn randomness, entropy, cryptographic keys, hashes, salts, password hashing, MACs, HMAC, key lifecycle, and safe local cryptographic examples from first principles.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+</head>
+<body data-root="../../" data-page-id="weeks/week-03/randomness-keys-hashes-and-macs.html" data-title="Lesson 3.2: Randomness, Keys, Hashes, and MACs">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 3</a> / Lesson 3.2</div>
+      <header class="hero">
+        <div class="eyebrow">Week 3 · Lesson 3.2</div>
+        <h1>Randomness, Keys, Hashes, and MACs</h1>
+        <p class="lead">Strong cryptographic algorithms can still fail if randomness is weak, keys are mishandled, hashes are used for the wrong purpose, or message authentication is skipped. This lesson explains the building blocks that make later encryption, signatures, TLS, password storage, and secure APIs possible.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>160–220 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lesson 3.1 helpful; no advanced math required</div>
+          <div class="meta-item"><strong>Lesson type</strong>Conceptual + safe local lab</div>
+        </div>
+        <div class="toolbar">
+          <button id="bookmarkBtn" type="button">☆ Bookmark lesson</button>
+          <button id="completeBtn" type="button">Mark complete</button>
+          <button id="quizModeBtn" type="button">Start quiz mode</button>
+          <button class="print-page" type="button">Download / Print as PDF</button>
+        </div>
+      </header>
+
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview" class="card">
+            <h2>Overview</h2>
+            <p><strong>Topic:</strong> randomness, cryptographic keys, hashes, password hashing, message authentication codes, and HMAC.</p>
+            <p><strong>Learning objective:</strong> understand the low-level primitives that many secure systems depend on, and recognize when each primitive is appropriate or dangerous.</p>
+            <p><strong>Required background:</strong> basic files, Python, command-line usage, and Lesson 3.1 concepts are helpful. This lesson re-explains the required ideas before using them.</p>
+            <p><strong>Difficulty:</strong> starts from zero, introduces probability and entropy carefully, and ends with MS-level engineering judgment.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p>Cryptography often fails at the edges. The encryption algorithm may be strong, but the system can still be broken if a key is predictable, a reset token is guessable, a secret is committed to GitHub, a password is stored with a fast hash, or an API accepts unsigned messages.</p>
+            <p>Plain English version: this lesson teaches how systems make and protect <strong>hard-to-guess values</strong>, how they turn data into <strong>fingerprints</strong>, and how they prove that a message was not changed by someone who does not know the secret key.</p>
+            <p>The topic exists because digital systems constantly need answers to practical questions:</p>
+            <ul>
+              <li>How do we create a password-reset token that attackers cannot guess?</li>
+              <li>How do we know a downloaded file is exactly the file we expected?</li>
+              <li>How do we store passwords without storing the passwords themselves?</li>
+              <li>How do two servers prove that an API message was not modified in transit?</li>
+              <li>How do we manage cryptographic keys across creation, use, rotation, and destruction?</li>
+            </ul>
+            <p>These ideas are used in login systems, banking APIs, software updates, cloud secrets management, container signing, VPNs, TLS, payment systems, backups, healthcare records, military communications, university identity systems, and research prototypes.</p>
+            <div class="callout warning">
+              <strong>Safety boundary:</strong> All examples in this lesson are local, defensive, and educational. Do not generate, test, verify, intercept, brute force, or manipulate cryptographic material belonging to systems you do not own or have written authorization to study.
+            </div>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <p>After finishing this lesson, you should be able to:</p>
+            <ul>
+              <li>Explain entropy, randomness, pseudo-randomness, and cryptographically secure random generation in plain English.</li>
+              <li>Calculate simple keyspace sizes such as 2<sup>128</sup> and explain why uniform randomness matters.</li>
+              <li>Distinguish keys, passwords, tokens, salts, peppers, nonces, initialization vectors, and MAC tags.</li>
+              <li>Explain the difference between general-purpose hashes and password-hashing schemes.</li>
+              <li>Explain preimage resistance, second-preimage resistance, and collision resistance.</li>
+              <li>Compute safe local SHA-256 hashes and HMAC-SHA-256 tags using Python and command-line tools.</li>
+              <li>Use constant-time comparison for MAC verification in Python.</li>
+              <li>Describe a key lifecycle: generation, distribution, storage, use, rotation, revocation, archival, and destruction.</li>
+              <li>Identify common failures such as weak random numbers, reused secrets, hardcoded keys, leaked API tokens, MD5/SHA-1 misuse, and fast password hashing.</li>
+              <li>Translate randomness, hash, and key-management issues into practical risk statements for technical and executive audiences.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <p>This lesson assumes no prior cryptography background. It uses these ideas and explains them before advanced use:</p>
+            <ul>
+              <li><strong>Bit:</strong> one binary value, either 0 or 1.</li>
+              <li><strong>Byte:</strong> eight bits. A 32-byte token contains 256 bits.</li>
+              <li><strong>File:</strong> named data stored on a computer. Hash tools often work on files.</li>
+              <li><strong>Function:</strong> a rule that maps input to output. Hash functions map messages to digests.</li>
+              <li><strong>Secret:</strong> information that must not be known by unauthorized parties.</li>
+              <li><strong>Threat model:</strong> a description of what the attacker can do and what you need to protect.</li>
+            </ul>
+            <details class="callout">
+              <summary>Prerequisite mini-explanation: why guessing is a security problem</summary>
+              <p>If a reset token has only six decimal digits, there are only 1,000,000 possible tokens. That may sound large to a human, but it is small to software if no rate limits exist. If a token has 128 uniformly random bits, there are 2<sup>128</sup> possibilities. The security difference is enormous.</p>
+            </details>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 Randomness</h3>
+            <p><strong>Randomness</strong> means lack of predictability. In security, we care less about whether a value “looks random” and more about whether an attacker can predict it before it is used.</p>
+            <p>Analogy: rolling a fair die is unpredictable before the roll. Writing today’s date on paper is not random, even if it looks different every day. A cryptographic token must be more like the die roll and less like the date.</p>
+            <p>Cybersecurity systems use randomness to generate keys, session IDs, nonces, salts, password-reset links, API tokens, one-time challenges, and cryptographic protocol values.</p>
+
+            <h3>4.2 Entropy</h3>
+            <p><strong>Entropy</strong> is a mathematical way to describe uncertainty. A value with high entropy is hard to guess. A value with low entropy is easier to predict.</p>
+            <p>For a uniformly random value with <em>N</em> equally likely outcomes, the entropy is:</p>
+            <p class="math">H = log<sub>2</sub>(N)</p>
+            <p>If a value has 2<sup>128</sup> equally likely outcomes, it has 128 bits of entropy. If a six-digit code has 10<sup>6</sup> equally likely outcomes, it has about log<sub>2</sub>(1,000,000) ≈ 19.93 bits of entropy.</p>
+            <div class="callout warning">
+              <strong>Important:</strong> entropy depends on how the value was generated. A 32-character string chosen by a human may have much less entropy than a 32-character string generated by a cryptographically secure random generator.
+            </div>
+
+            <h3>4.3 Pseudo-Random vs Cryptographically Secure Pseudo-Random</h3>
+            <p>A normal pseudo-random number generator produces values from an internal state. It may be good for simulation, games, sampling, or testing. It is not automatically safe for secrets.</p>
+            <p>A <strong>cryptographically secure pseudo-random number generator</strong>, often abbreviated CSPRNG, is designed so that outputs are unpredictable even if an attacker sees many previous outputs. Operating systems provide secure random sources for applications.</p>
+            <table>
+              <thead><tr><th>Use case</th><th>Unsafe choice</th><th>Safer choice</th></tr></thead>
+              <tbody>
+                <tr><td>Dice simulation</td><td>Not security-sensitive</td><td><code>random</code> is usually acceptable</td></tr>
+                <tr><td>Password reset token</td><td><code>random.randint()</code>, timestamp, counter</td><td>OS-backed secure randomness such as Python <code>secrets</code></td></tr>
+                <tr><td>Cryptographic key</td><td>Human-chosen phrase, predictable seed</td><td>Cryptographic key generator or CSPRNG</td></tr>
+                <tr><td>Test fixture</td><td>Hardcoded demo key reused in production</td><td>Clearly marked fake test secret; never production</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.4 Keys</h3>
+            <p>A <strong>cryptographic key</strong> is a value used by an algorithm to perform a security operation. The algorithm can be public; the key must be protected according to its role.</p>
+            <p>Examples:</p>
+            <ul>
+              <li>An AES key protects encrypted data.</li>
+              <li>An HMAC key protects message integrity and shared-key authentication.</li>
+              <li>A private signing key proves control of a digital-signature identity.</li>
+              <li>A public verification key may be shared widely.</li>
+              <li>An API key often works like a bearer secret: whoever has it can use it.</li>
+            </ul>
+            <p><strong>Key separation</strong> means using different keys for different purposes. Do not use one key for encryption, HMAC, backups, webhooks, and database credentials. Reuse increases blast radius and can violate assumptions of cryptographic constructions.</p>
+
+            <h3>4.5 Key Lifecycle</h3>
+            <p>Key management is the full lifecycle of cryptographic keys. It is often harder than choosing an algorithm.</p>
+            <ol>
+              <li><strong>Generate:</strong> create the key with adequate entropy.</li>
+              <li><strong>Register or label:</strong> assign owner, purpose, creation date, and allowed uses.</li>
+              <li><strong>Store:</strong> protect the key using a secrets manager, hardware security module, key-management service, or protected local store.</li>
+              <li><strong>Distribute:</strong> deliver the key only to authorized systems.</li>
+              <li><strong>Use:</strong> restrict operations according to policy.</li>
+              <li><strong>Rotate:</strong> replace with a new key on schedule or after risk events.</li>
+              <li><strong>Revoke:</strong> stop trusting a key when compromise or retirement occurs.</li>
+              <li><strong>Archive:</strong> keep only when needed for legal or data-recovery reasons.</li>
+              <li><strong>Destroy:</strong> remove keys safely when no longer needed.</li>
+            </ol>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  Generate[Generate key] --> Label[Label owner and purpose]
+  Label --> Store[Store securely]
+  Store --> Use[Use with policy]
+  Use --> Rotate[Rotate]
+  Rotate --> Revoke[Revoke old key]
+  Revoke --> Destroy[Destroy or archive]
+</pre></div>
+
+            <h3>4.6 Hash Functions</h3>
+            <p>A <strong>cryptographic hash function</strong> maps input data of arbitrary length to a fixed-size output called a <strong>digest</strong>.</p>
+            <p>Key properties:</p>
+            <ul>
+              <li><strong>Deterministic:</strong> the same input gives the same digest.</li>
+              <li><strong>Fixed output length:</strong> SHA-256 outputs 256 bits, regardless of input size.</li>
+              <li><strong>Avalanche effect:</strong> a small input change should drastically change the digest.</li>
+              <li><strong>Preimage resistance:</strong> given a digest, it should be infeasible to find an input that creates it.</li>
+              <li><strong>Second-preimage resistance:</strong> given one message, it should be infeasible to find another message with the same digest.</li>
+              <li><strong>Collision resistance:</strong> it should be infeasible to find any two different messages with the same digest.</li>
+            </ul>
+            <p>Hash functions are used for file integrity checks, digital signatures, content addressing, deduplication, certificate fingerprints, software distribution, evidence handling, and some protocol internals.</p>
+            <div class="callout warning">
+              <strong>Not secrecy:</strong> hashing a secret does not automatically make it safe. If the input is guessable, an attacker can hash guesses and compare results.
+            </div>
+
+            <h3>4.7 Password Hashing Is Different</h3>
+            <p>Password hashing is a special problem because user passwords are often low entropy. Attackers who steal a password database can perform offline guessing: they try candidate passwords, hash them, and compare results.</p>
+            <p>For password storage, use purpose-built password-hashing schemes such as Argon2id, bcrypt, scrypt, or PBKDF2 with appropriate parameters. These schemes are intentionally slow or memory-hard to raise the cost of each guess.</p>
+            <table>
+              <thead><tr><th>Technique</th><th>Good for file integrity?</th><th>Good for password storage?</th><th>Why</th></tr></thead>
+              <tbody>
+                <tr><td>SHA-256</td><td>Yes, in appropriate contexts</td><td>No, not alone</td><td>Too fast for low-entropy passwords</td></tr>
+                <tr><td>HMAC-SHA-256</td><td>Yes for keyed integrity</td><td>No, not as a standalone password hash</td><td>Designed for message authentication, not password stretching</td></tr>
+                <tr><td>Argon2id</td><td>No</td><td>Yes</td><td>Designed for password hashing with memory and time cost</td></tr>
+                <tr><td>bcrypt/scrypt/PBKDF2</td><td>No</td><td>Yes when configured correctly</td><td>Designed to slow offline guessing</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.8 Salts and Peppers</h3>
+            <p>A <strong>salt</strong> is a unique random value stored with each password hash. It does not need to be secret. Its purpose is uniqueness: two users with the same password should have different stored hashes.</p>
+            <p>A <strong>pepper</strong> is an additional secret value used by the application and stored separately from the password database, such as in a secrets manager or hardware-backed key store. A pepper is defense in depth, not a replacement for password hashing.</p>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Password[User password] --> KDF[Password hashing scheme]
+  Salt[Unique public salt] --> KDF
+  Pepper[Secret pepper stored outside DB] -. optional .-> KDF
+  KDF --> StoredHash[Stored password hash record]
+</pre></div>
+
+            <h3>4.9 Message Authentication Codes</h3>
+            <p>A <strong>message authentication code</strong>, or MAC, is a short value computed from a message and a secret key. The receiver recomputes the MAC and checks whether it matches.</p>
+            <p>A MAC provides two goals between parties that share the key:</p>
+            <ul>
+              <li><strong>Integrity:</strong> the message was not changed after the tag was created.</li>
+              <li><strong>Shared-key origin authentication:</strong> someone with the secret key created the valid tag.</li>
+            </ul>
+            <p>A MAC does not automatically provide confidentiality. The message may still be readable unless it is also encrypted.</p>
+
+            <h3>4.10 HMAC</h3>
+            <p><strong>HMAC</strong> is a widely used MAC construction based on a cryptographic hash function and a secret key. HMAC-SHA-256 means HMAC using SHA-256 as the underlying hash.</p>
+            <p>HMAC is used in webhooks, APIs, VPNs, cloud request signing, internal service calls, and protocol designs. The receiver must verify the tag over the exact bytes received. Even a harmless-looking formatting change can alter the tag.</p>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant Sender
+  participant Receiver
+  Note over Sender,Receiver: Both share secret key K
+  Sender->>Sender: tag = HMAC(K, message)
+  Sender->>Receiver: message + tag
+  Receiver->>Receiver: expected = HMAC(K, received message)
+  alt tags match
+    Receiver->>Receiver: accept message
+  else tags differ
+    Receiver->>Receiver: reject and log safely
+  end
+</pre></div>
+
+            <h3>4.11 Constant-Time Comparison</h3>
+            <p>When verifying MAC tags, compare values with a function designed to reduce timing leaks. In Python, use <code>hmac.compare_digest()</code>. A naive comparison may reveal partial information if it exits early when characters differ.</p>
+            <p>For beginners: this is like checking an answer sheet without accidentally telling the attacker how many starting characters were correct.</p>
+
+            <h3>4.12 Common Misuse Patterns</h3>
+            <ul>
+              <li>Using <code>random</code> instead of a cryptographic randomness source for tokens.</li>
+              <li>Using timestamps, user IDs, or counters as “random” values.</li>
+              <li>Hardcoding production keys in source code.</li>
+              <li>Committing API keys, private keys, or tokens to Git repositories.</li>
+              <li>Using SHA-256 alone for password storage.</li>
+              <li>Using MD5 or SHA-1 for collision-sensitive new designs.</li>
+              <li>Reusing one key for multiple unrelated purposes.</li>
+              <li>Accepting unsigned webhooks or API callbacks.</li>
+              <li>Verifying only part of a MAC tag.</li>
+              <li>Logging full secrets, tokens, or keys.</li>
+            </ul>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>5.1 Random Token Generation Flow</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Need[Need a secret token] --> AskOS[Ask OS cryptographic random source]
+  AskOS --> Bytes[Generate random bytes]
+  Bytes --> Encode[Encode for transport: hex or URL-safe base64]
+  Encode --> StoreHash[Store token hash or protected token record]
+  StoreHash --> Expire[Set expiry and one-time-use policy]
+  Expire --> Verify[Verify submitted token safely]
+</pre></div>
+
+            <h3>5.2 Hash vs HMAC Decision Tree</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Q[What do you need?] --> A{Need secrecy?}
+  A -->|Yes| Encrypt[Use authenticated encryption; later lesson]
+  A -->|No| B{Need to detect accidental or unauthorized change?}
+  B -->|Accidental or public file integrity| Hash[Use modern hash such as SHA-256/SHA-3]
+  B -->|Only someone with secret may create valid proof| HMAC[Use HMAC or another MAC]
+  B -->|Password storage| PH[Use Argon2id/bcrypt/scrypt/PBKDF2 with salt]
+</pre></div>
+
+            <h3>5.3 Key Lifecycle Architecture</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  App[Application] -->|request encrypt/sign/MAC| KMS[Key Management Service]
+  KMS --> HSM[Hardware Security Module or protected key store]
+  KMS --> Audit[Audit logs]
+  Admin[Security admin] -->|policy and rotation| KMS
+  SIEM[Monitoring] --> Audit
+</pre></div>
+
+            <h3>5.4 Password Storage Timeline</h3>
+            <div class="diagram"><pre class="mermaid">timeline
+  title Password Storage Evolution
+  Plaintext : Catastrophic if database leaks
+  Fast hashes : Better than plaintext but fast to guess offline
+  Salted fast hashes : Stops reusable rainbow tables but still fast to guess
+  Adaptive password hashing : Adds configurable time and memory cost
+  Modern practice : Argon2id or approved alternative, unique salts, monitoring, MFA, breach response
+</pre></div>
+
+            <h3>5.5 MAC Verification State Machine</h3>
+            <div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> ReceiveMessage
+  ReceiveMessage --> RecomputeTag
+  RecomputeTag --> CompareTags
+  CompareTags --> Accept: constant-time match
+  CompareTags --> Reject: mismatch
+  Accept --> ProcessMessage
+  Reject --> LogSafely
+  ProcessMessage --> [*]
+  LogSafely --> [*]
+</pre></div>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Randomness, Keys, Hashes, MACs))
+    Randomness
+      Entropy
+      CSPRNG
+      Tokens
+      Nonces
+      Salts
+    Keys
+      Generation
+      Storage
+      Rotation
+      Revocation
+      Destruction
+      Key separation
+    Hashes
+      Digest
+      Preimage resistance
+      Collision resistance
+      File integrity
+      Not encryption
+    Password hashing
+      Salt
+      Pepper
+      Work factor
+      Argon2id
+      bcrypt
+      scrypt
+      PBKDF2
+    MACs
+      HMAC
+      Shared key
+      Integrity
+      Origin authentication
+      Constant-time compare
+    Misuse
+      Hardcoded keys
+      Weak randomness
+      MD5/SHA-1 collision risk
+      Fast password hashes
+      Leaked secrets
+</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>7.1 Keyspace Size</h3>
+            <p>If a key has <em>b</em> uniformly random bits, the number of possible keys is:</p>
+            <p class="math">Number of keys = 2<sup>b</sup></p>
+            <p><strong>Example:</strong> a 128-bit key has 2<sup>128</sup> possible values. A 256-bit token has 2<sup>256</sup> possible values. These numbers are so large that brute-force guessing is infeasible when values are generated uniformly and rate limits or cryptographic assumptions are appropriate.</p>
+
+            <h3>7.2 Entropy of Uniform Choices</h3>
+            <p>If there are <em>N</em> equally likely outcomes, entropy is:</p>
+            <p class="math">H = log<sub>2</sub>(N)</p>
+            <p><strong>Worked example:</strong> A six-digit code has 10<sup>6</sup> possible values.</p>
+            <p class="math">H = log<sub>2</sub>(1,000,000) ≈ 19.93 bits</p>
+            <p>That is not enough by itself for an unrestricted online guessing scenario. It may be acceptable only with expiry, rate limiting, lockout/backoff, monitoring, and user-notification controls.</p>
+
+            <h3>7.3 Guessing Probability</h3>
+            <p>If a token has <em>b</em> uniformly random bits and an attacker gets <em>q</em> independent guesses, an approximate upper bound for success is:</p>
+            <p class="math">P(success) ≈ q / 2<sup>b</sup></p>
+            <p><strong>Worked example:</strong> A 128-bit token and one billion guesses:</p>
+            <p class="math">P ≈ 10<sup>9</sup> / 2<sup>128</sup></p>
+            <p>This is still extremely small. The real system still needs rate limits and monitoring because implementation mistakes, token leakage, or server-side bugs can bypass the pure guessing model.</p>
+
+            <h3>7.4 Birthday Bound for Collisions</h3>
+            <p>For a hash or random identifier with <em>b</em> bits, the approximate collision probability after generating <em>n</em> independent values is:</p>
+            <p class="math">P(collision) ≈ n<sup>2</sup> / 2<sup>b+1</sup></p>
+            <p>This is why collision probability grows faster than beginners expect. You do not need to guess a specific value; any pair colliding is enough.</p>
+
+            <h3>7.5 MAC Forgery Intuition</h3>
+            <p>If a MAC tag is <em>t</em> bits and the construction is secure, a blind random forgery attempt should succeed with probability about:</p>
+            <p class="math">P(forgery) ≈ 1 / 2<sup>t</sup></p>
+            <p>This simplified formula assumes the attacker does not know the key and that the MAC construction is used correctly. Real security also depends on key secrecy, correct message canonicalization, tag length, replay protection, and implementation safety.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>8.1 Linux Examples</h3>
+            <p>These examples operate only on local files and locally generated random values.</p>
+            <pre><code class="language-bash"># Create a harmless local message file
+mkdir -p crypto-lesson-3-2
+cd crypto-lesson-3-2
+echo &quot;student=alice;amount=100&quot; &gt; message.txt
+
+# Generate 32 random bytes as hex using OpenSSL
+openssl rand -hex 32
+
+# Compute a SHA-256 file digest
+sha256sum message.txt
+
+# Modify one character and compute the digest again
+echo &quot;student=alice;amount=900&quot; &gt; message.txt
+sha256sum message.txt</code></pre>
+            <p><strong>What to notice:</strong> the hash changes completely when the message changes from amount 100 to amount 900. The hash does not hide the file contents; it only gives a digest.</p>
+
+            <h3>8.2 Windows Examples</h3>
+            <pre><code class="language-powershell"># Generate 32 random bytes using .NET cryptographic RNG
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+[Convert]::ToHexString($bytes)
+
+# Compute a file hash
+&quot;hello from Windows&quot; | Out-File -Encoding utf8 message.txt
+Get-FileHash .\message.txt -Algorithm SHA256</code></pre>
+            <p><strong>What to notice:</strong> Windows can compute file hashes with PowerShell and can generate random bytes through cryptographic .NET APIs.</p>
+
+            <h3>8.3 Python Examples</h3>
+            <pre><code class="language-python">import secrets
+import hashlib
+import hmac
+
+# 1. Generate a random API-style token.
+# secrets uses operating-system randomness suitable for security tokens.
+token = secrets.token_urlsafe(32)
+print(&quot;Random token:&quot;, token)
+
+# 2. Hash a message. A hash is not secret and not reversible encryption.
+message = b&quot;pay=100&amp;to=library&quot;
+digest = hashlib.sha256(message).hexdigest()
+print(&quot;SHA-256 digest:&quot;, digest)
+
+# 3. Compute an HMAC. The key must remain secret.
+key = secrets.token_bytes(32)
+tag = hmac.new(key, message, hashlib.sha256).hexdigest()
+print(&quot;HMAC tag:&quot;, tag)
+
+# 4. Verify with constant-time comparison.
+received_message = b&quot;pay=100&amp;to=library&quot;
+received_tag = tag
+expected_tag = hmac.new(key, received_message, hashlib.sha256).hexdigest()
+
+if hmac.compare_digest(received_tag, expected_tag):
+    print(&quot;Message accepted: HMAC is valid&quot;)
+else:
+    print(&quot;Message rejected: HMAC is invalid&quot;)
+
+# 5. Tampering demo: one byte changes the expected tag.
+tampered_message = b&quot;pay=900&amp;to=library&quot;
+tampered_tag = hmac.new(key, tampered_message, hashlib.sha256).hexdigest()
+print(&quot;Tampered message has same tag?&quot;, hmac.compare_digest(tag, tampered_tag))</code></pre>
+            <p><strong>What to notice:</strong> the key is random bytes, the digest is public, the HMAC tag depends on both key and message, and <code>compare_digest</code> is used for verification.</p>
+
+            <h3>8.4 Network Example: Signed Webhook</h3>
+            <p>A webhook is a message one service sends to another when an event happens. A signed webhook lets the receiver check that the body has not been changed and was produced by a party that knows the shared secret.</p>
+            <pre><code class="language-python"># Safe local webhook-signing demonstration. No external network target is used.
+# Run the script and inspect how the receiver rejects a tampered body.
+import hashlib
+import hmac
+import secrets
+
+shared_webhook_secret = secrets.token_bytes(32)
+body = b&#x27;{&quot;event&quot;:&quot;assignment_submitted&quot;,&quot;student&quot;:&quot;alice&quot;}&#x27;
+
+signature = hmac.new(shared_webhook_secret, body, hashlib.sha256).hexdigest()
+print(&quot;Sender signature:&quot;, signature)
+
+# Receiver recomputes the signature from the exact bytes received.
+received_body = body
+expected = hmac.new(shared_webhook_secret, received_body, hashlib.sha256).hexdigest()
+print(&quot;Valid receiver check:&quot;, hmac.compare_digest(signature, expected))
+
+# A modified body fails verification.
+tampered_body = b&#x27;{&quot;event&quot;:&quot;grade_changed&quot;,&quot;student&quot;:&quot;alice&quot;}&#x27;
+expected_for_tampered = hmac.new(shared_webhook_secret, tampered_body, hashlib.sha256).hexdigest()
+print(&quot;Tampered receiver check:&quot;, hmac.compare_digest(signature, expected_for_tampered))</code></pre>
+
+            <h3>8.5 Web Example</h3>
+            <p>A password-reset link should use a high-entropy token, short expiry, one-time use, rate limiting, and safe logging. A weak design uses predictable token IDs such as <code>/reset?token=100123</code>. A safer design uses a random token and stores only a hash or protected representation of it server-side.</p>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant User
+  participant App
+  participant DB
+  User->>App: Request password reset
+  App->>App: Generate high-entropy token
+  App->>DB: Store token hash, user, expiry, unused status
+  App->>User: Send reset link through approved channel
+  User->>App: Submit token
+  App->>DB: Look up and verify token hash
+  App->>DB: Mark token used
+</pre></div>
+
+            <h3>8.6 Cloud Example</h3>
+            <p>Cloud systems often avoid exposing raw keys to applications. Instead, the application calls a key-management service to encrypt, decrypt, sign, verify, or generate data keys. This reduces direct key exposure and creates audit logs, but it does not remove the need for access control, monitoring, and secure application design.</p>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Unsafe Beginner Pattern</h3>
+            <pre><code class="language-python"># Do NOT copy this pattern into real software.
+# Problems:
+# - random is not intended for cryptographic secrets.
+# - The key is hardcoded in source code.
+# - SHA-256 alone is not a password-hashing scheme.
+import random
+import hashlib
+
+api_key = &quot;secret-key-inside-source-code&quot;
+reset_token = str(random.randint(100000, 999999))
+password_hash = hashlib.sha256(b&quot;Password123&quot;).hexdigest()
+print(api_key, reset_token, password_hash)</code></pre>
+            <p><strong>Line-by-line explanation:</strong></p>
+            <ul>
+              <li><code>import random</code> imports a module designed for simulation, not cryptographic secrets.</li>
+              <li><code>api_key = ...</code> hardcodes a secret in source code. This can leak through Git, backups, screenshots, logs, and support bundles.</li>
+              <li><code>random.randint(...)</code> creates a token that may be predictable and too small.</li>
+              <li><code>hashlib.sha256(...)</code> computes a fast hash. It is not a password-hashing scheme.</li>
+            </ul>
+
+            <h3>9.2 Safer Educational Pattern</h3>
+            <pre><code class="language-python"># Safer educational pattern for local demonstration.
+# Production systems should use a mature framework and a reviewed secrets manager.
+import os
+import secrets
+import hashlib
+
+# Load an application secret from the environment, not from source code.
+# In a real deployment, this would usually come from a secrets manager.
+app_secret = os.environ.get(&quot;APP_SECRET&quot;)
+if not app_secret:
+    raise RuntimeError(&quot;APP_SECRET is missing&quot;)
+
+# Generate an unpredictable reset token.
+reset_token = secrets.token_urlsafe(32)
+
+# Demonstration of PBKDF2 from Python standard library.
+# For new applications, prefer a modern password-hashing library supporting Argon2id
+# unless policy requires PBKDF2. Always use a unique salt per password.
+password = b&quot;correct horse battery staple&quot;
+salt = secrets.token_bytes(16)
+dk = hashlib.pbkdf2_hmac(&quot;sha256&quot;, password, salt, 600_000)
+print(&quot;Reset token:&quot;, reset_token)
+print(&quot;Salt:&quot;, salt.hex())
+print(&quot;Stored derived key:&quot;, dk.hex())</code></pre>
+            <p><strong>Line-by-line explanation:</strong></p>
+            <ul>
+              <li><code>import os</code> allows the program to read environment variables for local demonstration.</li>
+              <li><code>import secrets</code> provides cryptographically strong random values.</li>
+              <li><code>import hashlib</code> provides standard hashing and key-derivation functions.</li>
+              <li><code>os.environ.get("APP_SECRET")</code> avoids putting the secret directly in source code. Production systems should use a secrets manager rather than relying only on environment variables.</li>
+              <li><code>secrets.token_urlsafe(32)</code> generates a high-entropy token suitable for URLs.</li>
+              <li><code>secrets.token_bytes(16)</code> generates a unique salt for this password-hashing demonstration.</li>
+              <li><code>hashlib.pbkdf2_hmac(..., 600_000)</code> derives a password hash using many iterations. In new non-FIPS-constrained applications, Argon2id is usually preferred when available through a reviewed library.</li>
+            </ul>
+
+            <h3>9.3 Common Mistakes</h3>
+            <ul>
+              <li><strong>Mistake:</strong> “The token is long, so it must be safe.” <strong>Fix:</strong> check how it was generated, not only length.</li>
+              <li><strong>Mistake:</strong> “Hashing is encryption.” <strong>Fix:</strong> hashes are one-way digests; encryption is reversible with a key.</li>
+              <li><strong>Mistake:</strong> “A salt must be secret.” <strong>Fix:</strong> salts are public uniqueness values; peppers are secret defense-in-depth values.</li>
+              <li><strong>Mistake:</strong> “If the HMAC matches, the message is secret.” <strong>Fix:</strong> HMAC authenticates and protects integrity; it does not hide the message.</li>
+              <li><strong>Mistake:</strong> “I can use one key for everything.” <strong>Fix:</strong> use key separation and purpose labels.</li>
+            </ul>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common Attacks</h3>
+            <ul>
+              <li><strong>Token guessing:</strong> attacker guesses password-reset links, invite links, or API tokens.</li>
+              <li><strong>Offline password cracking:</strong> attacker steals password hashes and tests guesses locally.</li>
+              <li><strong>Secret leakage:</strong> keys appear in Git repositories, logs, tickets, screenshots, container images, or CI/CD variables.</li>
+              <li><strong>Replay:</strong> attacker resends a previously valid signed message if timestamps, nonces, or idempotency controls are missing.</li>
+              <li><strong>MAC bypass:</strong> application verifies only part of a tag or accepts missing signatures.</li>
+              <li><strong>Hash collision abuse:</strong> weak hash algorithms are exploited in collision-sensitive contexts.</li>
+              <li><strong>Key compromise:</strong> attacker obtains a key and can decrypt, sign, or authenticate depending on the key purpose.</li>
+            </ul>
+            <h3>Defensive Strategies</h3>
+            <ul>
+              <li>Generate secrets with OS-backed cryptographic randomness.</li>
+              <li>Use reviewed cryptographic libraries and standard constructions.</li>
+              <li>Use unique salts and slow password hashing for passwords.</li>
+              <li>Use a secrets manager or key-management service for production secrets.</li>
+              <li>Label keys by owner, purpose, environment, and rotation policy.</li>
+              <li>Rotate and revoke secrets after exposure, compromise, or role changes.</li>
+              <li>Scan repositories and CI/CD systems for secrets.</li>
+              <li>Verify MAC tags over the exact bytes received using constant-time comparison.</li>
+              <li>Protect against replay with timestamps, nonces, event IDs, and short validity windows.</li>
+            </ul>
+            <h3>Detection Methods</h3>
+            <ul>
+              <li>Repository secret-scanning alerts.</li>
+              <li>Unusual API-key use from unexpected IP addresses, regions, or services.</li>
+              <li>Repeated token-verification failures.</li>
+              <li>High rates of password-reset attempts.</li>
+              <li>Use of retired or revoked keys.</li>
+              <li>Unexpected spikes in HMAC verification failures.</li>
+              <li>Logs showing application errors from missing or malformed secrets.</li>
+            </ul>
+            <h3>Mitigation and Best Practices</h3>
+            <ul>
+              <li>Never log full keys, tokens, private keys, or password hashes in normal application logs.</li>
+              <li>Mask secrets in telemetry and support tools.</li>
+              <li>Do not email production keys or paste them into chat systems.</li>
+              <li>Use separate keys for development, staging, and production.</li>
+              <li>Prefer short-lived credentials where possible.</li>
+              <li>Document key owners and emergency rotation procedures.</li>
+              <li>Treat unknown key exposure as a security incident, not a minor cleanup task.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <table>
+              <thead><tr><th>Sector</th><th>How this topic is used</th><th>Failure impact</th></tr></thead>
+              <tbody>
+                <tr><td>Banks</td><td>Payment message authentication, transaction integrity, HSM-backed keys, API signing, fraud controls.</td><td>Financial loss, fraud, regulatory action, loss of trust.</td></tr>
+                <tr><td>Governments</td><td>Document integrity, classified communications, citizen identity systems, key custody, secure archives.</td><td>National-security risk, privacy harm, legal exposure.</td></tr>
+                <tr><td>Cloud providers</td><td>KMS, HSMs, signed requests, data-key wrapping, secret rotation, audit logging.</td><td>Tenant compromise, mass credential abuse, infrastructure takeover.</td></tr>
+                <tr><td>Healthcare</td><td>Patient-record integrity, secure portals, device credentials, backup encryption keys.</td><td>Patient privacy harm, safety risk, compliance violations.</td></tr>
+                <tr><td>Defense</td><td>Mission-system keys, supply-chain signatures, tamper evidence, classified network protection.</td><td>Operational compromise and safety consequences.</td></tr>
+                <tr><td>Universities</td><td>Student portals, research data, Git repositories, identity tokens, lab infrastructure.</td><td>Data exposure, grade tampering, research theft, account compromise.</td></tr>
+                <tr><td>Large enterprises</td><td>Secrets management, API authentication, CI/CD signing, log integrity, incident response.</td><td>Lateral movement, ransomware acceleration, business disruption.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Research in this area studies both mathematical security and engineering reality. A scheme may be sound in theory but still fail through weak randomness, implementation bugs, side channels, or poor key lifecycle controls.</p>
+            <h3>Current Research Directions</h3>
+            <ul>
+              <li><strong>Randomness generation and entropy estimation:</strong> how to measure, certify, and monitor entropy sources in hardware and software systems.</li>
+              <li><strong>Side-channel-resistant implementations:</strong> how timing, power, cache behavior, and faults can leak secrets.</li>
+              <li><strong>Formal verification:</strong> proving that cryptographic libraries and protocols implement intended properties.</li>
+              <li><strong>Password hashing economics:</strong> choosing memory and time costs that meaningfully increase attacker cost without causing denial of service for legitimate users.</li>
+              <li><strong>Secrets detection:</strong> reducing false positives and false negatives in repository and artifact scanning.</li>
+              <li><strong>Key transparency and accountability:</strong> making key changes auditable for messaging, software updates, and identity systems.</li>
+              <li><strong>Post-quantum migration:</strong> updating key-management systems so algorithms can change without redesigning the whole platform.</li>
+            </ul>
+            <h3>Notable Papers and Topics to Explore</h3>
+            <ul>
+              <li>Bellare, Canetti, and Krawczyk's work on HMAC security foundations.</li>
+              <li>The Password Hashing Competition and Argon2 design literature.</li>
+              <li>Research on Debian OpenSSL weak-key detection and ecosystem impact.</li>
+              <li>Studies on secret leakage in software repositories and CI/CD artifacts.</li>
+              <li>NIST work on random bit generation, key management, and hash standards.</li>
+            </ul>
+            <h3>Open Problems</h3>
+            <ul>
+              <li>How can organizations rotate millions of secrets without outages?</li>
+              <li>How can developers get secure defaults without needing cryptography expertise?</li>
+              <li>How can systems detect weak randomness before production damage occurs?</li>
+              <li>How can secret-scanning tools reduce alert fatigue while still catching real keys?</li>
+              <li>How should long-lived encrypted data be protected during post-quantum migration?</li>
+            </ul>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>13.1 Debian OpenSSL Predictable Random Number Generator</h3>
+            <p><strong>What happened:</strong> In 2008, Debian disclosed that a Debian-specific OpenSSL change made the random number generator predictable. Keys generated on affected systems could be guessable.</p>
+            <p><strong>Root cause:</strong> a change intended to quiet analysis warnings removed important entropy-related behavior.</p>
+            <p><strong>Impact:</strong> affected cryptographic key material had to be regenerated and replaced.</p>
+            <p><strong>Lesson:</strong> randomness code is security-critical. Small changes can destroy the security of many higher-level systems.</p>
+
+            <h3>13.2 Android SecureRandom and Bitcoin Wallets</h3>
+            <p><strong>What happened:</strong> In 2013, weak Android random-number generation affected Bitcoin wallet applications. Some wallet-generated cryptographic values became predictable enough to endanger funds.</p>
+            <p><strong>Root cause:</strong> weaknesses in the SecureRandom implementation and its use affected key/signature-related randomness.</p>
+            <p><strong>Impact:</strong> wallet providers advised users to update applications and move funds to addresses generated after fixes.</p>
+            <p><strong>Lesson:</strong> cryptographic randomness errors can directly compromise private keys or signatures.</p>
+
+            <h3>13.3 Flame Malware and MD5 Collision Abuse</h3>
+            <p><strong>What happened:</strong> The Flame malware case involved abuse of MD5 collision weaknesses to help forge a certificate chain used for malicious code-signing behavior.</p>
+            <p><strong>Root cause:</strong> a collision-weak hash algorithm remained usable in a security-sensitive certificate context.</p>
+            <p><strong>Impact:</strong> Microsoft invalidated affected certificates and strengthened update trust mechanisms.</p>
+            <p><strong>Lesson:</strong> legacy hash algorithms can remain dangerous long after their weaknesses are publicly known.</p>
+
+            <h3>13.4 Secrets in Source Code</h3>
+            <p><strong>What happened:</strong> Organizations repeatedly expose API keys, tokens, and private credentials in source repositories and collaboration tools.</p>
+            <p><strong>Root cause:</strong> developers treat secrets as configuration text and store them with code, logs, tickets, or local files.</p>
+            <p><strong>Impact:</strong> attackers can use exposed credentials directly, often without exploiting a software vulnerability.</p>
+            <p><strong>Lesson:</strong> key management is not optional paperwork. It is a core security control.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <ul>
+              <li><strong>“Random-looking means secure.”</strong> Incorrect. Predictable generators can produce values that look random to humans.</li>
+              <li><strong>“A longer token is always secure.”</strong> Incomplete. Length matters only if the token was generated unpredictably.</li>
+              <li><strong>“Hashing encrypts data.”</strong> Incorrect. Hashing is one-way digesting; encryption is reversible with a key.</li>
+              <li><strong>“SHA-256 is always enough.”</strong> Incorrect. It is not enough for password storage by itself.</li>
+              <li><strong>“Salts must be hidden.”</strong> Incorrect. Salts are usually stored with hashes; uniqueness is their main purpose.</li>
+              <li><strong>“HMAC encrypts the message.”</strong> Incorrect. HMAC authenticates and protects integrity but does not hide content.</li>
+              <li><strong>“One master key everywhere is simpler and fine.”</strong> Incorrect. It creates large blast radius and violates key-separation principles.</li>
+              <li><strong>“If a key leaked once but nobody noticed abuse, it is safe.”</strong> Incorrect. Exposure requires rotation or revocation according to risk.</li>
+              <li><strong>“Passing randomness tests proves security.”</strong> Incorrect. Tests can detect some bad patterns but cannot prove attacker unpredictability.</li>
+              <li><strong>“Developers do not need to understand key management if they use a library.”</strong> Incorrect. Libraries help, but applications still decide where secrets live, who can use them, and when to rotate them.</li>
+            </ul>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Randomness, keys, hashes, and MACs are basic but high-impact cryptographic building blocks. Randomness creates values attackers cannot predict. Keys control cryptographic operations and must be managed throughout their lifecycle. Hashes create fixed-size digests for integrity and identification, but they do not provide secrecy. Password hashing is a separate, slower, salt-based process designed to resist offline guessing. MACs such as HMAC provide keyed integrity and shared-key authentication. Real-world failures often come from weak randomness, leaked secrets, wrong primitive choice, poor verification, or weak key-management processes.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <dl>
+              <dt>API Key</dt><dd>A secret-like value used by software to authenticate to an API.</dd>
+              <dt>Birthday Bound</dt><dd>An approximation showing how collision probability grows as more values are generated.</dd>
+              <dt>CSPRNG</dt><dd>Cryptographically secure pseudo-random number generator designed for unpredictable security-sensitive values.</dd>
+              <dt>Digest</dt><dd>The fixed-size output of a hash function.</dd>
+              <dt>Entropy</dt><dd>A measure of uncertainty or unpredictability.</dd>
+              <dt>Hash Function</dt><dd>A function that maps data to a fixed-size digest.</dd>
+              <dt>HMAC</dt><dd>A hash-based message authentication code using a secret key and a hash function.</dd>
+              <dt>Key Lifecycle</dt><dd>The stages a key passes through: generation, storage, use, rotation, revocation, archival, and destruction.</dd>
+              <dt>Key Rotation</dt><dd>Replacing a key with a new one according to policy or risk.</dd>
+              <dt>Key Separation</dt><dd>Using different keys for different cryptographic purposes.</dd>
+              <dt>MAC</dt><dd>Message authentication code; a keyed tag for integrity and shared-key authentication.</dd>
+              <dt>Nonce</dt><dd>A value used once in a cryptographic operation.</dd>
+              <dt>Password Hashing</dt><dd>A slow, salted process for storing password verifiers rather than plaintext passwords.</dd>
+              <dt>Pepper</dt><dd>A secret value added as defense in depth to password hashing and stored separately from the password database.</dd>
+              <dt>Preimage Resistance</dt><dd>The property that it is infeasible to find an input that produces a given digest.</dd>
+              <dt>Salt</dt><dd>A unique public random value added to password hashing to make stored hashes unique.</dd>
+              <dt>Secret</dt><dd>Information that must be protected from unauthorized access.</dd>
+              <dt>Token</dt><dd>A value used to represent authorization, authentication, invitation, session, or reset capability.</dd>
+            </dl>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 Multiple-Choice Questions</h3>
+            <div class="quiz-card" data-answer="B">
+              <p><strong>1. Which source should Python code normally use for security tokens?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q1" value="A"> A. random.random()</label>
+<label class="quiz-option"><input type="radio" name="q1" value="B"> B. secrets.token_urlsafe() or another secrets module function</label>
+<label class="quiz-option"><input type="radio" name="q1" value="C"> C. The current time in seconds</label>
+<label class="quiz-option"><input type="radio" name="q1" value="D"> D. A username reversed</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. The secrets module is designed for cryptographically strong random values; random is for simulation, not security.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>2. What does entropy measure in this lesson?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q2" value="A"> A. How unpredictable a value is</label>
+<label class="quiz-option"><input type="radio" name="q2" value="B"> B. How large a file is</label>
+<label class="quiz-option"><input type="radio" name="q2" value="C"> C. How fast a network is</label>
+<label class="quiz-option"><input type="radio" name="q2" value="D"> D. How many users exist</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Entropy is a way to reason about uncertainty or unpredictability.</p>
+            </div>
+<div class="quiz-card" data-answer="C">
+              <p><strong>3. A 128-bit uniformly random key has how many possible values?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q3" value="A"> A. 128</label>
+<label class="quiz-option"><input type="radio" name="q3" value="B"> B. 2^64</label>
+<label class="quiz-option"><input type="radio" name="q3" value="C"> C. 2^128</label>
+<label class="quiz-option"><input type="radio" name="q3" value="D"> D. 128^2</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: C. Each bit has two possible values, so 128 independent bits produce 2^128 possibilities.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>4. Which statement about a cryptographic hash is correct?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q4" value="A"> A. It is reversible encryption</label>
+<label class="quiz-option"><input type="radio" name="q4" value="B"> B. It produces a fixed-size digest</label>
+<label class="quiz-option"><input type="radio" name="q4" value="C"> C. It always proves who created the message</label>
+<label class="quiz-option"><input type="radio" name="q4" value="D"> D. It keeps the original message secret</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. A hash maps data to a fixed-size digest but does not provide secrecy or origin authentication by itself.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>5. What is a salt used for in password hashing?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q5" value="A"> A. To make every user&#x27;s password hash unique even if passwords match</label>
+<label class="quiz-option"><input type="radio" name="q5" value="B"> B. To encrypt the password so it can be recovered</label>
+<label class="quiz-option"><input type="radio" name="q5" value="C"> C. To replace MFA</label>
+<label class="quiz-option"><input type="radio" name="q5" value="D"> D. To compress the password</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. A unique salt prevents identical passwords from producing identical stored hashes and blocks precomputed lookup-table reuse.</p>
+            </div>
+<div class="quiz-card" data-answer="C">
+              <p><strong>6. Why is SHA-256 alone not appropriate for password storage?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q6" value="A"> A. It cannot hash text</label>
+<label class="quiz-option"><input type="radio" name="q6" value="B"> B. It is too slow for attackers</label>
+<label class="quiz-option"><input type="radio" name="q6" value="C"> C. It is fast and enables large-scale offline guessing</label>
+<label class="quiz-option"><input type="radio" name="q6" value="D"> D. It requires a TLS certificate</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: C. Password storage needs slow, salted password-hashing schemes such as Argon2id, bcrypt, scrypt, or PBKDF2.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>7. What does HMAC provide when the key remains secret?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q7" value="A"> A. Compression</label>
+<label class="quiz-option"><input type="radio" name="q7" value="B"> B. Integrity and shared-key message authentication</label>
+<label class="quiz-option"><input type="radio" name="q7" value="C"> C. Public non-repudiation</label>
+<label class="quiz-option"><input type="radio" name="q7" value="D"> D. Automatic confidentiality</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. HMAC lets parties sharing a secret key detect modification and verify that the tag was created by someone with that key.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>8. Which value should usually be public in password storage?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q8" value="A"> A. Salt</label>
+<label class="quiz-option"><input type="radio" name="q8" value="B"> B. Pepper</label>
+<label class="quiz-option"><input type="radio" name="q8" value="C"> C. User password</label>
+<label class="quiz-option"><input type="radio" name="q8" value="D"> D. Database root password</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. The salt is normally stored with the password hash; secrecy is not its purpose.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>9. Which value should be stored separately from the password database?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q9" value="A"> A. Salt</label>
+<label class="quiz-option"><input type="radio" name="q9" value="B"> B. Pepper</label>
+<label class="quiz-option"><input type="radio" name="q9" value="C"> C. Username</label>
+<label class="quiz-option"><input type="radio" name="q9" value="D"> D. Hash algorithm name</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. A pepper is a secret shared application-side value and should be kept outside the password database, such as in a secrets manager.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>10. What is the safest way to compare a received HMAC tag with an expected tag?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q10" value="A"> A. Use == in all languages</label>
+<label class="quiz-option"><input type="radio" name="q10" value="B"> B. Use a constant-time comparison function such as hmac.compare_digest in Python</label>
+<label class="quiz-option"><input type="radio" name="q10" value="C"> C. Convert both tags to lowercase</label>
+<label class="quiz-option"><input type="radio" name="q10" value="D"> D. Compare only the first four characters</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. Constant-time comparison reduces timing side-channel leakage during tag verification.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>11. What is key rotation?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q11" value="A"> A. Changing a key according to policy or after suspected compromise</label>
+<label class="quiz-option"><input type="radio" name="q11" value="B"> B. Base64-encoding a key</label>
+<label class="quiz-option"><input type="radio" name="q11" value="C"> C. Renaming a file</label>
+<label class="quiz-option"><input type="radio" name="q11" value="D"> D. Sending a key by email</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Rotation replaces or retires keys according to risk, lifecycle, exposure, and operational policy.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>12. Which action is usually dangerous?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q12" value="A"> A. Generating a token with OS-backed randomness</label>
+<label class="quiz-option"><input type="radio" name="q12" value="B"> B. Storing an API key in a public Git repository</label>
+<label class="quiz-option"><input type="radio" name="q12" value="C"> C. Hashing a downloaded file to verify integrity</label>
+<label class="quiz-option"><input type="radio" name="q12" value="D"> D. Using a secrets manager</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. Hardcoded and publicly committed secrets can be discovered and abused by attackers.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>13. What is the birthday bound mainly used for here?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q13" value="A"> A. Estimating how collision probability grows as more random values are generated</label>
+<label class="quiz-option"><input type="radio" name="q13" value="B"> B. Calculating file permissions</label>
+<label class="quiz-option"><input type="radio" name="q13" value="C"> C. Designing passwords from birthdays</label>
+<label class="quiz-option"><input type="radio" name="q13" value="D"> D. Encrypting web traffic</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Collision probability grows roughly with the square of the number of generated values.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>14. What does key separation mean?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q14" value="A"> A. Use different keys for different purposes</label>
+<label class="quiz-option"><input type="radio" name="q14" value="B"> B. Split a keyboard into two halves</label>
+<label class="quiz-option"><input type="radio" name="q14" value="C"> C. Use the same key everywhere</label>
+<label class="quiz-option"><input type="radio" name="q14" value="D"> D. Store keys beside source code</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. A key used for one purpose should not be reused for unrelated purposes such as encryption, HMAC, and backups.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>15. Which hash family is currently preferred over MD5 and SHA-1 for new general integrity uses?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q15" value="A"> A. SHA-2 or SHA-3 family algorithms</label>
+<label class="quiz-option"><input type="radio" name="q15" value="B"> B. CRC32 only</label>
+<label class="quiz-option"><input type="radio" name="q15" value="C"> C. Base64</label>
+<label class="quiz-option"><input type="radio" name="q15" value="D"> D. ROT13</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. MD5 and SHA-1 are legacy and collision-weak; SHA-2 and SHA-3 families are appropriate for many modern hash uses.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>16. What is a MAC tag?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q16" value="A"> A. A fixed authentication value computed from a message and secret key</label>
+<label class="quiz-option"><input type="radio" name="q16" value="B"> B. A network cable</label>
+<label class="quiz-option"><input type="radio" name="q16" value="C"> C. A Windows registry hive</label>
+<label class="quiz-option"><input type="radio" name="q16" value="D"> D. A DNS record</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. A MAC tag is verified to detect tampering and prove possession of the shared key.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>17. What should happen if an HMAC verification fails?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q17" value="A"> A. Accept the message anyway</label>
+<label class="quiz-option"><input type="radio" name="q17" value="B"> B. Reject the message and log enough context without leaking secrets</label>
+<label class="quiz-option"><input type="radio" name="q17" value="C"> C. Try to guess the key</label>
+<label class="quiz-option"><input type="radio" name="q17" value="D"> D. Disable authentication</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. Failed verification means integrity/authentication cannot be trusted, so the message should be rejected.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>18. What is a secure key lifecycle?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q18" value="A"> A. Generate, distribute, store, use, rotate, revoke, archive if needed, and destroy</label>
+<label class="quiz-option"><input type="radio" name="q18" value="B"> B. Write the key into every source file</label>
+<label class="quiz-option"><input type="radio" name="q18" value="C"> C. Reuse one key forever</label>
+<label class="quiz-option"><input type="radio" name="q18" value="D"> D. Let users choose encryption keys from common words</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Keys need management across their whole life, not only at generation time.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>19. What is a common limitation of randomness tests?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q19" value="A"> A. Passing tests does not prove unpredictability</label>
+<label class="quiz-option"><input type="radio" name="q19" value="B"> B. They always reveal the exact key</label>
+<label class="quiz-option"><input type="radio" name="q19" value="C"> C. They replace entropy estimation</label>
+<label class="quiz-option"><input type="radio" name="q19" value="D"> D. They are only useful for images</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Statistical tests can find some defects, but passing them does not prove that future outputs are unpredictable to an attacker.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>20. Which is the best beginner rule for cryptographic design?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q20" value="A"> A. Invent your own algorithm</label>
+<label class="quiz-option"><input type="radio" name="q20" value="B"> B. Use reviewed libraries and standard constructions with correct key handling</label>
+<label class="quiz-option"><input type="radio" name="q20" value="C"> C. Hide the source code and skip key management</label>
+<label class="quiz-option"><input type="radio" name="q20" value="D"> D. Use fast hashes for every security problem</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. Most systems fail through misuse; standard libraries and sound key handling reduce avoidable risk.</p>
+            </div>
+
+            <h3>10 Short Questions</h3>
+            <ol>
+              <li>Define entropy in your own words.</li>
+              <li>Why is <code>random</code> unsuitable for security tokens in Python?</li>
+              <li>What is the difference between a key and a password?</li>
+              <li>What does SHA-256 output?</li>
+              <li>Why does a salt not need to be secret?</li>
+              <li>What is the difference between a salt and a pepper?</li>
+              <li>What does HMAC prove to the receiver?</li>
+              <li>Why should MAC tags be compared with constant-time comparison?</li>
+              <li>What does key rotation accomplish?</li>
+              <li>Give two examples of secret leakage locations outside source code.</li>
+            </ol>
+
+            <h3>5 Long Questions</h3>
+            <ol>
+              <li>Explain the lifecycle of a production API key from generation to destruction.</li>
+              <li>Compare general-purpose hashing, password hashing, and HMAC. Include purpose, inputs, outputs, and common mistakes.</li>
+              <li>Design a safe password-reset-token process for a university portal. Include generation, storage, expiry, verification, logging, and abuse detection.</li>
+              <li>Explain why weak randomness can break systems that use otherwise strong cryptographic algorithms.</li>
+              <li>Write a risk memo explaining why hardcoded secrets in Git repositories are dangerous for a cloud-based company.</li>
+            </ol>
+
+            <h3>Scenario-Based Questions</h3>
+            <ol>
+              <li>A developer creates password-reset tokens by hashing the user's email and current date. Identify the weakness and propose a safer design.</li>
+              <li>A webhook receiver checks only whether the first eight hex characters of an HMAC match. Explain the risk.</li>
+              <li>A company stores one encryption key in an environment variable used by every production service. Identify blast-radius and rotation problems.</li>
+              <li>An incident responder finds an API key in a public repository from three months ago. What immediate actions should be taken?</li>
+              <li>A product team wants to use SHA-256 for password storage because “SHA-256 is secure.” Correct the reasoning.</li>
+            </ol>
+
+            <h3>Interview Questions</h3>
+            <ol>
+              <li>Explain hashing vs encryption to a non-technical manager.</li>
+              <li>What makes a random token secure?</li>
+              <li>How would you verify a signed webhook?</li>
+              <li>What is key separation and why does it matter?</li>
+              <li>What should you do after a secret is accidentally committed to Git?</li>
+            </ol>
+
+            <h3>Critical Thinking Questions</h3>
+            <ol>
+              <li>Why can usability problems lead developers to store secrets insecurely?</li>
+              <li>When might short-lived credentials be better than long-lived static API keys?</li>
+              <li>How can secret rotation itself create availability risk?</li>
+              <li>Why is “no evidence of abuse” not the same as “no compromise” for leaked secrets?</li>
+              <li>What is the difference between mathematical security and operational security in key management?</li>
+            </ol>
+
+            <h3>Research Questions</h3>
+            <ol>
+              <li>How do modern operating systems collect and expose randomness to applications?</li>
+              <li>What are the practical trade-offs between Argon2id, bcrypt, scrypt, and PBKDF2?</li>
+              <li>How accurate are secret-scanning tools across different secret types?</li>
+              <li>What methods exist for proving that a cryptographic library avoids timing side channels?</li>
+              <li>How should organizations plan key-management systems for post-quantum cryptographic migration?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Title</h3>
+            <p>Safe Local Lab: Random Tokens, File Hashes, Password Hashing, and HMAC Verification</p>
+            <h3>Safety and Authorization</h3>
+            <p>This lab uses only local files and locally generated values. Do not use real passwords, real API keys, real private keys, real tokens, production logs, or third-party systems.</p>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Python 3 installed.</li>
+              <li>Terminal access on Linux, macOS, or Windows PowerShell.</li>
+              <li>Basic ability to create files and run scripts.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Generate a high-entropy local token.</li>
+              <li>Compute SHA-256 digests of local files.</li>
+              <li>Observe how a tiny message change changes a digest.</li>
+              <li>Create and verify an HMAC tag.</li>
+              <li>Demonstrate safe constant-time comparison.</li>
+              <li>Explain why SHA-256 alone is not password storage.</li>
+            </ul>
+            <h3>Steps</h3>
+            <ol>
+              <li>Create a folder named <code>lesson-3-2-lab</code>.</li>
+              <li>Create a harmless file named <code>message.txt</code> with the text <code>student=alice;amount=100</code>.</li>
+              <li>Compute the SHA-256 digest using <code>sha256sum</code>, <code>Get-FileHash</code>, or Python.</li>
+              <li>Change <code>amount=100</code> to <code>amount=900</code> and compute the digest again.</li>
+              <li>Run the Python HMAC example in this lesson.</li>
+              <li>Modify the message and verify that the original HMAC tag no longer validates.</li>
+              <li>Generate three URL-safe tokens using <code>secrets.token_urlsafe(32)</code>.</li>
+              <li>Write one paragraph explaining why these tokens should not be logged in a real application.</li>
+              <li>Write one paragraph explaining why password hashing must be slow and salted.</li>
+              <li>Submit a report with commands, outputs, screenshots if required by your instructor, and answers to reflection questions.</li>
+            </ol>
+            <h3>Expected Outcomes</h3>
+            <ul>
+              <li>You can generate local security tokens safely.</li>
+              <li>You can compute and interpret file hashes.</li>
+              <li>You can explain why file hashes are not encryption.</li>
+              <li>You can compute and verify HMAC tags.</li>
+              <li>You can describe at least five key-management best practices.</li>
+            </ul>
+            <h3>Reflection Questions</h3>
+            <ol>
+              <li>What would change if the HMAC key were leaked?</li>
+              <li>Why is a token leak different from a token guess?</li>
+              <li>What should an application log when HMAC verification fails?</li>
+              <li>Why should development and production secrets be different?</li>
+              <li>What evidence would you need before saying a rotated key is no longer accepted anywhere?</li>
+            </ol>
+            <h3>Deliverable</h3>
+            <p>Submit a two-page lab report titled <em>Randomness, Keys, Hashes, and MACs</em>. Include safe outputs only. Redact any value you believe could be reused as a secret. End with a section named “Limits of this lab.”</p>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li><a href="https://csrc.nist.gov/pubs/sp/800/90/a/r1/final">NIST SP 800-90A Rev. 1: Recommendation for Random Number Generation Using Deterministic Random Bit Generators</a>.</li>
+              <li><a href="https://csrc.nist.gov/pubs/fips/180-4/upd1/final">NIST FIPS 180-4: Secure Hash Standard</a>.</li>
+              <li><a href="https://csrc.nist.gov/pubs/fips/202/final">NIST FIPS 202: SHA-3 Standard</a>.</li>
+              <li><a href="https://csrc.nist.gov/pubs/fips/198-1/final">NIST FIPS 198-1: The Keyed-Hash Message Authentication Code</a>.</li>
+              <li><a href="https://datatracker.ietf.org/doc/html/rfc2104">RFC 2104: HMAC</a>.</li>
+              <li><a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final">NIST SP 800-57 Part 1 Rev. 5: Recommendation for Key Management</a>.</li>
+              <li><a href="https://docs.python.org/3/library/secrets.html">Python documentation: secrets module</a>.</li>
+              <li><a href="https://docs.python.org/3/library/hmac.html">Python documentation: hmac module</a>.</li>
+              <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">OWASP Password Storage Cheat Sheet</a>.</li>
+              <li><a href="https://www.debian.org/security/2008/dsa-1571">Debian Security Advisory DSA-1571-1: OpenSSL predictable RNG</a>.</li>
+              <li><a href="https://bitcoin.org/en/alert/2013-08-11-android">Bitcoin.org alert: Android security vulnerability affecting wallets</a>.</li>
+              <li><a href="https://www.microsoft.com/en-us/msrc/blog/2012/06/flame-malware-collision-attack-explained">Microsoft MSRC: Flame malware collision attack explained</a>.</li>
+              <li>Recommended textbooks: Jonathan Katz and Yehuda Lindell, <em>Introduction to Modern Cryptography</em>; Ross Anderson, <em>Security Engineering</em>; David Wong, <em>Real-World Cryptography</em>.</li>
+              <li>Research topics: entropy estimation, hardware random number generators, HMAC proofs, password-hashing economics, secret-scanning accuracy, and key-management automation.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="cryptography-from-first-principles.html">← Lesson 3.1</a><a class="btn" href="index.html">Week 3 Overview</a><a class="btn btn-primary" href="symmetric-encryption-and-authenticated-encryption.html">Next: Lesson 3.3 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><script>hljs.highlightAll();</script>
+</body>
+</html>

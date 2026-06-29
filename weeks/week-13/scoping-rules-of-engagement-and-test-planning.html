@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 13.2: Scoping, Rules of Engagement, and Test Planning | MS Cybersecurity</title>
+  <meta name="description" content="Learn how to scope authorized security assessments, write rules of engagement, plan test windows, define prohibited actions, handle evidence, and set stop conditions.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-13/scoping-rules-of-engagement-and-test-planning" data-title="Lesson 13.2: Scoping, Rules of Engagement, and Test Planning">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 13</a> / Lesson 13.2</div>
+      <header class="hero">
+        <div class="eyebrow">Week 13 · Lesson 13.2 · Offensive Security Methodology</div>
+        <h1>Scoping, Rules of Engagement, and Test Planning</h1>
+        <p class="lead">A security assessment is only professional when the boundaries are explicit. Scope and rules of engagement protect systems, people, evidence, privacy, testers, defenders, and the business decision the test is supposed to support.</p>
+        <div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>95 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Lesson 13.1 and Weeks 0–12</div><div class="meta-item"><strong>Practice time</strong>90–120 minutes</div></div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+
+<section id="introduction"><h2>1. Introduction</h2>
+<p>Weak scoping is one of the easiest ways for an authorized test to become unsafe, useless, or unauthorized. A vague request such as “pentest our app” does not identify the owner, the permitted assets, the testing window, the prohibited actions, the data rules, or the emergency stop process.</p>
+<p>This lesson treats scope and rules of engagement as operational security controls. They are not paperwork added after the real work. They are the controls that make the work lawful, repeatable, defensible, and useful.</p>
+<p>The practical outcome is a test plan that says exactly what will be tested, why it will be tested, how far the tester may go, what must not be touched, how evidence will be handled, and who can pause or stop the work.</p>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2>
+<ul><li>Explain why authorization, scope, and rules of engagement are required before any offensive-security activity.</li><li>Write a precise scope statement with in-scope assets, out-of-scope assets, owner approval, business objectives, and deliverables.</li><li>Define rules of engagement for methods, windows, prohibited actions, credentials, data handling, communication, and stop conditions.</li><li>Identify common scoping traps involving cloud, SaaS, third parties, shared services, production systems, and sensitive data.</li><li>Convert a vague assessment request into a controlled test plan.</li><li>Use a safe local Python lab to review fictional plans for missing controls and conflicts.</li></ul>
+</section>
+
+<section id="research-anchors"><h2>3. Research Anchors Used for This Lesson</h2>
+<p>This lesson is grounded in formal assessment and testing references:</p>
+<ul><li><a href="https://csrc.nist.gov/pubs/sp/800/115/final">NIST SP 800-115</a> supports planning and conducting technical information security tests and examinations, analyzing findings, and developing mitigation strategies.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/53/a/r5/final">NIST SP 800-53A Rev. 5</a> provides assessment procedures that organizations can tailor to support risk management and stated risk tolerance.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final">NIST SP 800-53 Rev. 5</a> provides control context for authorization, monitoring, access control, audit, incident response, configuration management, and risk management.</li><li><a href="https://owasp.org/www-project-web-security-testing-guide/">OWASP Web Security Testing Guide</a> provides a structured web and web-service testing reference.</li><li><a href="https://owasp.org/www-project-web-security-testing-guide/latest/3-The_OWASP_Testing_Framework/1-Penetration_Testing_Methodologies">OWASP's testing-methodology references</a> summarize common testing phases, including pre-engagement interaction, intelligence gathering, vulnerability analysis, reporting, and NIST SP 800-115's planning/execution/post-testing framing.</li><li><a href="https://attack.mitre.org/">MITRE ATT&amp;CK</a> provides a common vocabulary for adversary behavior when scoping emulation, purple-team, and detection-validation objectives.</li><li><a href="https://www.cisa.gov/cyber-hygiene-services">CISA Cyber Hygiene Services</a> illustrate the idea that even scanning internet-accessible assets must be treated as an authorized, bounded defensive service.</li></ul>
+<div class="warning"><strong>Research limitation:</strong> Methodology references do not replace written authorization, contract terms, cloud-provider rules, local law, privacy obligations, or organization-specific risk decisions.</div>
+</section>
+
+<section id="safety-boundary"><h2>4. Safety and Authorization Boundary</h2>
+<div class="warning"><strong>Authorized environments only:</strong> Do not scan, enumerate, test, exploit, bypass controls, collect data, phish, stress systems, or interact with accounts unless the asset owner has explicitly authorized the activity in writing. This lesson uses only fictional examples and local validation scripts.</div>
+<p>A test plan must be specific enough that a reasonable reviewer can answer: who approved this, which assets are covered, which actions are permitted, which actions are prohibited, when testing may happen, what evidence may be collected, and how to stop the activity if risk increases.</p>
+<p>This lesson does not provide legal advice. Real engagements require review by the correct business, legal, privacy, compliance, risk, security, engineering, and service-owner stakeholders.</p>
+</section>
+
+<section id="scope-is-control"><h2>5. First Principle: Scope Is a Security Control</h2>
+<p>Scope is not just a list of URLs or IP ranges. It is the permission boundary for the assessment. It limits blast radius, protects third parties, prevents privacy violations, gives defenders context, and makes evidence easier to interpret.</p>
+<table><thead><tr><th>Weak assumption</th><th>Failure mode</th><th>Better control</th></tr></thead><tbody>
+<tr><td>“We own the company, so everything is in scope.”</td><td>Shared cloud accounts, subsidiaries, vendors, customer tenants, and personal accounts may have different ownership and authorization.</td><td>Name exact legal entities, owners, systems, accounts, domains, environments, and exclusions.</td></tr>
+<tr><td>“The tool only scans, so it is harmless.”</td><td>Scanning can trigger alarms, rate limits, account lockouts, unstable services, or provider abuse systems.</td><td>Define methods, rate limits, windows, contacts, and stop conditions.</td></tr>
+<tr><td>“Production is fine because we need real results.”</td><td>Testing can disrupt users, expose data, or collide with deployments.</td><td>Prefer staging/lab validation unless production testing is explicitly justified, approved, and controlled.</td></tr>
+<tr><td>“The vendor hosts it, but it is our app.”</td><td>Vendor terms may forbid specific tests or require prior notice.</td><td>Confirm third-party approval, provider rules, and escalation paths.</td></tr>
+</tbody></table>
+</section>
+
+<section id="scope-statement"><h2>6. Anatomy of a Scope Statement</h2>
+<p>A useful scope statement should be concrete enough to guide a tester and clear enough for a non-technical owner to approve.</p>
+<table><thead><tr><th>Element</th><th>Questions it must answer</th><th>Example</th></tr></thead><tbody>
+<tr><td>Owner and authority</td><td>Who owns the asset and who authorizes the test?</td><td>Application Security Steering Group authorizes testing of the training portal.</td></tr>
+<tr><td>Business objective</td><td>What decision will the test support?</td><td>Validate remediation before public release.</td></tr>
+<tr><td>In-scope assets</td><td>Which domains, APIs, applications, accounts, repositories, networks, cloud accounts, or roles are included?</td><td><code>training-portal.example.test</code> and <code>api.training-portal.example.test</code>.</td></tr>
+<tr><td>Out-of-scope assets</td><td>Which connected systems, vendors, tenants, environments, or data stores are excluded?</td><td>Payment provider, production email, customer export service.</td></tr>
+<tr><td>Methods</td><td>Which test activities are permitted, limited, or prohibited?</td><td>Authenticated web testing with test accounts; no denial-of-service or credential harvesting.</td></tr>
+<tr><td>Timing</td><td>When may testing start and stop? Which timezone? Which change freezes?</td><td>July 6–7, 09:00–18:00 Asia/Karachi.</td></tr>
+<tr><td>Evidence</td><td>What may be captured, where will it be stored, and how long will it be retained?</td><td>Redacted screenshots, request IDs, timestamps, synthetic data, encrypted repository.</td></tr>
+<tr><td>Deliverables</td><td>What output will the owner receive?</td><td>Validated findings, impact explanation, remediation, retest criteria, detection opportunities.</td></tr>
+</tbody></table>
+</section>
+
+<section id="roe"><h2>7. Rules of Engagement</h2>
+<p>Rules of engagement turn the scope statement into operating instructions. They should be written before testing begins and should be visible to testers, defenders, service owners, incident responders, and the engagement sponsor.</p>
+<table><thead><tr><th>RoE area</th><th>What to define</th><th>Why it matters</th></tr></thead><tbody>
+<tr><td>Allowed methods</td><td>Permitted techniques, accounts, tools, test types, and validation depth.</td><td>Prevents uncontrolled escalation and ambiguous expectations.</td></tr>
+<tr><td>Prohibited actions</td><td>Denial-of-service, destructive testing, persistence, credential theft, sensitive-data extraction, phishing, physical access, or social engineering unless explicitly approved.</td><td>Reduces avoidable harm and legal/privacy exposure.</td></tr>
+<tr><td>Rate and load limits</td><td>Request rates, concurrency limits, scanning windows, and production throttles.</td><td>Protects service availability and reduces false incidents.</td></tr>
+<tr><td>Credential rules</td><td>Approved test accounts, roles, MFA expectations, password handling, and account cleanup.</td><td>Prevents misuse of real user credentials and unclear authorization.</td></tr>
+<tr><td>Evidence rules</td><td>Redaction, storage, retention, access, ticket IDs, chain of custody when needed.</td><td>Improves report quality and protects sensitive data.</td></tr>
+<tr><td>Communications</td><td>Kickoff, daily status, emergency bridge, escalation path, deconfliction with SOC.</td><td>Keeps owners and defenders aligned.</td></tr>
+<tr><td>Stop conditions</td><td>Who can stop the test, what triggers a pause, and how testers acknowledge the stop.</td><td>Provides a safety brake when risk changes.</td></tr>
+</tbody></table>
+</section>
+
+<section id="planning-workflow"><h2>8. Test-Planning Workflow</h2>
+<p>A professional plan moves from business question to bounded evidence collection. The exact method changes by assessment type, but the planning logic is stable.</p>
+<pre class="mermaid">flowchart TD
+  A[Business objective] --> B[Written authorization]
+  B --> C[Scope and exclusions]
+  C --> D[Rules of engagement]
+  D --> E[Evidence and data-handling plan]
+  E --> F[Communication and stop procedure]
+  F --> G[Test cases and schedule]
+  G --> H[Readiness review]
+  H --> I[Authorized testing]
+  I --> J[Findings, remediation, and retest criteria]
+</pre>
+<p>Do not begin technical testing until the readiness review resolves missing authorization, unclear assets, vague methods, absent emergency contacts, and data-handling gaps.</p>
+</section>
+
+<section id="test-cases"><h2>9. From Objective to Test Cases</h2>
+<p>The test plan should not be a tool list. It should connect each test case to a business objective, control question, evidence requirement, and safety limit.</p>
+<table><thead><tr><th>Objective</th><th>Test case framing</th><th>Evidence target</th><th>Safety limit</th></tr></thead><tbody>
+<tr><td>Validate access-control remediation</td><td>Can approved test role A access object owned by role B?</td><td>Redacted request/response metadata, role names, object IDs using synthetic records.</td><td>No real customer records; stop if unexpected data appears.</td></tr>
+<tr><td>Confirm cloud logging coverage</td><td>Are administrative actions visible in the approved logging path?</td><td>Event IDs, timestamps, source account, log destination, detection mapping.</td><td>Read-only review; no privilege changes unless separately approved.</td></tr>
+<tr><td>Review exposure of staging service</td><td>Which approved staging endpoints are reachable from the internet?</td><td>Asset list, owner mapping, service banners only where permitted.</td><td>No third-party scanning; no stress testing.</td></tr>
+<tr><td>Check remediation effectiveness</td><td>Does the previously reported weakness still reproduce under approved conditions?</td><td>Before/after observation, exact test account, retest conclusion.</td><td>No expansion beyond the original finding without approval.</td></tr>
+</tbody></table>
+</section>
+
+<section id="asset-boundaries"><h2>10. Asset and Environment Boundaries</h2>
+<p>Scope must distinguish environment, owner, tenant, and provider boundary. A single product may involve a public domain, CDN, WAF, application servers, APIs, cloud accounts, identity providers, SaaS integrations, CI/CD systems, logging systems, and third-party services. Ownership is not always obvious from the URL.</p>
+<p>For each asset, record the environment, owner, asset identifier, approval source, dependency status, data sensitivity, allowed methods, and out-of-scope neighbors. Do not infer that adjacent domains, IP ranges, repositories, tenants, or accounts are included merely because they look related.</p>
+</section>
+
+<section id="identity-boundaries"><h2>11. Identity, Credential, and Role Scope</h2>
+<p>Many meaningful findings involve identity and authorization. That makes credential boundaries critical. A test plan should specify approved test accounts, roles, permissions, MFA behavior, password handling, service accounts, tokens, session handling, account cleanup, and whether account lockout testing is permitted.</p>
+<div class="callout"><strong>Practical rule:</strong> Use approved test accounts and synthetic data whenever possible. Real employee credentials, customer accounts, production tokens, and privileged service accounts require explicit written approval and stronger handling rules.</div>
+</section>
+
+<section id="data-handling"><h2>12. Data Handling and Evidence Rules</h2>
+<p>Evidence should prove the claim without collecting unnecessary sensitive data. The plan should define approved storage, retention, redaction, access control, naming conventions, timestamps, screenshots, request logs, ticket IDs, and escalation steps if sensitive data appears unexpectedly.</p>
+<table><thead><tr><th>Evidence question</th><th>Good plan answer</th></tr></thead><tbody>
+<tr><td>Can screenshots include personal data?</td><td>No, unless explicitly approved; prefer redacted synthetic records.</td></tr>
+<tr><td>Where is evidence stored?</td><td>Encrypted project repository with named access list.</td></tr>
+<tr><td>How long is evidence retained?</td><td>Defined retention period tied to report, remediation, and legal requirements.</td></tr>
+<tr><td>What if sensitive data is exposed?</td><td>Stop or pause, preserve minimal metadata, notify authorized contacts, follow privacy/legal process.</td></tr>
+<tr><td>What makes evidence reproducible?</td><td>Timestamp, tester, role, asset, test case ID, input summary, observed result, limitation note.</td></tr>
+</tbody></table>
+</section>
+
+<section id="communication"><h2>13. Communication and Deconfliction</h2>
+<p>Communication prevents safe testing from becoming an avoidable incident. The plan should specify kickoff participants, daily status cadence, SOC awareness, incident-response deconfliction, emergency contacts, after-hours rules, approved channels, and how testers acknowledge stop instructions.</p>
+<p>Covert exercises require stricter governance, not less governance. If defenders are not fully informed, someone else must own deconfliction, safety monitoring, legal approval, and emergency authority.</p>
+</section>
+
+<section id="stop-conditions"><h2>14. Stop Conditions</h2>
+<p>Stop conditions are not signs of failure. They are part of professional risk control. A test should pause when conditions change in a way the rules did not authorize.</p>
+<table><thead><tr><th>Stop trigger</th><th>Reason</th><th>Immediate action</th></tr></thead><tbody>
+<tr><td>Unexpected sensitive data appears</td><td>Privacy and legal exposure.</td><td>Stop, minimize capture, notify authorized contacts.</td></tr>
+<tr><td>Service instability or user impact</td><td>Availability risk.</td><td>Pause activity, preserve logs, coordinate with service owner.</td></tr>
+<tr><td>Tester reaches an out-of-scope system</td><td>Authorization boundary risk.</td><td>Do not continue; document boundary contact and escalate.</td></tr>
+<tr><td>SOC opens an incident</td><td>Operational disruption risk.</td><td>Deconflict through approved contact or stop procedure.</td></tr>
+<tr><td>New high-risk finding appears outside plan</td><td>Scope expansion risk.</td><td>Request explicit approval before additional validation.</td></tr>
+</tbody></table>
+</section>
+
+<section id="production-cloud"><h2>15. Production, Cloud, SaaS, and Third-Party Traps</h2>
+<p>Production and cloud testing require extra care because the blast radius is often larger than it appears. A cloud account may contain shared networking, centralized logging, IAM trust relationships, backup services, customer data, and provider-managed services. SaaS systems may contain tenant boundaries and contractual restrictions. Third-party integrations may require separate notice or approval.</p>
+<ul><li>Confirm provider terms and customer responsibilities before testing hosted systems.</li><li>Confirm whether infrastructure belongs to your organization, a vendor, a customer, or a shared provider.</li><li>Prefer read-only review for configuration and logging assessments unless change testing is explicitly approved.</li><li>Define rollback and emergency contacts before any change-producing test.</li><li>Exclude customer data and unrelated tenants unless explicit authorization exists.</li></ul>
+</section>
+
+<section id="matrix"><h2>16. Planning Matrix</h2>
+<p>A planning matrix helps reviewers see whether the plan is complete before activity begins.</p>
+<table><thead><tr><th>Plan field</th><th>Minimum acceptable detail</th><th>Red flag</th></tr></thead><tbody>
+<tr><td>Objective</td><td>Specific risk, release, control, or remediation question.</td><td>“Find anything interesting.”</td></tr>
+<tr><td>Assets</td><td>Named assets, owners, environments, identifiers, and exclusions.</td><td>“All company systems.”</td></tr>
+<tr><td>Methods</td><td>Allowed and prohibited methods with depth limits.</td><td>“Use any tools.”</td></tr>
+<tr><td>Window</td><td>Start/end time, timezone, blackout dates, change freezes.</td><td>“Whenever.”</td></tr>
+<tr><td>Credentials</td><td>Approved test accounts and roles.</td><td>“Use whatever credentials you can get.”</td></tr>
+<tr><td>Evidence</td><td>Redaction, storage, retention, access control, naming scheme.</td><td>No data-handling rule.</td></tr>
+<tr><td>Contacts</td><td>Owner, SOC, incident response, emergency stop authority.</td><td>No one available during testing.</td></tr>
+<tr><td>Deliverables</td><td>Findings, evidence, impact, remediation, retest criteria.</td><td>Only a scanner export.</td></tr>
+</tbody></table>
+</section>
+
+<section id="weak-strong"><h2>17. Weak vs. Strong Test Requests</h2>
+<table><thead><tr><th>Weak request</th><th>Problem</th><th>Stronger version</th></tr></thead><tbody>
+<tr><td>“Pentest our website.”</td><td>No asset list, owner, methods, or window.</td><td>“Test these two staging domains for access-control and session findings from July 6–7 using approved test accounts.”</td></tr>
+<tr><td>“Scan anything with our company name.”</td><td>May include third parties, abandoned assets, or unrelated domains.</td><td>“Review the attached approved external asset inventory; do not test domains outside the inventory.”</td></tr>
+<tr><td>“Try to get admin.”</td><td>Encourages uncontrolled escalation.</td><td>“Validate whether role separation prevents approved test users from accessing admin-only functions.”</td></tr>
+<tr><td>“Use real customer data to prove impact.”</td><td>Privacy and legal risk.</td><td>“Use synthetic records; stop and escalate if real customer data appears.”</td></tr>
+<tr><td>“Do it quietly.”</td><td>Can cause confusion with incident response.</td><td>“Define who is informed, who is blind, and who owns deconfliction.”</td></tr>
+</tbody></table>
+</section>
+
+<section id="fictional-scenario"><h2>18. Fictional Scenario: Release Retest Plan</h2>
+<p>A fictional product team asks for a release retest of a training portal. The initial request is: “Can security check the portal before launch?” That is not enough. A usable plan adds:</p>
+<ul><li><strong>Objective:</strong> validate remediation of prior access-control and session-management findings.</li><li><strong>In scope:</strong> training portal, training API, approved staging tenant, approved test accounts.</li><li><strong>Out of scope:</strong> payment provider, production mailboxes, customer export service, third-party analytics tenant.</li><li><strong>Allowed:</strong> authenticated web testing, configuration review, evidence review, and role-based access checks using synthetic data.</li><li><strong>Prohibited:</strong> denial-of-service, credential harvesting, persistence, destructive testing, real customer data access, and social engineering.</li><li><strong>Evidence:</strong> redacted screenshots, request IDs, timestamps, affected test roles, synthetic object IDs, and reproducible retest steps.</li><li><strong>Stop:</strong> any sensitive-data exposure, service degradation, out-of-scope redirect, or incident-response escalation pauses testing.</li></ul>
+<p>The improved request is still not an exploit procedure. It is a controlled plan that lets useful testing happen safely.</p>
+</section>
+
+<section id="local-lab"><h2>19. Safe Local Lab: Rules-of-Engagement Plan Validator</h2>
+<p>This lab does not scan or connect to anything. It reviews fictional test plans and reports whether they are ready, need revision, or must be blocked.</p>
+<h3>Step 1: Create the fictional plan file</h3>
+<p>Save this as <code>roe_test_plans.json</code>.</p>
+<pre><code>[
+  {
+    &quot;plan_id&quot;: &quot;ROE-1302-001&quot;,
+    &quot;title&quot;: &quot;Training portal retest&quot;,
+    &quot;written_authorization&quot;: true,
+    &quot;asset_owner&quot;: &quot;Application Security Steering Group&quot;,
+    &quot;business_objective&quot;: &quot;Validate remediation of access-control and session-management issues before release.&quot;,
+    &quot;in_scope_assets&quot;: [&quot;training-portal.example.test&quot;, &quot;api.training-portal.example.test&quot;],
+    &quot;out_of_scope_assets&quot;: [&quot;payment-provider.example.test&quot;, &quot;production-mail.example.test&quot;],
+    &quot;allowed_methods&quot;: [&quot;authenticated web testing with test accounts&quot;, &quot;configuration review&quot;, &quot;evidence review&quot;],
+    &quot;prohibited_methods&quot;: [&quot;denial-of-service&quot;, &quot;credential harvesting&quot;, &quot;destructive testing&quot;, &quot;persistence&quot;],
+    &quot;test_window&quot;: {&quot;start&quot;: &quot;2026-07-06T09:00:00+05:00&quot;, &quot;end&quot;: &quot;2026-07-07T18:00:00+05:00&quot;, &quot;freeze_exceptions&quot;: false},
+    &quot;emergency_contacts&quot;: [&quot;service-owner@example.test&quot;, &quot;soc-bridge@example.test&quot;],
+    &quot;data_handling&quot;: {&quot;synthetic_data_only&quot;: true, &quot;redaction_required&quot;: true, &quot;retention_days&quot;: 30, &quot;approved_storage&quot;: &quot;encrypted project repository&quot;},
+    &quot;communications&quot;: {&quot;kickoff_required&quot;: true, &quot;daily_status_required&quot;: true, &quot;stop_signal&quot;: &quot;STOP-TEST-1302&quot;},
+    &quot;deliverables&quot;: [&quot;validated findings&quot;, &quot;evidence log&quot;, &quot;risk explanation&quot;, &quot;remediation guidance&quot;, &quot;retest criteria&quot;],
+    &quot;red_flags&quot;: []
+  },
+  {
+    &quot;plan_id&quot;: &quot;ROE-1302-002&quot;,
+    &quot;title&quot;: &quot;Anything on the internet&quot;,
+    &quot;written_authorization&quot;: false,
+    &quot;asset_owner&quot;: &quot;&quot;,
+    &quot;business_objective&quot;: &quot;See what is vulnerable.&quot;,
+    &quot;in_scope_assets&quot;: [],
+    &quot;out_of_scope_assets&quot;: [],
+    &quot;allowed_methods&quot;: [&quot;any tools&quot;],
+    &quot;prohibited_methods&quot;: [],
+    &quot;test_window&quot;: {},
+    &quot;emergency_contacts&quot;: [],
+    &quot;data_handling&quot;: {},
+    &quot;communications&quot;: {},
+    &quot;deliverables&quot;: [&quot;report&quot;],
+    &quot;red_flags&quot;: [&quot;no written authorization&quot;, &quot;unbounded internet scope&quot;, &quot;undefined owner&quot;]
+  },
+  {
+    &quot;plan_id&quot;: &quot;ROE-1302-003&quot;,
+    &quot;title&quot;: &quot;Production API assessment during launch week&quot;,
+    &quot;written_authorization&quot;: true,
+    &quot;asset_owner&quot;: &quot;API Product Owner&quot;,
+    &quot;business_objective&quot;: &quot;Assess production API resilience before a public campaign.&quot;,
+    &quot;in_scope_assets&quot;: [&quot;api.production.example.test&quot;],
+    &quot;out_of_scope_assets&quot;: [&quot;customer-data-export-service&quot;],
+    &quot;allowed_methods&quot;: [&quot;authenticated API review with test accounts&quot;, &quot;rate-limited validation&quot;],
+    &quot;prohibited_methods&quot;: [&quot;denial-of-service&quot;, &quot;data exfiltration&quot;, &quot;credential harvesting&quot;],
+    &quot;test_window&quot;: {&quot;start&quot;: &quot;2026-07-15T09:00:00+05:00&quot;, &quot;end&quot;: &quot;2026-07-15T12:00:00+05:00&quot;, &quot;freeze_exceptions&quot;: true},
+    &quot;emergency_contacts&quot;: [&quot;api-owner@example.test&quot;],
+    &quot;data_handling&quot;: {&quot;synthetic_data_only&quot;: true, &quot;redaction_required&quot;: true, &quot;retention_days&quot;: 14, &quot;approved_storage&quot;: &quot;encrypted case folder&quot;},
+    &quot;communications&quot;: {&quot;kickoff_required&quot;: true, &quot;daily_status_required&quot;: false, &quot;stop_signal&quot;: &quot;STOP-API-TEST&quot;},
+    &quot;deliverables&quot;: [&quot;validated findings&quot;, &quot;risk explanation&quot;, &quot;retest criteria&quot;],
+    &quot;red_flags&quot;: [&quot;change freeze conflict&quot;]
+  },
+  {
+    &quot;plan_id&quot;: &quot;ROE-1302-004&quot;,
+    &quot;title&quot;: &quot;Staging cloud configuration review&quot;,
+    &quot;written_authorization&quot;: true,
+    &quot;asset_owner&quot;: &quot;Cloud Platform Team&quot;,
+    &quot;business_objective&quot;: &quot;Confirm logging, least privilege, and public exposure controls for staging.&quot;,
+    &quot;in_scope_assets&quot;: [&quot;staging-cloud-account&quot;, &quot;staging-container-registry&quot;, &quot;staging-ci-role&quot;],
+    &quot;out_of_scope_assets&quot;: [&quot;production-cloud-account&quot;, &quot;shared-security-logging-account&quot;],
+    &quot;allowed_methods&quot;: [&quot;read-only configuration review&quot;, &quot;policy-as-code comparison&quot;, &quot;evidence review&quot;],
+    &quot;prohibited_methods&quot;: [&quot;resource deletion&quot;, &quot;secret access&quot;, &quot;privilege escalation&quot;, &quot;network stress testing&quot;],
+    &quot;test_window&quot;: {&quot;start&quot;: &quot;2026-07-08T10:00:00+05:00&quot;, &quot;end&quot;: &quot;2026-07-10T17:00:00+05:00&quot;, &quot;freeze_exceptions&quot;: false},
+    &quot;emergency_contacts&quot;: [&quot;cloud-owner@example.test&quot;, &quot;security-ops@example.test&quot;],
+    &quot;data_handling&quot;: {&quot;synthetic_data_only&quot;: true, &quot;redaction_required&quot;: true, &quot;retention_days&quot;: 45, &quot;approved_storage&quot;: &quot;encrypted GRC evidence store&quot;},
+    &quot;communications&quot;: {&quot;kickoff_required&quot;: true, &quot;daily_status_required&quot;: true, &quot;stop_signal&quot;: &quot;STOP-CLOUD-REVIEW&quot;},
+    &quot;deliverables&quot;: [&quot;control observations&quot;, &quot;evidence log&quot;, &quot;remediation guidance&quot;, &quot;retest criteria&quot;, &quot;logging gaps&quot;],
+    &quot;red_flags&quot;: []
+  }
+]</code></pre>
+<h3>Step 2: Create the validator</h3>
+<p>Save this as <code>roe_plan_validator.py</code>.</p>
+<pre><code>import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+BLOCKING_FLAGS = {
+    &quot;no written authorization&quot;,
+    &quot;unbounded internet scope&quot;,
+    &quot;undefined owner&quot;,
+    &quot;third-party target without permission&quot;,
+}
+
+HIGH_RISK_FLAGS = {
+    &quot;change freeze conflict&quot;,
+    &quot;production safety concern&quot;,
+    &quot;sensitive data exposure risk&quot;,
+}
+
+REQUIRED_DELIVERABLES = {
+    &quot;validated findings&quot;,
+    &quot;risk explanation&quot;,
+    &quot;retest criteria&quot;,
+}
+
+REQUIRED_PROHIBITED_METHODS = {
+    &quot;denial-of-service&quot;,
+    &quot;credential harvesting&quot;,
+    &quot;destructive testing&quot;,
+}
+
+@dataclass
+class PlanDecision:
+    plan_id: str
+    title: str
+    status: str
+    completeness_score: int
+    missing_items: list[str]
+    conflicts: list[str]
+    required_next_actions: list[str]
+
+
+def load_plans(path: str = &quot;roe_test_plans.json&quot;) -&gt; list[dict[str, Any]]:
+    with open(path, &quot;r&quot;, encoding=&quot;utf-8&quot;) as handle:
+        return json.load(handle)
+
+
+def has_text(value: Any) -&gt; bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def has_list(value: Any) -&gt; bool:
+    return isinstance(value, list) and len(value) &gt; 0
+
+
+def valid_window(window: dict[str, Any]) -&gt; bool:
+    try:
+        start = datetime.fromisoformat(window.get(&quot;start&quot;, &quot;&quot;))
+        end = datetime.fromisoformat(window.get(&quot;end&quot;, &quot;&quot;))
+    except ValueError:
+        return False
+    return start &lt; end
+
+
+def evaluate_plan(plan: dict[str, Any]) -&gt; PlanDecision:
+    missing: list[str] = []
+    conflicts: list[str] = []
+
+    if plan.get(&quot;written_authorization&quot;) is not True:
+        missing.append(&quot;written_authorization&quot;)
+    if not has_text(plan.get(&quot;asset_owner&quot;)):
+        missing.append(&quot;asset_owner&quot;)
+    if not has_text(plan.get(&quot;business_objective&quot;)):
+        missing.append(&quot;business_objective&quot;)
+    if not has_list(plan.get(&quot;in_scope_assets&quot;)):
+        missing.append(&quot;in_scope_assets&quot;)
+    if not has_list(plan.get(&quot;out_of_scope_assets&quot;)):
+        missing.append(&quot;out_of_scope_assets&quot;)
+    if not has_list(plan.get(&quot;allowed_methods&quot;)):
+        missing.append(&quot;allowed_methods&quot;)
+    if not has_list(plan.get(&quot;prohibited_methods&quot;)):
+        missing.append(&quot;prohibited_methods&quot;)
+    if not valid_window(plan.get(&quot;test_window&quot;, {})):
+        missing.append(&quot;valid_test_window&quot;)
+    if not has_list(plan.get(&quot;emergency_contacts&quot;)):
+        missing.append(&quot;emergency_contacts&quot;)
+
+    data = plan.get(&quot;data_handling&quot;, {})
+    if not data.get(&quot;synthetic_data_only&quot;):
+        missing.append(&quot;synthetic_or_minimized_data_rule&quot;)
+    if not data.get(&quot;redaction_required&quot;):
+        missing.append(&quot;redaction_required&quot;)
+    if not data.get(&quot;approved_storage&quot;):
+        missing.append(&quot;approved_storage&quot;)
+
+    comms = plan.get(&quot;communications&quot;, {})
+    if not comms.get(&quot;kickoff_required&quot;):
+        missing.append(&quot;kickoff_required&quot;)
+    if not comms.get(&quot;stop_signal&quot;):
+        missing.append(&quot;stop_signal&quot;)
+
+    deliverables = set(plan.get(&quot;deliverables&quot;, []))
+    missing_deliverables = sorted(REQUIRED_DELIVERABLES - deliverables)
+    for item in missing_deliverables:
+        missing.append(f&quot;deliverable:{item}&quot;)
+
+    prohibited = set(plan.get(&quot;prohibited_methods&quot;, []))
+    missing_prohibitions = sorted(REQUIRED_PROHIBITED_METHODS - prohibited)
+    for item in missing_prohibitions:
+        missing.append(f&quot;prohibited_method:{item}&quot;)
+
+    flags = set(plan.get(&quot;red_flags&quot;, []))
+    blocking = sorted(flags &amp; BLOCKING_FLAGS)
+    high_risk = sorted(flags &amp; HIGH_RISK_FLAGS)
+    conflicts.extend(blocking)
+    conflicts.extend(high_risk)
+
+    if &quot;any tools&quot; in plan.get(&quot;allowed_methods&quot;, []):
+        conflicts.append(&quot;allowed methods are too vague&quot;)
+
+    if set(plan.get(&quot;in_scope_assets&quot;, [])) &amp; set(plan.get(&quot;out_of_scope_assets&quot;, [])):
+        conflicts.append(&quot;asset appears in both in-scope and out-of-scope lists&quot;)
+
+    max_checks = 20
+    completeness_score = max(0, int(((max_checks - min(len(missing), max_checks)) / max_checks) * 100))
+
+    if blocking or plan.get(&quot;written_authorization&quot;) is not True:
+        status = &quot;blocked&quot;
+    elif missing or high_risk or conflicts:
+        status = &quot;needs_revision_before_testing&quot;
+    else:
+        status = &quot;ready_for_authorized_testing&quot;
+
+    actions = []
+    for item in missing:
+        actions.append(f&quot;define or correct: {item}&quot;)
+    for item in conflicts:
+        actions.append(f&quot;resolve conflict or risk: {item}&quot;)
+    if status == &quot;ready_for_authorized_testing&quot;:
+        actions.append(&quot;schedule kickoff, publish rules of engagement, and confirm stop procedure before testing begins&quot;)
+
+    return PlanDecision(
+        plan_id=plan[&quot;plan_id&quot;],
+        title=plan[&quot;title&quot;],
+        status=status,
+        completeness_score=completeness_score,
+        missing_items=missing,
+        conflicts=conflicts,
+        required_next_actions=actions,
+    )
+
+
+def main() -&gt; None:
+    decisions = [evaluate_plan(plan).__dict__ for plan in load_plans()]
+    print(json.dumps(decisions, indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<h3>Step 3: Run the validator</h3>
+<pre><code>python3 roe_plan_validator.py
+# or on Windows:
+python roe_plan_validator.py</code></pre>
+<p>The output flags missing authorization, unclear scope, absent prohibited actions, weak evidence rules, and high-risk conflicts.</p>
+<h3>Step 4: Optional tests</h3>
+<p>Save this as <code>test_roe_plan_validator.py</code> if you want to check the logic with <code>pytest</code>.</p>
+<pre><code>from roe_plan_validator import evaluate_plan, load_plans
+
+
+def by_id(plan_id):
+    return next(plan for plan in load_plans() if plan[&quot;plan_id&quot;] == plan_id)
+
+
+def test_training_portal_plan_is_ready():
+    decision = evaluate_plan(by_id(&quot;ROE-1302-001&quot;))
+    assert decision.status == &quot;ready_for_authorized_testing&quot;
+    assert decision.completeness_score == 100
+
+
+def test_unbounded_internet_plan_is_blocked():
+    decision = evaluate_plan(by_id(&quot;ROE-1302-002&quot;))
+    assert decision.status == &quot;blocked&quot;
+    assert &quot;unbounded internet scope&quot; in decision.conflicts
+    assert &quot;written_authorization&quot; in decision.missing_items
+
+
+def test_change_freeze_conflict_requires_revision():
+    decision = evaluate_plan(by_id(&quot;ROE-1302-003&quot;))
+    assert decision.status == &quot;needs_revision_before_testing&quot;
+    assert &quot;change freeze conflict&quot; in decision.conflicts
+
+
+def test_cloud_review_keeps_production_out_of_scope():
+    plan = by_id(&quot;ROE-1302-004&quot;)
+    decision = evaluate_plan(plan)
+    assert decision.status == &quot;ready_for_authorized_testing&quot;
+    assert &quot;production-cloud-account&quot; in plan[&quot;out_of_scope_assets&quot;]
+</code></pre>
+<div class="callout"><strong>Why this lab matters:</strong> In real work, blocking a weak assessment plan is often more valuable than running a tool. It prevents harm and forces the organization to define the risk question clearly.</div>
+</section>
+
+<section id="quiz"><h2>20. Self-Assessment</h2>
+<ol><li>Why is scope a security control rather than an administrative detail?</li><li>What is the difference between in-scope assets and allowed methods?</li><li>Why should out-of-scope assets be named explicitly?</li><li>What stop conditions would you require for production web testing?</li><li>Why are real employee credentials risky in an assessment?</li><li>What evidence proves an access-control weakness without exposing customer data?</li><li>How should the plan change if a third-party SaaS provider is involved?</li><li>What communication rules prevent SOC confusion during testing?</li><li>Why is “use any tools” an unacceptable rule of engagement?</li><li>What deliverables make a test useful to engineers and defenders?</li></ol>
+</section>
+
+<section id="deliverables"><h2>21. Portfolio Deliverables</h2>
+<ul><li>A one-page scope statement template.</li><li>A rules-of-engagement checklist with allowed methods, prohibited actions, stop conditions, and contacts.</li><li>A test-planning matrix that links objective, asset, method, evidence, safety limit, and deliverable.</li><li>A data-handling and evidence-redaction checklist.</li><li>A communication plan covering kickoff, daily updates, SOC deconfliction, and emergency stop.</li><li>A fictional test plan reviewed with the local validator lab.</li></ul>
+</section>
+
+<section id="further-reading"><h2>22. Further Reading</h2>
+<ul><li>NIST SP 800-115 — Technical Guide to Information Security Testing and Assessment.</li><li>NIST SP 800-53A Rev. 5 — Assessing Security and Privacy Controls.</li><li>NIST SP 800-53 Rev. 5 — Security and Privacy Controls for Information Systems and Organizations.</li><li>OWASP Web Security Testing Guide.</li><li>MITRE ATT&amp;CK.</li><li>CISA Cyber Hygiene Services.</li><li>PTES — Penetration Testing Execution Standard, used cautiously and supplemented with current legal, cloud, and privacy guidance.</li></ul>
+</section>
+
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="authorized-offensive-security-from-first-principles.html">← Lesson 13.1</a><a class="btn btn-primary" href="reconnaissance-enumeration-and-attack-surface-mapping.html">Lesson 13.3 →</a></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

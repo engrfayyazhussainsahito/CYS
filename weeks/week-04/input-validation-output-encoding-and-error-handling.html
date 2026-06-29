@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 4.3: Input Validation, Output Encoding, and Error Handling | MS Cybersecurity</title>
+  <meta name="description" content="Input validation, output encoding, and error handling from first principles for secure software engineering, with safe local labs and defensive examples.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-04-03" data-title="Lesson 4.3: Input Validation, Output Encoding, and Error Handling">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 4</a> / Lesson 4.3</div>
+      <header class="hero">
+        <div class="eyebrow">Week 4 · Secure Software and Supply Chain</div>
+        <h1>Lesson 4.3: Input Validation, Output Encoding, and Error Handling</h1>
+        <p class="lead">Most software receives data from somewhere and sends data somewhere else. Security depends on controlling both directions: validate what enters, encode what leaves, and handle errors without leaking secrets or crashing unpredictably.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>260–360 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 0.1–4.2 recommended; no prior secure coding background required</div>
+          <div class="meta-item"><strong>Practice time</strong>5–8 hours</div>
+        </div>
+        <div class="toolbar">
+          <button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button>
+          <button id="completeBtn" class="complete-btn" type="button">Mark complete</button>
+          <button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button>
+          <button class="pdf-btn print-page" type="button">Download lesson as PDF</button>
+          <button class="theme-toggle" type="button">Toggle dark mode</button>
+        </div>
+      </header>
+
+      <section class="lesson-visual card">
+        <div class="visual-graphic" aria-label="Input output error handling illustration">
+          <svg viewBox="0 0 680 390" role="img" aria-labelledby="svg-title svg-desc">
+            <title id="svg-title">Safe data boundary</title>
+            <desc id="svg-desc">Untrusted input enters validation, application logic processes normalized data, output encoding protects each output context, and error handling controls failures.</desc>
+            <defs>
+              <linearGradient id="dataGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#6ea8ff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient>
+            </defs>
+            <rect x="24" y="38" width="632" height="306" rx="28" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/>
+            <g fill="var(--bg)" stroke="var(--border)" stroke-width="3">
+              <rect x="58" y="95" width="138" height="82" rx="18"/>
+              <rect x="268" y="95" width="150" height="82" rx="18"/>
+              <rect x="490" y="95" width="138" height="82" rx="18"/>
+              <rect x="268" y="230" width="150" height="70" rx="18"/>
+            </g>
+            <path d="M196 136h70M418 136h70M343 177v51" stroke="url(#dataGrad)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow)"/>
+            <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#41d6b3"/></marker></defs>
+            <text x="127" y="128" text-anchor="middle" font-size="18" fill="var(--text)">Input</text>
+            <text x="127" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">validate + normalize</text>
+            <text x="343" y="128" text-anchor="middle" font-size="18" fill="var(--text)">Logic</text>
+            <text x="343" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">use safe data</text>
+            <text x="559" y="128" text-anchor="middle" font-size="18" fill="var(--text)">Output</text>
+            <text x="559" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">encode by context</text>
+            <text x="343" y="258" text-anchor="middle" font-size="18" fill="var(--text)">Errors</text>
+            <text x="343" y="281" text-anchor="middle" font-size="13" fill="var(--muted)">log safely, fail closed</text>
+            <circle cx="47" cy="70" r="9" fill="#ffb020"/><circle cx="74" cy="70" r="9" fill="#ff5d5d"/><circle cx="101" cy="70" r="9" fill="#41d6b3"/>
+          </svg>
+        </div>
+        <div class="visual-panel">
+          <h2>Secure software is a boundary-control problem.</h2>
+          <p>Input validation asks: “Is this data acceptable?” Output encoding asks: “How do I safely represent this data in this destination?” Error handling asks: “What happens when something goes wrong?”</p>
+          <div class="visual-steps">
+            <div class="visual-step"><strong>Validate</strong><span>Reject data that does not match rules.</span></div>
+            <div class="visual-step"><strong>Encode</strong><span>Keep data from becoming code or structure.</span></div>
+            <div class="visual-step"><strong>Handle</strong><span>Fail safely and preserve evidence.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview">
+            <h2>Week 4 Context</h2>
+            <p>Lesson 4.1 explained secure software engineering as a lifecycle. Lesson 4.2 explained requirements and secure design. Lesson 4.3 moves into daily coding decisions: how software accepts input, produces output, and reacts to failures.</p>
+            <p>This lesson is deliberately defensive. All examples run locally or describe fictional systems. The goal is not to bypass systems. The goal is to build software that rejects unsafe input, displays data safely, and gives defenders useful evidence without exposing sensitive details.</p>
+            <div class="callout warning"><p><strong>Boundary:</strong> do not use examples from this lesson to test real websites, APIs, cloud accounts, or university systems. Use only your own local files and assigned labs.</p></div>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <h3>Plain-English explanation</h3>
+            <p><strong>Input validation</strong> means checking data before the program trusts it. <strong>Output encoding</strong> means converting data into a safe form before placing it into a specific output context, such as HTML, a URL, JSON, SQL parameters, a shell argument, or a log line. <strong>Error handling</strong> means controlling what the program does when something unexpected happens.</p>
+            <p>Analogy: a bank branch does not let every object brought by a visitor go directly into the vault. Staff check identity documents, examine forms, use standard procedures, record unusual events, and avoid shouting private account details across the lobby. Software needs similar discipline at its boundaries.</p>
+            <h3>Why the topic exists</h3>
+            <p>Programs process data from users, files, networks, APIs, devices, databases, queues, and other programs. A program cannot assume that data is correct, complete, harmless, or honestly labeled. Input validation, output encoding, and error handling exist because software boundaries are where confusion turns into vulnerabilities.</p>
+            <h3>Why the topic matters</h3>
+            <p>Many serious vulnerability classes involve data being interpreted in the wrong way. A name becomes HTML code. A search string becomes part of a database query. A file name becomes a path outside the intended folder. An error message reveals table names, stack traces, or secrets. These are not rare corner cases; they are basic secure software engineering concerns.</p>
+            <h3>Where it is used</h3>
+            <ul>
+              <li>Web forms, APIs, mobile apps, desktop applications, command-line tools, and cloud functions.</li>
+              <li>Log pipelines, data import jobs, message queues, and batch processing.</li>
+              <li>Identity systems, payment systems, healthcare portals, university records, and administrative dashboards.</li>
+            </ul>
+            <h3>Who uses it</h3>
+            <ul>
+              <li><strong>Developers</strong> write validation, encoding, and error-handling logic.</li>
+              <li><strong>Security engineers</strong> define secure patterns and review risky data flows.</li>
+              <li><strong>Quality engineers</strong> create positive, negative, and boundary tests.</li>
+              <li><strong>Operations teams</strong> use controlled errors and logs for diagnosis.</li>
+              <li><strong>Incident responders</strong> use error and validation logs as evidence.</li>
+            </ul>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <p>After finishing this lesson, you should be able to:</p>
+            <ul>
+              <li>Define input, output, trust boundary, validation, normalization, canonicalization, encoding, escaping, sanitization, and error handling.</li>
+              <li>Explain the difference between allowlist validation and blocklist filtering.</li>
+              <li>Explain why output encoding must match the destination context.</li>
+              <li>Recognize common failure patterns: injection, cross-site scripting, path traversal, mass assignment, log injection, and information exposure through errors.</li>
+              <li>Write simple local Python validation code and safe HTML output code.</li>
+              <li>Design user-safe error messages and maintainer-useful logs.</li>
+              <li>Describe how banks, governments, healthcare, universities, cloud providers, and enterprises use these controls.</li>
+              <li>Complete a safe local lab that validates data, encodes output, and reviews controlled error logs.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <p>This lesson re-explains the necessary background. Helpful previous concepts are:</p>
+            <ul>
+              <li><strong>String:</strong> text stored by a program.</li>
+              <li><strong>Variable:</strong> a name that points to a value.</li>
+              <li><strong>Function:</strong> a reusable block of code.</li>
+              <li><strong>HTTP:</strong> the request/response protocol used by web browsers and many APIs.</li>
+              <li><strong>HTML:</strong> markup used to structure web pages.</li>
+              <li><strong>Log:</strong> a record of events created by a system.</li>
+              <li><strong>Trust boundary:</strong> a point where data moves from a less trusted area to a more trusted area.</li>
+            </ul>
+            <details class="callout"><summary>Quick prerequisite: data vs instructions</summary><p>Data is information a program should process. Instructions are commands a program should execute. Many injection bugs happen when untrusted data is accidentally treated as instructions or structural syntax.</p></details>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 Input</h3>
+            <p><strong>Input</strong> is data entering a program. Beginners often think input means only typed text in a form. In security, input includes HTTP headers, file names, uploaded files, JSON fields, cookies, tokens, environment variables, database records, queue messages, logs, device telemetry, command-line arguments, and values returned by other services.</p>
+            <p><strong>Intuition:</strong> any data that crosses a boundary should be treated as untrusted until checked.</p>
+
+            <h3>4.2 Trust boundary</h3>
+            <p>A <strong>trust boundary</strong> is a border between areas with different assumptions. A browser is less trusted than a server. A public API request is less trusted than application logic. A third-party webhook is less trusted than your internal database. Trust boundaries tell you where validation, authentication, authorization, rate limiting, logging, and error control are especially important.</p>
+
+            <h3>4.3 Validation</h3>
+            <p><strong>Validation</strong> checks whether data is acceptable for a particular use. A good validation rule is specific, testable, and tied to business meaning.</p>
+            <ul>
+              <li><strong>Format:</strong> does it match the expected pattern?</li>
+              <li><strong>Type:</strong> is it text, number, date, list, or object?</li>
+              <li><strong>Length:</strong> is it too short or too long?</li>
+              <li><strong>Range:</strong> is a number within allowed bounds?</li>
+              <li><strong>Membership:</strong> is the value one of the allowed options?</li>
+              <li><strong>Relationship:</strong> does it match related data, such as the current user owning the requested object?</li>
+            </ul>
+
+            <h3>4.4 Allowlist vs blocklist</h3>
+            <p>An <strong>allowlist</strong> defines what is accepted. A <strong>blocklist</strong> defines what is rejected. For security-critical validation, allowlists are usually safer because they describe the expected language of valid input. Blocklists are fragile because attackers and ordinary users can create many unexpected variations.</p>
+            <div class="callout"><p><strong>Example:</strong> for a fictional student ID, the rule <code>STUD-</code> followed by exactly four digits is clearer than trying to block every strange character.</p></div>
+
+            <h3>4.5 Normalization and canonicalization</h3>
+            <p><strong>Normalization</strong> converts harmless variations into a standard form. For example, <code>stud-0042</code> may become <code>STUD-0042</code>. <strong>Canonicalization</strong> converts data into its authoritative representation before security decisions. This matters because the same apparent value can have multiple encodings, paths, Unicode forms, or case variations.</p>
+            <p><strong>Common mistake:</strong> checking a value before decoding or canonicalizing it, then using a different representation later.</p>
+
+            <h3>4.6 Sanitization</h3>
+            <p><strong>Sanitization</strong> modifies input to remove or transform unwanted content. It is useful in some cases, such as cleaning rich-text HTML with a trusted library. But sanitization is often misused. For many security decisions, rejecting invalid input is safer than trying to repair it.</p>
+
+            <h3>4.7 Output encoding</h3>
+            <p><strong>Output encoding</strong> changes characters so they are interpreted as data in a specific context. The important phrase is <em>specific context</em>. HTML text, HTML attributes, JavaScript strings, URLs, CSS, JSON, SQL parameters, shell arguments, and log lines have different rules.</p>
+            <p><strong>Example:</strong> in HTML text, <code>&lt;</code> should become <code>&amp;lt;</code> so a browser shows it as text instead of treating it as markup.</p>
+
+            <h3>4.8 Escaping</h3>
+            <p><strong>Escaping</strong> is a kind of encoding that marks special characters so they lose special meaning in a context. The escape rules depend on the destination. Escaping for HTML is not the same as escaping for SQL, JSON, LDAP, XML, CSV, or a shell.</p>
+
+            <h3>4.9 Parameterization</h3>
+            <p><strong>Parameterization</strong> keeps command/query structure separate from data. Parameterized SQL queries are the standard defensive pattern for database queries because user values are bound as values, not pasted into the query string.</p>
+
+            <h3>4.10 Error handling</h3>
+            <p><strong>Error handling</strong> is the planned response to unexpected or invalid conditions. Good error handling has two audiences:</p>
+            <ul>
+              <li><strong>Users:</strong> need a clear, safe message that helps them continue.</li>
+              <li><strong>Maintainers:</strong> need logs with enough detail to debug and investigate.</li>
+            </ul>
+            <p>A public error should not reveal secrets, stack traces, internal paths, database schema, source code, cloud resource names, tokens, or private user data.</p>
+
+            <h3>4.11 Fail open vs fail closed</h3>
+            <p><strong>Fail open</strong> means the system allows the action when a check fails. <strong>Fail closed</strong> means the system denies or safely stops the action when a check fails. Security checks should generally fail closed, but designers must consider availability and usability trade-offs.</p>
+
+            <h3>4.12 Logging without leaking</h3>
+            <p>Logs help detection and incident response, but logs can become sensitive data stores. Avoid logging passwords, full tokens, session cookies, private keys, unnecessary personal data, raw payment data, and complete secrets. Use request IDs, event types, usernames or pseudonymous IDs where appropriate, and controlled error categories.</p>
+
+            <h3>4.13 Layered defense</h3>
+            <p>Validation at the client improves usability. Validation at the server protects security. Database constraints protect data integrity. Output encoding protects presentation. Parameterization protects query structure. Logging and monitoring support detection. No single layer replaces the others.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>Data-flow view</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  User[User or external system] --&gt;|untrusted data| Edge[Boundary: request parser]
+  Edge --&gt; Validate[Validate type, format, length, range]
+  Validate --&gt; Normalize[Normalize and canonicalize]
+  Normalize --&gt; Authz[Authorization and business rules]
+  Authz --&gt; Logic[Application logic]
+  Logic --&gt; Encode[Output encode for destination context]
+  Encode --&gt; Browser[Browser, API client, log, or database]
+  Validate --&gt;|invalid| Error[Controlled error response]
+  Error --&gt; Log[Safe security log]
+  Authz --&gt;|denied| Error</pre></div>
+            <h3>Validation decision tree</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  A[Receive value] --&gt; B{Expected source?}
+  B -- No --&gt; R[Reject or quarantine]
+  B -- Yes --&gt; C{Correct type?}
+  C -- No --&gt; R
+  C -- Yes --&gt; D{Length and range valid?}
+  D -- No --&gt; R
+  D -- Yes --&gt; E{Allowed format or option?}
+  E -- No --&gt; R
+  E -- Yes --&gt; F{Business rule valid?}
+  F -- No --&gt; R
+  F -- Yes --&gt; G[Accept normalized value]
+  R --&gt; H[Return safe error and log event]</pre></div>
+            <h3>Sequence diagram for safe form processing</h3>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant B as Browser
+  participant A as Application
+  participant V as Validator
+  participant D as Database
+  participant L as Log
+  B-&gt;&gt;A: Submit profile update
+  A-&gt;&gt;V: Validate and normalize fields
+  alt invalid input
+    V--&gt;&gt;A: Reject with reason code
+    A-&gt;&gt;L: Log validation failure without secrets
+    A--&gt;&gt;B: Safe public error
+  else valid input
+    V--&gt;&gt;A: Normalized data
+    A-&gt;&gt;D: Parameterized update
+    D--&gt;&gt;A: Success
+    A--&gt;&gt;B: Success page with encoded output
+  end</pre></div>
+            <h3>Context-specific encoding map</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TB
+  X[Untrusted value] --&gt; H[HTML text: HTML encode]
+  X --&gt; A[HTML attribute: attribute encode]
+  X --&gt; U[URL parameter: percent encode]
+  X --&gt; J[JavaScript string: JS string encode or avoid inline JS]
+  X --&gt; Q[SQL query: parameterize]
+  X --&gt; S[Shell command: avoid shell; pass argument array]
+  X --&gt; L[Log line: structured logging and delimiter control]</pre></div>
+            <h3>ASCII diagram: two audiences for errors</h3>
+            <pre><code class="language-text">+-----------------------+
+                    |  Exception occurs    |
+                    +-----------+-----------+
+                                |
+               +----------------+----------------+
+               |                                 |
+               v                                 v
+ +----------------------------+     +-----------------------------+
+ | Public user message        |     | Private maintainer log      |
+ | &quot;Request could not be      |     | request_id, event type,     |
+ | processed.&quot;                |     | stack trace if appropriate  |
+ +----------------------------+     +-----------------------------+</code></pre>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Input, Output, Errors))
+    Input Validation
+      Type
+      Length
+      Range
+      Format
+      Allowlist
+      Business rules
+      Canonicalization
+    Output Encoding
+      HTML text
+      HTML attribute
+      URL
+      JavaScript
+      JSON
+      SQL parameters
+      Logs
+    Error Handling
+      Safe user messages
+      Private logs
+      Request IDs
+      Fail closed
+      Avoid information exposure
+    Security Risks
+      Injection
+      XSS
+      Path traversal
+      Log injection
+      Mass assignment
+      DoS by malformed input</pre></div>
+          </section>
+
+          <section id="math-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>Set membership</h3>
+            <p>An allowlist can be modeled as a set. If the allowed roles are <code>A = {student, advisor, registrar}</code>, then a submitted role <code>x</code> is accepted only if <code>x ∈ A</code>.</p>
+            <p><strong>Worked example:</strong> <code>advisor ∈ A</code>, so it passes the membership check. <code>superadmin ∉ A</code>, so it is rejected unless a separate authorized workflow defines it.</p>
+
+            <h3>Range checks</h3>
+            <p>A numeric range check can be written as <code>min ≤ x ≤ max</code>. If a course credit value must be between 1 and 6, then <code>1 ≤ credits ≤ 6</code>.</p>
+            <p><strong>Worked example:</strong> <code>credits = 3</code> passes. <code>credits = 9999</code> fails. This protects data quality and may also reduce resource abuse.</p>
+
+            <h3>Length bounds</h3>
+            <p>For a string <code>s</code>, <code>|s|</code> means length. A username rule might be <code>3 ≤ |s| ≤ 32</code>. Length bounds help prevent accidental errors, storage problems, and some denial-of-service cases caused by extremely large inputs.</p>
+
+            <h3>Regular languages</h3>
+            <p>A regular expression defines a simple language of accepted strings. For a fictional student ID, <code>^STUD-\d{4}$</code> accepts exactly values like <code>STUD-0042</code>. It rejects <code>STUD-42</code>, <code>stud-0042</code> unless normalized first, and <code>STUD-0042/../../x</code>.</p>
+
+            <h3>Boolean validation logic</h3>
+            <p>A value is accepted only if all required checks are true:</p>
+            <p><code>accepted = type_ok ∧ length_ok ∧ format_ok ∧ business_rule_ok</code></p>
+            <p>The symbol <code>∧</code> means “and.” If any part is false, the whole expression is false.</p>
+
+            <h3>Error-rate monitoring</h3>
+            <p>A simple validation failure rate is:</p>
+            <p><code>failure_rate = validation_failures / total_requests</code></p>
+            <p>If a system receives 10,000 requests and 500 fail validation, the failure rate is <code>500 / 10,000 = 0.05 = 5%</code>. A sudden increase may indicate a broken client, a bot, a scanning attempt, or a new data-quality problem.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>Linux example</h3>
+            <p>Create and inspect a fictional log file locally:</p>
+            <pre><code class="language-bash"># Create a safe local lab folder.
+mkdir -p input-output-error-lab
+cd input-output-error-lab
+
+# Create a tiny log file with fictional events.
+cat &gt; app.log &lt;&lt;&#x27;EOF&#x27;
+2026-01-01T10:00:00Z INFO user=alice action=login status=success
+2026-01-01T10:01:00Z WARN user=bob action=download_transcript status=denied reason=invalid_student_id
+2026-01-01T10:02:00Z ERROR request_id=req-1003 public_error=&quot;request could not be processed&quot;
+EOF
+
+# Review only local data.
+cat app.log
+
+# Count denied events. This is defensive log review, not system probing.
+grep &#x27;status=denied&#x27; app.log | wc -l</code></pre>
+            <h3>Windows example</h3>
+            <p>Do the same with PowerShell:</p>
+            <pre><code class="language-powershell"># Windows PowerShell safe local lab.
+New-Item -ItemType Directory -Force -Path input-output-error-lab | Out-Null
+Set-Location input-output-error-lab
+
+@&quot;
+2026-01-01T10:00:00Z INFO user=alice action=login status=success
+2026-01-01T10:01:00Z WARN user=bob action=download_transcript status=denied reason=invalid_student_id
+2026-01-01T10:02:00Z ERROR request_id=req-1003 public_error=&quot;request could not be processed&quot;
+&quot;@ | Out-File app.log
+
+Get-Content app.log
+Select-String -Path app.log -Pattern &#x27;status=denied&#x27;</code></pre>
+            <h3>Python example</h3>
+            <p>Validate a student ID and safely render a name as HTML text:</p>
+            <pre><code class="language-python"># Safe local example: validate input before using it.
+# This program does not connect to any real website or database.
+
+import re
+from html import escape
+
+# 1. Compile a regular expression for a simple student ID format.
+#    ^ means &quot;start of string&quot;.
+#    STUD- means the ID must begin with these exact characters.
+#    \d{4} means exactly four digits.
+#    $ means &quot;end of string&quot;.
+STUDENT_ID_PATTERN = re.compile(r&quot;^STUD-\d{4}$&quot;)
+
+
+def validate_student_id(value: str) -&gt; str:
+    &quot;&quot;&quot;Return a normalized student ID or raise ValueError.&quot;&quot;&quot;
+    # 2. Check the type. Defensive code should not assume the caller is friendly.
+    if not isinstance(value, str):
+        raise ValueError(&quot;student_id must be text&quot;)
+
+    # 3. Normalize harmless formatting differences.
+    normalized = value.strip().upper()
+
+    # 4. Enforce a strict allowlist format.
+    if not STUDENT_ID_PATTERN.fullmatch(normalized):
+        raise ValueError(&quot;student_id has an invalid format&quot;)
+
+    # 5. Return the safe, normalized value.
+    return normalized
+
+
+def render_student_name(name: str) -&gt; str:
+    &quot;&quot;&quot;Return safe HTML for displaying a name as text.&quot;&quot;&quot;
+    # 6. Output encoding is different from input validation.
+    #    We encode before placing the value into an HTML page.
+    safe_name = escape(name, quote=True)
+    return f&quot;&lt;p&gt;Student name: {safe_name}&lt;/p&gt;&quot;
+
+
+examples = [&quot; STUD-0042 &quot;, &quot;stud-0007&quot;, &quot;../secret&quot;, &quot;STUD-12AB&quot;]
+
+for item in examples:
+    try:
+        print(item, &quot;=&gt;&quot;, validate_student_id(item))
+    except ValueError as error:
+        print(item, &quot;=&gt; rejected:&quot;, error)
+
+print(render_student_name(&quot;Aisha &lt;Admin&gt;&quot;))</code></pre>
+            <h3>Network example</h3>
+            <p>For an API request such as <code>GET /students/STUD-0042/transcript</code>, the server should validate the path parameter format, authenticate the caller, authorize access to that specific student record, and encode any returned text fields in the response format.</p>
+            <h3>Web example</h3>
+            <p>Use browser APIs that treat text as text:</p>
+            <pre><code class="language-html">&lt;!-- Safe browser example: prefer textContent for untrusted text. --&gt;
+&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;body&gt;
+  &lt;label for=&quot;name&quot;&gt;Name&lt;/label&gt;
+  &lt;input id=&quot;name&quot; value=&quot;Aisha &lt;Admin&gt;&quot;&gt;
+  &lt;button id=&quot;show&quot;&gt;Show&lt;/button&gt;
+  &lt;p id=&quot;output&quot;&gt;&lt;/p&gt;
+
+  &lt;script&gt;
+    const nameBox = document.querySelector(&#x27;#name&#x27;);
+    const output = document.querySelector(&#x27;#output&#x27;);
+    const show = document.querySelector(&#x27;#show&#x27;);
+
+    show.addEventListener(&#x27;click&#x27;, () =&gt; {
+      // textContent treats the input as text.
+      // Do not use innerHTML with untrusted input.
+      output.textContent = `Student name: ${nameBox.value}`;
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <h3>Cloud example</h3>
+            <p>Cloud functions often receive event data from storage, queues, or webhooks. Validate object keys, metadata, and event type before using them in storage paths or access decisions:</p>
+            <pre><code class="language-python"># Cloud-style validation policy idea, shown as pseudocode.
+# Validate external input before it becomes a storage key, tag, queue message, or IAM decision.
+
+allowed_prefixes = [&quot;students/&quot;, &quot;advisors/&quot;]
+object_key = &quot;students/STUD-0001/transcript.pdf&quot;
+
+if not any(object_key.startswith(prefix) for prefix in allowed_prefixes):
+    raise ValueError(&quot;object key prefix is not allowed&quot;)
+
+if &quot;..&quot; in object_key or object_key.startswith(&quot;/&quot;):
+    raise ValueError(&quot;object key contains unsafe path syntax&quot;)
+
+print(&quot;Object key passed local validation:&quot;, object_key)</code></pre>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Validation and output encoding</h3>
+            <pre><code class="language-python"># Safe local example: validate input before using it.
+# This program does not connect to any real website or database.
+
+import re
+from html import escape
+
+# 1. Compile a regular expression for a simple student ID format.
+#    ^ means &quot;start of string&quot;.
+#    STUD- means the ID must begin with these exact characters.
+#    \d{4} means exactly four digits.
+#    $ means &quot;end of string&quot;.
+STUDENT_ID_PATTERN = re.compile(r&quot;^STUD-\d{4}$&quot;)
+
+
+def validate_student_id(value: str) -&gt; str:
+    &quot;&quot;&quot;Return a normalized student ID or raise ValueError.&quot;&quot;&quot;
+    # 2. Check the type. Defensive code should not assume the caller is friendly.
+    if not isinstance(value, str):
+        raise ValueError(&quot;student_id must be text&quot;)
+
+    # 3. Normalize harmless formatting differences.
+    normalized = value.strip().upper()
+
+    # 4. Enforce a strict allowlist format.
+    if not STUDENT_ID_PATTERN.fullmatch(normalized):
+        raise ValueError(&quot;student_id has an invalid format&quot;)
+
+    # 5. Return the safe, normalized value.
+    return normalized
+
+
+def render_student_name(name: str) -&gt; str:
+    &quot;&quot;&quot;Return safe HTML for displaying a name as text.&quot;&quot;&quot;
+    # 6. Output encoding is different from input validation.
+    #    We encode before placing the value into an HTML page.
+    safe_name = escape(name, quote=True)
+    return f&quot;&lt;p&gt;Student name: {safe_name}&lt;/p&gt;&quot;
+
+
+examples = [&quot; STUD-0042 &quot;, &quot;stud-0007&quot;, &quot;../secret&quot;, &quot;STUD-12AB&quot;]
+
+for item in examples:
+    try:
+        print(item, &quot;=&gt;&quot;, validate_student_id(item))
+    except ValueError as error:
+        print(item, &quot;=&gt; rejected:&quot;, error)
+
+print(render_student_name(&quot;Aisha &lt;Admin&gt;&quot;))</code></pre>
+            <h4>Line-by-line explanation</h4>
+            <ol>
+              <li><code>import re</code> loads Python's regular-expression library.</li>
+              <li><code>from html import escape</code> loads a helper for HTML text encoding.</li>
+              <li><code>STUDENT_ID_PATTERN</code> defines the exact allowed student-ID format.</li>
+              <li><code>isinstance(value, str)</code> rejects non-text values.</li>
+              <li><code>strip().upper()</code> normalizes spaces and case.</li>
+              <li><code>fullmatch</code> requires the whole value to match, not just part of it.</li>
+              <li><code>escape(name, quote=True)</code> encodes special HTML characters.</li>
+              <li>The loop tests valid and invalid examples safely on local data.</li>
+            </ol>
+            <h4>Common mistakes</h4>
+            <ul>
+              <li>Using a partial match instead of a full match.</li>
+              <li>Validating in the browser but not on the server.</li>
+              <li>Trying to block “bad characters” instead of defining valid input.</li>
+              <li>Using HTML encoding for a non-HTML context.</li>
+              <li>Assuming sanitized input is safe forever in every context.</li>
+            </ul>
+
+            <h3>9.2 Parameterized database query</h3>
+            <pre><code class="language-python"># Conceptual Python example: parameterized queries prevent data from
+# being interpreted as SQL structure. This snippet is for a local sqlite file.
+
+import sqlite3
+
+connection = sqlite3.connect(&#x27;:memory:&#x27;)
+connection.execute(&#x27;CREATE TABLE students (id TEXT PRIMARY KEY, name TEXT)&#x27;)
+connection.execute(&#x27;INSERT INTO students VALUES (?, ?)&#x27;, (&#x27;STUD-0001&#x27;, &#x27;Aisha&#x27;))
+
+student_id = &#x27;STUD-0001&#x27;
+
+# Good: the query structure and the data value are separate.
+row = connection.execute(
+    &#x27;SELECT name FROM students WHERE id = ?&#x27;,
+    (student_id,)
+).fetchone()
+
+print(row[0])</code></pre>
+            <p>The query text uses a placeholder. The value is passed separately. This prevents the value from changing the query structure.</p>
+
+            <h3>9.3 Safe error handling</h3>
+            <pre><code class="language-python"># Safe local example: public error messages vs private logs.
+# Public messages should be useful without leaking sensitive internals.
+
+import logging
+
+logging.basicConfig(
+    filename=&quot;app-demo.log&quot;,
+    level=logging.INFO,
+    format=&quot;%(asctime)s %(levelname)s %(message)s&quot;
+)
+
+
+def divide_safely(numerator: int, denominator: int) -&gt; dict:
+    try:
+        # The risky operation is inside a try block.
+        result = numerator / denominator
+        return {&quot;ok&quot;: True, &quot;result&quot;: result}
+    except ZeroDivisionError:
+        # The log keeps technical detail for maintainers.
+        logging.exception(&quot;Division failed because denominator was zero&quot;)
+
+        # The user receives a controlled message, not a stack trace.
+        return {&quot;ok&quot;: False, &quot;error&quot;: &quot;The request could not be processed.&quot;}
+
+
+print(divide_safely(10, 2))
+print(divide_safely(10, 0))
+print(&quot;Technical details were written to app-demo.log&quot;)</code></pre>
+            <p>The user receives a controlled public error. The maintainer gets a private log entry. In production systems, logs must also be protected, retained appropriately, and monitored.</p>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common attacks</h3>
+            <ul>
+              <li><strong>Injection:</strong> untrusted data changes the structure of a query, command, expression, or document.</li>
+              <li><strong>Cross-site scripting:</strong> untrusted data is placed into a web page in a way that executes as browser code.</li>
+              <li><strong>Path traversal:</strong> file path input escapes the intended directory.</li>
+              <li><strong>Mass assignment:</strong> unexpected fields update sensitive object properties.</li>
+              <li><strong>Log injection:</strong> crafted input creates misleading log lines or corrupts log structure.</li>
+              <li><strong>Information exposure:</strong> error messages reveal sensitive internals.</li>
+              <li><strong>Resource exhaustion:</strong> extremely large or malformed input consumes memory, CPU, storage, or queue capacity.</li>
+            </ul>
+            <h3>Common vulnerabilities</h3>
+            <ul>
+              <li>Missing server-side validation.</li>
+              <li>Inconsistent validation across APIs.</li>
+              <li>Using blocklists for complex syntax.</li>
+              <li>Encoding for the wrong output context.</li>
+              <li>Concatenating SQL, shell commands, LDAP filters, or HTML with untrusted values.</li>
+              <li>Public stack traces or verbose database errors.</li>
+              <li>Logs containing secrets or personal data beyond need.</li>
+            </ul>
+            <h3>Defensive strategies</h3>
+            <ul>
+              <li>Validate at trust boundaries.</li>
+              <li>Use allowlists and strict schemas.</li>
+              <li>Normalize before security decisions.</li>
+              <li>Use parameterized APIs instead of string concatenation.</li>
+              <li>Encode at output, as late as possible, for the exact destination context.</li>
+              <li>Return generic public errors and log structured private details.</li>
+              <li>Rate-limit repeated invalid input when appropriate.</li>
+              <li>Test with boundary values, invalid values, Unicode, empty values, long values, and unexpected types.</li>
+            </ul>
+            <h3>Detection methods</h3>
+            <ul>
+              <li>Monitor validation failure rates and unusual error spikes.</li>
+              <li>Alert on repeated rejected fields from the same account, IP range, API key, or service identity.</li>
+              <li>Review logs for public error pages, stack traces, or uncaught exceptions.</li>
+              <li>Use static analysis to find unsafe string concatenation and missing encoding.</li>
+              <li>Use dynamic tests and fuzzing in authorized environments.</li>
+            </ul>
+            <h3>Mitigation and best practices</h3>
+            <ul>
+              <li>Prefer framework-provided validators, encoders, routers, serializers, and database parameterization.</li>
+              <li>Keep validation rules close to the boundary and business rules close to the protected operation.</li>
+              <li>Do not rely on client-side validation for security.</li>
+              <li>Use structured logs and avoid secrets in logs.</li>
+              <li>Fail closed for authorization, validation, and safety-critical checks.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <ul>
+              <li><strong>Banks:</strong> validate account numbers, transaction amounts, payment references, and API requests; encode statements and messages; log failed transactions without exposing full account details.</li>
+              <li><strong>Governments:</strong> validate citizen-service forms, document uploads, identity fields, and case identifiers; avoid leaking sensitive case data in error pages.</li>
+              <li><strong>Cloud providers:</strong> validate resource names, metadata, API parameters, policy documents, event payloads, and storage object paths at large scale.</li>
+              <li><strong>Healthcare:</strong> validate patient identifiers, dates, clinical codes, and uploaded documents; error handling must avoid exposing protected health information.</li>
+              <li><strong>Defense:</strong> strict input handling is used in command systems, telemetry processing, embedded systems, and data classification boundaries.</li>
+              <li><strong>Universities:</strong> validate student IDs, course codes, transcript requests, grade-entry forms, and identity-provider attributes.</li>
+              <li><strong>Large enterprises:</strong> standardize secure coding libraries, API schemas, central logging, error-handling policies, and validation test cases across teams.</li>
+            </ul>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Research continues because these problems are simple to describe but difficult to eliminate at scale. Important research directions include:</p>
+            <ul>
+              <li><strong>Automated vulnerability discovery:</strong> static analysis, dynamic analysis, symbolic execution, and fuzzing for input-handling flaws.</li>
+              <li><strong>Language-based security:</strong> type systems, taint tracking, information-flow control, and safer APIs that separate data from code.</li>
+              <li><strong>Usable security APIs:</strong> studying why developers misuse encoding, escaping, validation, and sanitizer libraries.</li>
+              <li><strong>Context-aware output encoding:</strong> tools that understand where a value is being inserted and choose the right protection.</li>
+              <li><strong>Schema-driven APIs:</strong> OpenAPI, JSON Schema, protocol buffers, and strongly typed contracts for reducing ambiguity.</li>
+              <li><strong>Privacy-preserving logging:</strong> useful detection evidence without unnecessary sensitive data retention.</li>
+            </ul>
+            <p>Notable research themes include grammar-based fuzzing, XSS detection through automated testing, sanitizer usability, type-safe template systems, and verified parsers.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>Equifax and Apache Struts</h3>
+            <p><strong>What happened:</strong> attackers exploited a known Apache Struts vulnerability affecting request handling. <strong>Root cause:</strong> a vulnerable component remained unpatched in an exposed system. <strong>Impact:</strong> large-scale personal-data exposure. <strong>Lessons:</strong> input-handling bugs in frameworks matter, and vulnerability management must connect known issues to real assets.</p>
+            <h3>Log4Shell</h3>
+            <p><strong>What happened:</strong> specially crafted input reaching a logging library could trigger dangerous lookup behavior in vulnerable configurations. <strong>Root cause:</strong> untrusted input was interpreted in an unsafe way by a widely used component. <strong>Impact:</strong> global emergency response across enterprises and cloud providers. <strong>Lessons:</strong> logs are not harmless text bins; dependencies need inventory, patching, and safe defaults.</p>
+            <h3>Heartbleed</h3>
+            <p><strong>What happened:</strong> a bounds-checking flaw in TLS heartbeat handling allowed memory disclosure. <strong>Root cause:</strong> input length was trusted incorrectly. <strong>Impact:</strong> possible leakage of sensitive memory from affected services. <strong>Lessons:</strong> validation must include length consistency, and memory-safe design matters.</p>
+            <h3>Verbose error pages in production</h3>
+            <p><strong>What happens:</strong> production applications sometimes expose stack traces, file paths, SQL fragments, framework versions, or environment variables. <strong>Root cause:</strong> debug mode or exception handling intended for developers is exposed to users. <strong>Impact:</strong> attackers gain reconnaissance information. <strong>Lessons:</strong> public errors and private diagnostics must be separated.</p>
+          </section>
+
+          <section id="misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <ul>
+              <li><strong>“Client-side validation is enough.”</strong> Incorrect. Client-side checks help usability, but attackers can send requests without the browser interface.</li>
+              <li><strong>“Escaping once makes data safe forever.”</strong> Incorrect. Encoding is context-specific and should happen at the output boundary.</li>
+              <li><strong>“Input validation prevents all injection.”</strong> Incorrect. Validation helps, but parameterization and context-specific output encoding are still needed.</li>
+              <li><strong>“Blocklists are simpler and therefore safer.”</strong> Usually incorrect. Blocklists miss variants and encodings.</li>
+              <li><strong>“Stack traces are harmless because only developers understand them.”</strong> Incorrect. They can reveal paths, versions, queries, and architecture.</li>
+              <li><strong>“Logs are always safe because they are internal.”</strong> Incorrect. Logs are often copied, searched, exported, retained, and accessed by many systems.</li>
+              <li><strong>“Sanitization and validation are the same.”</strong> Incorrect. Validation decides accept/reject; sanitization modifies data.</li>
+              <li><strong>“A web application firewall fixes bad code.”</strong> Incorrect. It may reduce exposure, but the application still needs correct validation, encoding, and error handling.</li>
+            </ul>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Input validation, output encoding, and error handling are core secure-coding disciplines. Validation checks whether data is acceptable. Normalization and canonicalization put data into a consistent form. Output encoding keeps data from becoming executable or structural syntax in a specific context. Error handling separates safe public messages from protected private diagnostics. Together, these controls reduce injection, XSS, path traversal, log injection, information exposure, and unstable failures.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <dl>
+              <dt>Allowlist</dt><dd>A list or rule defining values that are explicitly accepted.</dd>
+              <dt>Blocklist</dt><dd>A list or rule defining values that are rejected.</dd>
+              <dt>Canonicalization</dt><dd>Converting data into its authoritative standard representation before making decisions.</dd>
+              <dt>Context</dt><dd>The destination syntax where data will be placed, such as HTML, URL, SQL, JSON, or a log record.</dd>
+              <dt>Encoding</dt><dd>Representing data so special characters are treated safely in a destination context.</dd>
+              <dt>Error handling</dt><dd>Planned behavior when invalid input, exceptions, failures, or unexpected states occur.</dd>
+              <dt>Escaping</dt><dd>Marking special characters so they lose special meaning in a given context.</dd>
+              <dt>Fail closed</dt><dd>Denying or stopping safely when a security check cannot complete.</dd>
+              <dt>Input validation</dt><dd>Checking whether input is acceptable for a particular purpose.</dd>
+              <dt>Normalization</dt><dd>Converting harmless variations into a consistent form.</dd>
+              <dt>Output encoding</dt><dd>Encoding data before placing it into an output context.</dd>
+              <dt>Parameterization</dt><dd>Separating data values from query or command structure.</dd>
+              <dt>Sanitization</dt><dd>Modifying data to remove or transform unwanted content.</dd>
+              <dt>Schema validation</dt><dd>Checking structured data against a defined model of fields, types, and constraints.</dd>
+              <dt>Structured logging</dt><dd>Writing logs as machine-readable fields instead of ambiguous free text.</dd>
+            </dl>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <div class="quiz-card" data-answer="B"><p><strong>1.</strong> What is input validation?</p><label class="quiz-option"><input type="radio" name="q1" value="A"> Encrypting all user data</label><label class="quiz-option"><input type="radio" name="q1" value="B"> Checking whether input is acceptable for a specific use</label><label class="quiz-option"><input type="radio" name="q1" value="C"> Compressing files before upload</label><label class="quiz-option"><input type="radio" name="q1" value="D"> Logging every request forever</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: B</span></div>
+            <div class="quiz-card" data-answer="C"><p><strong>2.</strong> Why is allowlist validation often safer than blocklist filtering?</p><label class="quiz-option"><input type="radio" name="q2" value="A"> It accepts more values</label><label class="quiz-option"><input type="radio" name="q2" value="B"> It removes the need for authorization</label><label class="quiz-option"><input type="radio" name="q2" value="C"> It defines expected valid input directly</label><label class="quiz-option"><input type="radio" name="q2" value="D"> It encrypts input automatically</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: C</span></div>
+            <div class="quiz-card" data-answer="A"><p><strong>3.</strong> Output encoding must be chosen based on what?</p><label class="quiz-option"><input type="radio" name="q3" value="A"> The destination context</label><label class="quiz-option"><input type="radio" name="q3" value="B"> The user's password length</label><label class="quiz-option"><input type="radio" name="q3" value="C"> The server's IP address</label><label class="quiz-option"><input type="radio" name="q3" value="D"> The database brand only</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: A</span></div>
+            <div class="quiz-card" data-answer="D"><p><strong>4.</strong> Which public error message is usually safest?</p><label class="quiz-option"><input type="radio" name="q4" value="A"> Full stack trace</label><label class="quiz-option"><input type="radio" name="q4" value="B"> SQL query and table names</label><label class="quiz-option"><input type="radio" name="q4" value="C"> Cloud access key prefix</label><label class="quiz-option"><input type="radio" name="q4" value="D"> Controlled message with request ID</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: D</span></div>
+            <div class="quiz-card" data-answer="B"><p><strong>5.</strong> What does parameterization protect against?</p><label class="quiz-option"><input type="radio" name="q5" value="A"> Power failure</label><label class="quiz-option"><input type="radio" name="q5" value="B"> Data changing query or command structure</label><label class="quiz-option"><input type="radio" name="q5" value="C"> Broken monitors</label><label class="quiz-option"><input type="radio" name="q5" value="D"> Weak Wi-Fi signal</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: B</span></div>
+            <div class="quiz-card" data-answer="A"><p><strong>6.</strong> Where must security-critical validation occur?</p><label class="quiz-option"><input type="radio" name="q6" value="A"> On the server or trusted enforcement point</label><label class="quiz-option"><input type="radio" name="q6" value="B"> Only in browser JavaScript</label><label class="quiz-option"><input type="radio" name="q6" value="C"> Only in CSS</label><label class="quiz-option"><input type="radio" name="q6" value="D"> Only in documentation</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: A</span></div>
+            <div class="quiz-card" data-answer="C"><p><strong>7.</strong> What is canonicalization?</p><label class="quiz-option"><input type="radio" name="q7" value="A"> Deleting all logs</label><label class="quiz-option"><input type="radio" name="q7" value="B"> Making passwords longer</label><label class="quiz-option"><input type="radio" name="q7" value="C"> Converting data into a standard representation before decisions</label><label class="quiz-option"><input type="radio" name="q7" value="D"> Buying a certificate</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: C</span></div>
+            <div class="quiz-card" data-answer="D"><p><strong>8.</strong> Which is an example of output encoding?</p><label class="quiz-option"><input type="radio" name="q8" value="A"> Accepting every value</label><label class="quiz-option"><input type="radio" name="q8" value="B"> Disabling logs</label><label class="quiz-option"><input type="radio" name="q8" value="C"> Turning off authentication</label><label class="quiz-option"><input type="radio" name="q8" value="D"> Displaying &lt; as &amp;lt; in HTML text</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: D</span></div>
+            <div class="quiz-card" data-answer="B"><p><strong>9.</strong> Why are verbose stack traces risky in production?</p><label class="quiz-option"><input type="radio" name="q9" value="A"> They make pages prettier</label><label class="quiz-option"><input type="radio" name="q9" value="B"> They can reveal internal implementation details</label><label class="quiz-option"><input type="radio" name="q9" value="C"> They prevent debugging</label><label class="quiz-option"><input type="radio" name="q9" value="D"> They force encryption</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: B</span></div>
+            <div class="quiz-card" data-answer="A"><p><strong>10.</strong> A string length rule is best represented as:</p><label class="quiz-option"><input type="radio" name="q10" value="A"> Minimum and maximum allowed length</label><label class="quiz-option"><input type="radio" name="q10" value="B"> Random formatting</label><label class="quiz-option"><input type="radio" name="q10" value="C"> Public stack trace</label><label class="quiz-option"><input type="radio" name="q10" value="D"> A firewall rule only</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: A</span></div>
+            <div class="quiz-card" data-answer="C"><p><strong>11.</strong> Which value should generally not be logged?</p><label class="quiz-option"><input type="radio" name="q11" value="A"> Event type</label><label class="quiz-option"><input type="radio" name="q11" value="B"> Request ID</label><label class="quiz-option"><input type="radio" name="q11" value="C"> Plaintext password</label><label class="quiz-option"><input type="radio" name="q11" value="D"> Timestamp</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: C</span></div>
+            <div class="quiz-card" data-answer="D"><p><strong>12.</strong> What does fail closed mean?</p><label class="quiz-option"><input type="radio" name="q12" value="A"> Always accept input</label><label class="quiz-option"><input type="radio" name="q12" value="B"> Ignore errors</label><label class="quiz-option"><input type="radio" name="q12" value="C"> Retry forever</label><label class="quiz-option"><input type="radio" name="q12" value="D"> Deny or stop safely when a check fails</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: D</span></div>
+            <div class="quiz-card" data-answer="A"><p><strong>13.</strong> What is structured logging?</p><label class="quiz-option"><input type="radio" name="q13" value="A"> Logging with consistent fields</label><label class="quiz-option"><input type="radio" name="q13" value="B"> Logging secrets in plain text</label><label class="quiz-option"><input type="radio" name="q13" value="C"> Turning logs into images</label><label class="quiz-option"><input type="radio" name="q13" value="D"> Deleting all warnings</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: A</span></div>
+            <div class="quiz-card" data-answer="B"><p><strong>14.</strong> Which is a boundary value test for a username length rule of 3 to 32 characters?</p><label class="quiz-option"><input type="radio" name="q14" value="A"> Only testing 10 characters</label><label class="quiz-option"><input type="radio" name="q14" value="B"> Testing 2, 3, 32, and 33 characters</label><label class="quiz-option"><input type="radio" name="q14" value="C"> Testing only empty database tables</label><label class="quiz-option"><input type="radio" name="q14" value="D"> Testing only screenshots</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: B</span></div>
+            <div class="quiz-card" data-answer="C"><p><strong>15.</strong> What is mass assignment?</p><label class="quiz-option"><input type="radio" name="q15" value="A"> Assigning many students homework</label><label class="quiz-option"><input type="radio" name="q15" value="B"> Using two-factor authentication</label><label class="quiz-option"><input type="radio" name="q15" value="C"> Unexpected input fields updating sensitive object properties</label><label class="quiz-option"><input type="radio" name="q15" value="D"> Compressing a source tree</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: C</span></div>
+            <div class="quiz-card" data-answer="D"><p><strong>16.</strong> Which control is best for SQL values?</p><label class="quiz-option"><input type="radio" name="q16" value="A"> Manual string concatenation</label><label class="quiz-option"><input type="radio" name="q16" value="B"> HTML encoding only</label><label class="quiz-option"><input type="radio" name="q16" value="C"> More colorful error pages</label><label class="quiz-option"><input type="radio" name="q16" value="D"> Parameterized queries</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: D</span></div>
+            <div class="quiz-card" data-answer="A"><p><strong>17.</strong> What should happen when input fails validation?</p><label class="quiz-option"><input type="radio" name="q17" value="A"> Reject it with a safe response and log as appropriate</label><label class="quiz-option"><input type="radio" name="q17" value="B"> Always process it anyway</label><label class="quiz-option"><input type="radio" name="q17" value="C"> Print database credentials</label><label class="quiz-option"><input type="radio" name="q17" value="D"> Disable authentication</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: A</span></div>
+            <div class="quiz-card" data-answer="C"><p><strong>18.</strong> Which is the best reason to normalize input?</p><label class="quiz-option"><input type="radio" name="q18" value="A"> To remove all need for testing</label><label class="quiz-option"><input type="radio" name="q18" value="B"> To make logs public</label><label class="quiz-option"><input type="radio" name="q18" value="C"> To handle harmless variation consistently before checks</label><label class="quiz-option"><input type="radio" name="q18" value="D"> To hide authorization rules</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: C</span></div>
+            <div class="quiz-card" data-answer="B"><p><strong>19.</strong> Why is log injection a concern?</p><label class="quiz-option"><input type="radio" name="q19" value="A"> Logs are never used</label><label class="quiz-option"><input type="radio" name="q19" value="B"> Crafted input can mislead or corrupt log records</label><label class="quiz-option"><input type="radio" name="q19" value="C"> It improves audit quality</label><label class="quiz-option"><input type="radio" name="q19" value="D"> It encrypts messages</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: B</span></div>
+            <div class="quiz-card" data-answer="D"><p><strong>20.</strong> What is the safest general design principle for unexpected security-check failures?</p><label class="quiz-option"><input type="radio" name="q20" value="A"> Continue silently</label><label class="quiz-option"><input type="radio" name="q20" value="B"> Give administrator access</label><label class="quiz-option"><input type="radio" name="q20" value="C"> Show all internals to the user</label><label class="quiz-option"><input type="radio" name="q20" value="D"> Fail closed with controlled logging</label><button class="check-quiz" type="button">Check</button><span class="answer">Answer: D</span></div>
+
+            <h3>10 Short Questions</h3>
+            <ol>
+              <li>Define input validation in your own words.</li>
+              <li>Give one example of input that is not typed by a human.</li>
+              <li>Explain the difference between normalization and validation.</li>
+              <li>Why is output encoding context-specific?</li>
+              <li>What is one risk of logging raw user input?</li>
+              <li>What is the difference between a public error message and a private diagnostic log?</li>
+              <li>Why is browser-only validation insufficient for security?</li>
+              <li>What is a boundary value test?</li>
+              <li>Why are parameterized queries safer than string-built queries?</li>
+              <li>What does fail closed mean?</li>
+            </ol>
+            <h3>5 Long Questions</h3>
+            <ol>
+              <li>Design validation rules for a fictional university course-registration form. Include field type, format, length, range, and business rules.</li>
+              <li>Compare validation, sanitization, escaping, and output encoding. Explain where each belongs in a secure design.</li>
+              <li>Explain how poor error handling can help attackers and how structured logging can help defenders.</li>
+              <li>Analyze a fictional transcript-download API and identify possible input, output, and error-handling failures.</li>
+              <li>Explain why validation alone does not replace authorization, parameterization, output encoding, or monitoring.</li>
+            </ol>
+            <h3>Scenario-Based Questions</h3>
+            <ol>
+              <li>A profile page displays a student's nickname. The nickname may contain symbols. How should the application store, validate, and display it?</li>
+              <li>An API accepts <code>role=student</code>. A request sends <code>role=admin</code>. What checks should occur?</li>
+              <li>A production page displays a database error with table names. What should be changed?</li>
+              <li>A log file shows thousands of invalid student IDs in five minutes. What might this mean, and what evidence should be preserved?</li>
+            </ol>
+            <h3>Interview Questions</h3>
+            <ol>
+              <li>What is the difference between input validation and output encoding?</li>
+              <li>Why are allowlists usually preferred for strict identifiers?</li>
+              <li>How would you prevent SQL injection in new code?</li>
+              <li>What should a secure error-handling policy say?</li>
+              <li>How would you test a validator?</li>
+            </ol>
+            <h3>Critical Thinking Questions</h3>
+            <ol>
+              <li>When might rejecting invalid input harm usability, and how can design reduce that harm?</li>
+              <li>What sensitive information is truly necessary in logs for incident response?</li>
+              <li>How can validation rules become outdated as business processes change?</li>
+              <li>Why can a correct encoder still be used incorrectly?</li>
+            </ol>
+            <h3>Research Questions</h3>
+            <ol>
+              <li>How effective are type systems and taint tracking at preventing injection classes?</li>
+              <li>What makes secure output-encoding APIs difficult for developers to use correctly?</li>
+              <li>How can fuzzing be integrated into CI/CD without creating unmanageable false positives?</li>
+              <li>How can logs preserve forensic value while minimizing privacy risk?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title</h3>
+            <p><strong>Build a local input/output/error-handling safety harness for a fictional student portal.</strong></p>
+            <h3>Safety statement</h3>
+            <p>This lab uses only local files and toy code. Do not send test strings to real websites, APIs, cloud services, university systems, or third-party software.</p>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Python 3 installed.</li>
+              <li>Basic command line usage.</li>
+              <li>Lesson 4.2 secure design concepts.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Write allowlist validation rules.</li>
+              <li>Normalize simple text input.</li>
+              <li>Encode untrusted text for HTML output.</li>
+              <li>Create controlled public error messages.</li>
+              <li>Create private local logs without secrets.</li>
+            </ul>
+            <h3>Tasks</h3>
+            <ol>
+              <li>Create a folder named <code>input-output-error-lab</code>.</li>
+              <li>Create <code>validator.py</code> using the Python validation example in this lesson.</li>
+              <li>Add at least ten test values: valid, invalid, empty, too long, wrong type, wrong case, and unexpected symbols.</li>
+              <li>Create a function that renders a name safely as HTML text.</li>
+              <li>Create an error-handling function that logs a request ID and event type but does not log secrets.</li>
+              <li>Run the program locally and save the output to <code>results.txt</code>.</li>
+              <li>Write <code>notes.md</code> explaining which values passed, which failed, and why.</li>
+              <li>Optional: commit the files to a local Git repository.</li>
+            </ol>
+            <h3>Expected outcomes</h3>
+            <ul>
+              <li>You can explain each validation rule.</li>
+              <li>Invalid input is rejected with controlled messages.</li>
+              <li>Displayed HTML treats untrusted values as text.</li>
+              <li>Logs contain useful event evidence without secrets.</li>
+            </ul>
+            <h3>Extension</h3>
+            <p>Add a JSON schema for a fictional profile update request and write tests for missing, extra, and wrong-type fields.</p>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li>OWASP Input Validation Cheat Sheet.</li>
+              <li>OWASP Cross-Site Scripting Prevention Cheat Sheet.</li>
+              <li>OWASP Error Handling Cheat Sheet and Logging Cheat Sheet.</li>
+              <li>OWASP Application Security Verification Standard, especially validation, encoding, logging, and error-handling requirements.</li>
+              <li>MITRE CWE-20: Improper Input Validation.</li>
+              <li>MITRE CWE-116: Improper Encoding or Escaping of Output.</li>
+              <li>MITRE CWE-209: Error Message Containing Sensitive Information.</li>
+              <li>NIST SP 800-218 Secure Software Development Framework.</li>
+              <li>Research topics: fuzzing, taint tracking, context-sensitive encoding, structured logging, privacy-preserving telemetry, developer-centered secure APIs.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="requirements-abuse-cases-and-secure-design.html">← Lesson 4.2</a><a class="btn" href="index.html">Week 4 Overview</a><a class="btn btn-primary" href="secrets-dependencies-and-sboms.html">Next: Lesson 4.4 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

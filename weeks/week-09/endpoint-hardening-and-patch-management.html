@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 9.3: Endpoint Hardening and Patch Management | MS Cybersecurity</title>
+  <meta name="description" content="Endpoint hardening and patch management from first principles: secure baselines, configuration drift, risk-based patching, update rings, patch compliance, exceptions, rollback, and safe labs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-09-03" data-title="Lesson 9.3: Endpoint Hardening and Patch Management">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 9</a> / Lesson 9.3</div>
+
+    <header class="hero"><div class="eyebrow">Week 9 · Endpoint Security, Malware Concepts, and Hardening</div><h1>Lesson 9.3: Endpoint Hardening and Patch Management</h1><p class="lead">This lesson teaches how to reduce endpoint attack surface and keep systems current without pretending that patching alone solves security. You will learn baselines, configuration drift, update rings, vulnerability prioritization, rollback planning, and evidence-based hardening.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>480–720 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–8 and Lessons 9.1–9.2 recommended; required ideas are reviewed</div><div class="meta-item"><strong>Practice time</strong>6–10 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+<section class="lesson-visual card"><div class="visual-graphic" aria-label="Endpoint hardening and patch lifecycle illustration"><svg viewBox="0 0 1120 620" role="img" aria-labelledby="hardening-title hardening-desc"><title id="hardening-title">Endpoint hardening and patch lifecycle</title><desc id="hardening-desc">An endpoint hardening and patch lifecycle moves from inventory and baseline to testing, phased deployment, verification, monitoring, and rollback planning.</desc><defs><linearGradient id="hpg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#42d6b5"/><stop offset="100%" stop-color="#7aa7ff"/></linearGradient><filter id="hshadow"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity="0.18"/></filter></defs><rect x="35" y="35" width="1050" height="545" rx="34" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><circle cx="560" cy="310" r="150" fill="url(#hpg)" opacity="0.18"/><g filter="url(#hshadow)" font-size="20" fill="var(--text)"><rect x="85" y="95" width="205" height="85" rx="20" fill="var(--bg)" stroke="var(--border)"/><text x="187" y="130" text-anchor="middle">Inventory</text><text x="187" y="158" text-anchor="middle" font-size="15" fill="var(--muted)">devices + software</text><rect x="450" y="75" width="220" height="90" rx="22" fill="var(--bg)" stroke="var(--border)"/><text x="560" y="112" text-anchor="middle">Secure Baseline</text><text x="560" y="140" text-anchor="middle" font-size="15" fill="var(--muted)">known-good settings</text><rect x="830" y="95" width="205" height="85" rx="20" fill="var(--bg)" stroke="var(--border)"/><text x="932" y="130" text-anchor="middle">Prioritize</text><text x="932" y="158" text-anchor="middle" font-size="15" fill="var(--muted)">risk + exploit data</text><rect x="850" y="278" width="205" height="85" rx="20" fill="var(--bg)" stroke="var(--border)"/><text x="952" y="313" text-anchor="middle">Patch Rings</text><text x="952" y="341" text-anchor="middle" font-size="15" fill="var(--muted)">pilot → broad</text><rect x="450" y="445" width="220" height="90" rx="22" fill="var(--bg)" stroke="var(--border)"/><text x="560" y="482" text-anchor="middle">Verify</text><text x="560" y="510" text-anchor="middle" font-size="15" fill="var(--muted)">compliance + drift</text><rect x="65" y="278" width="225" height="85" rx="20" fill="var(--bg)" stroke="var(--border)"/><text x="177" y="313" text-anchor="middle">Rollback Plan</text><text x="177" y="341" text-anchor="middle" font-size="15" fill="var(--muted)">recover safely</text></g><g stroke="#42d6b5" stroke-width="5" stroke-linecap="round" opacity="0.9" fill="none"><path d="M290 138 C360 105 400 105 450 120"/><path d="M670 120 C740 105 785 110 830 138"/><path d="M932 180 C960 210 965 245 952 278"/><path d="M880 360 C800 435 720 470 670 490"/><path d="M450 490 C370 455 290 395 260 360"/><path d="M170 278 C150 240 155 205 185 180"/></g><text x="560" y="304" text-anchor="middle" font-size="31" fill="var(--text)">Reduce exposure</text><text x="560" y="342" text-anchor="middle" font-size="19" fill="var(--muted)">without breaking the mission</text></svg></div><div class="visual-panel"><h2>Visual learning path</h2><p>Hardening and patching are not one-time actions. They are a maintenance loop: know what you own, define the secure state, change carefully, verify results, and respond when systems drift.</p><div class="visual-steps"><div class="visual-step"><strong>1. Baseline</strong><span>Define the minimum secure configuration for each endpoint class.</span></div><div class="visual-step"><strong>2. Patch</strong><span>Test updates, deploy in rings, verify installation, and monitor failures.</span></div><div class="visual-step"><strong>3. Sustain</strong><span>Detect drift, handle exceptions, measure compliance, and improve the baseline.</span></div></div><div class="badge-row"><span class="badge">Defensive only</span><span class="badge">Risk-based patching</span><span class="badge">Configuration drift</span><span class="badge">Safe rollback</span></div></div></section>
+
+<div class="content-grid"><article class="lesson-content card article">
+<section id="introduction"><h2>1. Introduction</h2><p><strong>Endpoint hardening</strong> means configuring a device so it exposes fewer unnecessary ways to be attacked. <strong>Patch management</strong> means identifying, testing, installing, and verifying updates for operating systems, applications, firmware, drivers, and security tools.</p><p>Plain English: hardening is like closing unused doors and removing unnecessary keys. Patching is like repairing known broken locks after vendors publish fixes. Neither activity makes a system perfect, but both reduce avoidable risk.</p><p>This topic exists because default systems are built for broad usability, not for every organization’s exact risk profile. A fresh laptop may include optional services, sample apps, permissive settings, browser plugins, old drivers, cached credentials, local administrator rights, and update settings that are convenient but not ideal for a bank, hospital, university, or government agency.</p><p>The topic matters because attackers often use already-known weaknesses. If a vulnerability is public, exploitable, and present on many endpoints, delayed remediation gives attackers time. If a device is patched but poorly configured, attackers may still abuse weak settings such as unnecessary local admin rights, unrestricted macros, disabled firewalls, or exposed remote access.</p><p>Hardening and patching are used by endpoint administrators, system engineers, security operations centers, cloud administrators, incident responders, auditors, compliance teams, vulnerability managers, and product owners. In mature organizations, hardening and patching are not random technical tasks. They are governed maintenance processes with ownership, metrics, exceptions, testing, and rollback plans.</p></section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><p>After finishing this lesson, you should be able to:</p><ul><li>Define endpoint hardening, secure baseline, configuration drift, and patch management.</li><li>Explain why patching and hardening are complementary but different controls.</li><li>Identify common endpoint settings that reduce attack surface.</li><li>Describe a safe patch lifecycle: inventory, prioritize, test, deploy, verify, monitor, and rollback.</li><li>Explain why risk-based patching uses more than CVSS severity.</li><li>Design phased update rings for a fictional organization.</li><li>Write a beginner endpoint baseline for Linux and Windows lab systems.</li><li>Use safe local commands to inspect update state, services, firewall status, users, and listening ports.</li><li>Explain how hardening affects usability, reliability, privacy, and business continuity.</li><li>Produce an evidence-based hardening and patch report without exposing secrets or personal data.</li></ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2><p>This lesson uses concepts from earlier weeks, but it reviews them before applying them.</p><h3>3.1 Endpoint</h3><p>An endpoint is a device or workload where software runs and users, services, data, credentials, and logs exist. Examples: laptops, desktops, servers, virtual machines, tablets, and cloud-hosted workloads.</p><h3>3.2 Vulnerability</h3><p>A vulnerability is a weakness that could be used to violate a security goal. A missing patch may leave a known vulnerability present. A bad configuration may create a vulnerability even when software is fully updated.</p><h3>3.3 Service</h3><p>A service is a background program that waits for work. Some services listen on network ports. If a service is unnecessary, it adds attack surface.</p><h3>3.4 Privilege</h3><p>Privilege is permission to perform powerful actions. Local administrator or root privilege can install software, change security settings, access protected data, and disable controls. Hardening often reduces unnecessary privilege.</p><h3>3.5 Log</h3><p>A log is a record of system activity. Patching and hardening need logs because defenders must know what changed, when it changed, whether it succeeded, and what failed.</p></section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2><h3>4.1 Hardening versus patching</h3><p><strong>Hardening</strong> reduces unnecessary exposure. <strong>Patching</strong> fixes known defects by installing updates. A hardened system can still be vulnerable if it is missing a critical patch. A patched system can still be weak if it runs unnecessary services, allows broad local administrator rights, or stores sensitive data without encryption.</p><table><thead><tr><th>Question</th><th>Hardening</th><th>Patching</th></tr></thead><tbody><tr><td>What does it change?</td><td>Configuration and allowed behavior</td><td>Software, firmware, drivers, or packages</td></tr><tr><td>Example</td><td>Disable unused remote desktop access</td><td>Install a browser security update</td></tr><tr><td>Main risk reduced</td><td>Attack surface and weak defaults</td><td>Known software defects</td></tr><tr><td>Can it break things?</td><td>Yes, if a required feature is disabled</td><td>Yes, if an update conflicts with applications</td></tr><tr><td>How is it verified?</td><td>Baseline checks and drift detection</td><td>Patch inventory and version evidence</td></tr></tbody></table>
+<h3>4.2 Attack surface</h3><p>An <strong>attack surface</strong> is the set of ways an attacker could interact with or influence a system. On endpoints, attack surface includes users, browsers, email clients, office documents, scripts, installed applications, drivers, services, exposed ports, credentials, removable media, file shares, startup mechanisms, and physical access.</p><p>Hardening aims to remove, restrict, or monitor parts of the attack surface that are not needed for the endpoint’s purpose.</p>
+<h3>4.3 Secure baseline</h3><p>A <strong>secure baseline</strong> is a documented, approved configuration standard for a class of systems. A student lab desktop, hospital workstation, developer laptop, domain controller, and cloud server should not necessarily share the same baseline because they have different missions and risks.</p><p>A useful baseline states:</p><ul><li>Who owns the endpoint class.</li><li>Which operating-system versions are allowed.</li><li>Which applications are required, allowed, and prohibited.</li><li>Which services must be enabled or disabled.</li><li>Which local users and groups are permitted.</li><li>Which logging settings are required.</li><li>Which firewall rules are allowed.</li><li>Which encryption settings are required.</li><li>Which update behavior is expected.</li><li>How exceptions are approved and reviewed.</li></ul>
+<h3>4.4 Configuration drift</h3><p><strong>Configuration drift</strong> occurs when a system moves away from its approved baseline. Drift can happen because of manual changes, emergency troubleshooting, software installation, user behavior, failed policy application, vendor updates, or attacker activity.</p><p>Drift is dangerous because documentation says the system is secure, but reality may disagree. Mature hardening programs measure actual state, not only intended state.</p>
+<h3>4.5 Patch management lifecycle</h3><p>Patch management is a lifecycle, not a single command.</p><ol><li><strong>Inventory:</strong> know which endpoints, applications, versions, and owners exist.</li><li><strong>Monitor:</strong> track vendor updates, vulnerability feeds, security advisories, and exploit intelligence.</li><li><strong>Prioritize:</strong> consider exploit activity, exposure, asset criticality, severity, compensating controls, and business impact.</li><li><strong>Test:</strong> validate updates on representative systems before broad rollout when practical.</li><li><strong>Deploy:</strong> use phased update rings instead of updating every device blindly at once.</li><li><strong>Verify:</strong> confirm the update installed and the vulnerability is no longer present.</li><li><strong>Monitor:</strong> watch for failed installs, crashes, compatibility issues, and security events.</li><li><strong>Recover:</strong> use rollback, backups, snapshots, or rebuilds if the patch causes unacceptable failure.</li><li><strong>Improve:</strong> update baselines, playbooks, and metrics based on lessons learned.</li></ol>
+<h3>4.6 Update rings</h3><p>An <strong>update ring</strong> is a phased deployment group. The idea is simple: start with a small, controlled set of devices; learn from failures; then expand.</p><table><thead><tr><th>Ring</th><th>Typical purpose</th><th>Example devices</th></tr></thead><tbody><tr><td>Ring 0</td><td>IT/security pilot</td><td>Test VMs and IT-owned laptops</td></tr><tr><td>Ring 1</td><td>Early adopters</td><td>Low-criticality staff devices</td></tr><tr><td>Ring 2</td><td>Broad deployment</td><td>Most standard endpoints</td></tr><tr><td>Ring 3</td><td>Special handling</td><td>Clinical, OT, research, kiosk, or legacy devices</td></tr></tbody></table><p>Ring 3 is not a permission to ignore risk. It means changes require extra testing, maintenance windows, compensating controls, and documented ownership.</p>
+<h3>4.7 Risk-based patching</h3><p>Risk-based patching means prioritizing fixes based on real risk, not only a score. A vulnerability with medium severity but active exploitation on internet-facing endpoints may be more urgent than a higher-scoring vulnerability on an isolated system with strong compensating controls.</p><p>Useful prioritization factors include:</p><ul><li>Known exploitation in the wild.</li><li>Internet exposure or remote reachability.</li><li>Privilege required to exploit.</li><li>Asset criticality and data sensitivity.</li><li>Availability of a reliable exploit.</li><li>Presence of compensating controls.</li><li>Business impact of patching or not patching.</li><li>Whether the affected software is end-of-life.</li></ul>
+<h3>4.8 Patch compliance</h3><p><strong>Patch compliance</strong> measures whether systems have required updates. It is usually expressed as a percentage:</p><pre><code>patch compliance = patched applicable endpoints / total applicable endpoints</code></pre><p>Compliance numbers can mislead if the asset inventory is incomplete. If 20 unmanaged laptops are missing from inventory, they will not appear in the denominator, and the metric may look better than reality.</p>
+<h3>4.9 Exceptions and compensating controls</h3><p>Sometimes a patch cannot be deployed immediately because of medical equipment, industrial systems, fragile research instruments, vendor constraints, legacy applications, or operational windows. An exception must not be informal. It should include:</p><ul><li>Asset owner.</li><li>Reason patch cannot be applied.</li><li>Risk statement.</li><li>Temporary compensating controls.</li><li>Expiration date.</li><li>Review schedule.</li><li>Approval authority.</li></ul><p>Compensating controls may include network isolation, firewall restriction, application allowlisting, disabling vulnerable features, monitoring, virtual patching, or retiring the system.</p>
+<h3>4.10 End-of-life software</h3><p><strong>End-of-life</strong> software no longer receives normal security updates from the vendor. End-of-life systems are high risk because future vulnerabilities may remain unpatched. The durable fix is replacement, upgrade, isolation, or decommissioning.</p>
+<h3>4.11 Hardening categories</h3><p>Endpoint hardening commonly includes:</p><ul><li><strong>Identity:</strong> MFA, least privilege, no routine local administrator use.</li><li><strong>Services:</strong> disable unused services and remote access.</li><li><strong>Applications:</strong> remove unnecessary software and block untrusted execution.</li><li><strong>Network:</strong> enable host firewall and restrict inbound traffic.</li><li><strong>Data:</strong> enable disk encryption and protect sensitive files.</li><li><strong>Browser:</strong> update browsers, restrict risky extensions, use safe defaults.</li><li><strong>Scripting:</strong> restrict unnecessary script execution and log script behavior.</li><li><strong>Logging:</strong> enable useful security logs and send important events centrally.</li><li><strong>Recovery:</strong> test backups, restore procedures, and rebuild images.</li></ul>
+<h3>4.12 Hardening trade-offs</h3><p>Hardening can break workflows if applied blindly. A restrictive macro policy may protect finance users but break a legitimate accounting process. Blocking removable drives may help protect against data exfiltration but hinder laboratory equipment workflows. A serious hardening program includes testing, user impact analysis, exception handling, and rollback.</p>
+<h3>4.13 Baseline ownership</h3><p>A baseline without an owner decays. A good baseline names the responsible team, review frequency, change process, and evidence requirements. Security teams may define requirements, but system owners must help validate operational impact.</p>
+<h3>4.14 Golden images and rebuilds</h3><p>A <strong>golden image</strong> is a trusted system image used to build endpoints consistently. Rebuilding from a known-good image can be safer than trying to repair a heavily drifted or compromised endpoint. Golden images need patching too; otherwise new devices are born vulnerable.</p>
+<h3>4.15 Verification evidence</h3><p>Do not claim a system is patched or hardened without evidence. Evidence may include package versions, update history, configuration snapshots, policy reports, vulnerability scan results, endpoint management reports, logs, and screenshots with sensitive data redacted.</p></section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2><h3>5.1 Hardening and patch management lifecycle</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  A[Asset inventory] --> B[Secure baseline]
+  B --> C[Current-state scan]
+  C --> D[Gap and vulnerability triage]
+  D --> E[Test changes]
+  E --> F[Deploy in rings]
+  F --> G[Verify installation and settings]
+  G --> H[Monitor failures and drift]
+  H --> I[Update baseline and exceptions]
+  I --> C
+</pre></div><h3>5.2 Patch deployment sequence</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant Vendor
+  participant VulnTeam as Vulnerability Team
+  participant IT as Endpoint Admin
+  participant Pilot as Pilot Ring
+  participant Fleet as Broad Fleet
+  participant SOC
+  Vendor->>VulnTeam: Security advisory and update released
+  VulnTeam->>VulnTeam: Prioritize by exposure, exploit activity, and asset criticality
+  VulnTeam->>IT: Create deployment task and deadline
+  IT->>Pilot: Deploy to Ring 0/1
+  Pilot->>IT: Report success or failure evidence
+  IT->>Fleet: Expand rollout if acceptable
+  Fleet->>SOC: Send patch status and error telemetry
+  SOC->>VulnTeam: Monitor exploitation attempts and exceptions
+</pre></div><h3>5.3 Risk-based prioritization decision tree</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  V[New vulnerability or patch] --> KEV{Known exploited?}
+  KEV -- Yes --> E{Affected endpoint exposed or critical?}
+  E -- Yes --> Urgent[Urgent remediation window]
+  E -- No --> High[High priority with compensating controls]
+  KEV -- No --> Remote{Remote unauthenticated or wormable?}
+  Remote -- Yes --> High2[High priority]
+  Remote -- No --> Asset{Sensitive data or privileged endpoint?}
+  Asset -- Yes --> Medium[Medium to high priority]
+  Asset -- No --> Standard[Standard maintenance cycle]
+  Urgent --> Verify[Verify and report evidence]
+  High --> Verify
+  High2 --> Verify
+  Medium --> Verify
+  Standard --> Verify
+</pre></div><h3>5.4 Configuration drift loop</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> BaselineDefined
+  BaselineDefined --> Compliant: apply policy
+  Compliant --> Drifted: manual change / failed update / attacker / software install
+  Drifted --> Detected: scan or telemetry finds difference
+  Detected --> ApprovedException: business-justified exception
+  Detected --> Remediated: restore setting or patch
+  ApprovedException --> Review: expiration date reached
+  Review --> Remediated
+  Remediated --> Compliant
+</pre></div><h3>5.5 Timeline for emergency patching</h3><div class="diagram"><pre class="mermaid">timeline
+  title Emergency patch response timeline
+  Hour 0 : Advisory or exploit evidence received
+  Hour 1 : Confirm affected assets and owners
+  Hour 2 : Define risk, workaround, and deployment plan
+  Hours 3-8 : Test on pilot systems
+  Hours 8-24 : Deploy to exposed and critical endpoints
+  Day 2 : Expand to remaining applicable endpoints
+  Day 3+ : Verify, close exceptions, and update lessons learned
+</pre></div><h3>5.6 Network design for patch management</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Vendor[Vendor update source] --> UpdateService[Enterprise update service]
+  UpdateService --> Ring0[Ring 0: IT pilot]
+  UpdateService --> Ring1[Ring 1: early adopters]
+  UpdateService --> Ring2[Ring 2: broad fleet]
+  UpdateService --> Ring3[Ring 3: special systems]
+  Ring0 --> Logs[Patch telemetry]
+  Ring1 --> Logs
+  Ring2 --> Logs
+  Ring3 --> Logs
+  Logs --> Dashboard[Compliance dashboard]
+  Dashboard --> Exceptions[Exception register]
+</pre></div><h3>5.7 ASCII model</h3><pre><code>known good baseline
+        |
+        v
+ current endpoint state ---- compare ----> gaps
+        |                                |
+        v                                v
+ patch status                      hardening drift
+        |                                |
+        +------------ prioritize --------+
+                         |
+                         v
+               test -> deploy -> verify</code></pre></section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Endpoint Hardening and Patching))
+    Inventory
+      Devices
+      Software
+      Versions
+      Owners
+      Criticality
+    Baseline
+      Services
+      Firewall
+      Privilege
+      Encryption
+      Logging
+      Applications
+    Patching
+      Advisories
+      Testing
+      Rings
+      Verification
+      Rollback
+    Prioritization
+      Exploited
+      Exposed
+      Critical asset
+      Compensating controls
+      Business impact
+    Drift
+      Manual changes
+      Failed policies
+      Emergency fixes
+      Attacker changes
+    Metrics
+      Compliance
+      Mean time to remediate
+      Exception age
+      Failure rate
+</pre></div></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2><h3>7.1 Patch compliance</h3><p>If 900 of 1,000 applicable endpoints have a required update installed:</p><pre><code>patch compliance = 900 / 1000 = 0.90 = 90%</code></pre><p>This number is useful only if the inventory is accurate. Unknown endpoints are hidden risk.</p><h3>7.2 Exposure-weighted priority</h3><p>A simple classroom model:</p><pre><code>priority = severity × exposure × asset criticality × exploit evidence</code></pre><p>Each factor can be scored from 1 to 5. This is not a universal truth; it is a transparent way to explain why one patch should be handled before another.</p><h3>7.3 Worked prioritization example</h3><p>Suppose two vulnerabilities affect 100 endpoints:</p><table><thead><tr><th>Vulnerability</th><th>Severity</th><th>Exposure</th><th>Asset criticality</th><th>Exploit evidence</th><th>Priority</th></tr></thead><tbody><tr><td>A</td><td>5</td><td>1</td><td>2</td><td>1</td><td>10</td></tr><tr><td>B</td><td>3</td><td>5</td><td>5</td><td>5</td><td>375</td></tr></tbody></table><p>Vulnerability B has lower raw severity but much higher practical priority in this model because it is exposed, affects critical systems, and has exploit evidence.</p><h3>7.4 Mean time to remediate</h3><p><strong>Mean time to remediate</strong> is the average time between identifying a required fix and verifying remediation.</p><pre><code>MTTR = sum(remediation times) / number of remediated findings</code></pre><p>If five fixes took 2, 4, 5, 7, and 12 days:</p><pre><code>MTTR = (2 + 4 + 5 + 7 + 12) / 5 = 6 days</code></pre><h3>7.5 Exception aging</h3><p>An old exception is more dangerous than a fresh exception because temporary compensating controls often become permanent by accident.</p><pre><code>exception age = current date - exception approval date</code></pre><p>Exception reports should show age, owner, expiration, reason, and review status.</p></section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2><p>Only run commands on systems you own or are explicitly authorized to administer. Do not change production settings during practice.</p><h3>8.1 Linux examples</h3><pre><code class="language-bash"># Show OS version on your own lab machine
+cat /etc/os-release
+
+# List packages with available upgrades on Debian/Ubuntu-style systems
+apt list --upgradable
+
+# Review recent package manager history on Debian/Ubuntu-style systems
+less /var/log/apt/history.log
+
+# Check enabled services
+systemctl list-unit-files --type=service --state=enabled
+
+# Show listening network sockets
+ss -tulpen
+
+# Check uncomplicated firewall status, if ufw is installed
+sudo ufw status verbose</code></pre><h3>8.2 Windows examples</h3><pre><code class="language-powershell"># Show Windows version information
+Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber
+
+# Show installed hotfixes reported by the system
+Get-HotFix | Sort-Object InstalledOn -Descending | Select-Object -First 10
+
+# Show local administrators
+Get-LocalGroupMember -Group "Administrators"
+
+# Show running services
+Get-Service | Where-Object {$_.Status -eq "Running"} | Select-Object -First 20
+
+# Show enabled firewall profiles
+Get-NetFirewallProfile | Select-Object Name, Enabled
+
+# Show listening TCP ports
+Get-NetTCPConnection -State Listen | Select-Object LocalAddress, LocalPort, OwningProcess</code></pre><h3>8.3 Python example: patch compliance from a toy CSV</h3><pre><code class="language-python">import csv
+from pathlib import Path
+
+# This script analyzes a fictional CSV file.
+# It does not scan networks or change systems.
+
+csv_path = Path("toy_patch_inventory.csv")
+required_patch = "KB-TRAINING-2026-001"
+
+with csv_path.open(newline="", encoding="utf-8") as f:
+    rows = list(csv.DictReader(f))
+
+applicable = [row for row in rows if row["applicable"] == "yes"]
+patched = [row for row in applicable if row["installed_patch"] == required_patch]
+
+if applicable:
+    compliance = len(patched) / len(applicable)
+else:
+    compliance = 0
+
+print(f"Applicable endpoints: {len(applicable)}")
+print(f"Patched endpoints: {len(patched)}")
+print(f"Compliance: {compliance:.1%}")
+
+for row in applicable:
+    if row["installed_patch"] != required_patch:
+        print(f"Needs remediation: {row['hostname']} owned by {row['owner']}")</code></pre><h3>8.4 Network example</h3><p>A laptop should usually not accept inbound connections from the internet. A host firewall baseline might allow outbound web traffic, allow management traffic only from a management subnet, and block unsolicited inbound traffic from untrusted networks.</p><h3>8.5 Web example</h3><p>Browser hardening can include current browser versions, automatic updates, restricted extensions, safer download settings, phishing protection, certificate warning enforcement, and isolation for high-risk browsing.</p><h3>8.6 Cloud example</h3><p>Cloud-hosted endpoints such as virtual machines need baseline images, automated patching, vulnerability visibility, network security groups, identity-managed access, and immutable rebuild workflows where possible.</p></section>
+
+<section id="code-examples"><h2>9. Code Examples</h2><h3>9.1 Line-by-line Python explanation</h3><pre><code class="language-python">import csv                      # Load Python's CSV reader module.
+from pathlib import Path          # Use safer path objects instead of raw string paths.
+
+csv_path = Path("toy_patch_inventory.csv")  # Name of the local training file.
+required_patch = "KB-TRAINING-2026-001"     # Fictional required patch identifier.
+
+with csv_path.open(newline="", encoding="utf-8") as f:  # Open the file safely.
+    rows = list(csv.DictReader(f))                       # Convert rows to dictionaries.
+
+applicable = []                   # Endpoints where the patch should apply.
+patched = []                      # Endpoints where the patch is already installed.
+
+for row in rows:                  # Review each endpoint record.
+    if row["applicable"] == "yes": # Only count relevant systems.
+        applicable.append(row)    # Store the applicable endpoint.
+        if row["installed_patch"] == required_patch: # Check installed patch.
+            patched.append(row)   # Store compliant endpoint.
+
+if len(applicable) == 0:          # Avoid division by zero.
+    compliance = 0
+else:
+    compliance = len(patched) / len(applicable) # Calculate compliance ratio.
+
+print(f"Compliance: {compliance:.1%}")       # Print as a percentage.</code></pre><h3>9.2 Common mistakes</h3><ul><li><strong>Mistake:</strong> Trusting only a dashboard without sampling endpoints. <strong>Why wrong:</strong> dashboards depend on agent health and inventory quality.</li><li><strong>Mistake:</strong> Treating every high CVSS vulnerability as the same operational priority. <strong>Why wrong:</strong> exposure, exploit activity, and asset criticality matter.</li><li><strong>Mistake:</strong> Patching without rollback planning. <strong>Why wrong:</strong> emergency rollback may be needed if a critical workflow breaks.</li><li><strong>Mistake:</strong> Disabling services without owner approval. <strong>Why wrong:</strong> the service may support a business-critical workflow.</li><li><strong>Mistake:</strong> Storing patch reports with hostnames, usernames, and screenshots publicly. <strong>Why wrong:</strong> operational details can become attacker reconnaissance data.</li></ul><h3>9.3 Secure coding relevance</h3><p>Secure coding matters because patching is expensive. If developers prevent vulnerabilities, organizations do not have to chase as many emergency fixes later. Patch management is a safety net, not a substitute for secure software engineering.</p></section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2><h3>10.1 Common attacks</h3><ul><li>Exploitation of unpatched browsers, document readers, VPN clients, remote access tools, or endpoint agents.</li><li>Privilege escalation through outdated drivers or local services.</li><li>Abuse of exposed remote desktop or remote management services.</li><li>Malware persistence through startup entries, scheduled tasks, services, or login scripts.</li><li>Credential theft from endpoints with weak hardening.</li><li>Ransomware spread through unpatched systems and permissive network access.</li></ul><h3>10.2 Common vulnerabilities and weak configurations</h3><ul><li>End-of-life operating systems.</li><li>Missing security updates.</li><li>Unnecessary local administrator accounts.</li><li>Disabled host firewall.</li><li>Unrestricted macros or scripts.</li><li>Unpatched third-party applications.</li><li>Old browser extensions.</li><li>Default passwords on management tools.</li><li>Weak logging or no central log forwarding.</li><li>No disk encryption on portable endpoints.</li></ul><h3>10.3 Defensive strategies</h3><ul><li>Maintain accurate hardware and software inventory.</li><li>Use secure baselines for each endpoint class.</li><li>Automate operating-system and application updates where possible.</li><li>Prioritize known-exploited and exposed vulnerabilities.</li><li>Reduce local administrator rights.</li><li>Enable host firewalls and disk encryption.</li><li>Use application control for high-risk endpoints.</li><li>Collect and protect endpoint logs.</li><li>Review exceptions and retire end-of-life systems.</li></ul><h3>10.4 Detection methods</h3><ul><li>Patch failure alerts.</li><li>Endpoint version drift reports.</li><li>New local administrator membership.</li><li>Firewall disabled events.</li><li>Security agent stopped or tampered with.</li><li>New listening services.</li><li>Sudden configuration changes outside maintenance windows.</li><li>Known vulnerable software detected on critical systems.</li></ul><h3>10.5 Mitigation and best practices</h3><p>Mitigation should be layered. Patch when possible; use compensating controls when patching must be delayed; remove unnecessary services; restrict access; monitor exceptions; and replace systems that cannot be maintained safely.</p></section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><h3>11.1 Banks</h3><p>Banks use endpoint baselines for teller machines, analyst workstations, privileged-administrator laptops, trading terminals, and fraud teams. Patch delays can affect regulatory risk and fraud exposure, but untested updates can disrupt customer service. Banks often use staged rollouts and strict change windows.</p><h3>11.2 Governments</h3><p>Governments manage varied endpoints across agencies, field offices, classified environments, and public services. They often require formal vulnerability remediation evidence, secure configuration baselines, exception tracking, and auditability.</p><h3>11.3 Cloud providers</h3><p>Cloud providers harden management workstations, build images, hypervisor hosts, containers, and internal services. They favor automation, immutable infrastructure, and strong identity controls because manual patching does not scale.</p><h3>11.4 Healthcare</h3><p>Healthcare organizations must balance security with patient care. Some medical devices cannot be patched quickly because of vendor certification, uptime requirements, or clinical risk. Compensating controls and segmentation are especially important.</p><h3>11.5 Defense</h3><p>Defense environments require high assurance, configuration control, mission continuity, and strict change management. Patch testing may be extensive because operational failure can have safety or national-security consequences.</p><h3>11.6 Universities</h3><p>Universities are difficult environments because they contain student devices, research systems, public labs, servers, grants, sensitive records, and open networks. A one-size-fits-all baseline rarely works; different endpoint classes need different control levels.</p><h3>11.7 Large enterprises</h3><p>Large enterprises need scale: endpoint management platforms, vulnerability dashboards, deployment rings, exception registers, asset ownership, executive metrics, and integration with incident response.</p></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2><p>Current and ongoing research problems include:</p><ul><li><strong>Risk-based remediation:</strong> how to combine exploit evidence, asset context, exposure, business criticality, and dependency data.</li><li><strong>Patch reliability:</strong> how to predict which endpoints are likely to fail after a patch.</li><li><strong>Automated hardening verification:</strong> how to compare real system state with natural-language and machine-readable baselines.</li><li><strong>Configuration drift detection:</strong> how to detect meaningful drift without overwhelming administrators.</li><li><strong>Legacy and cyber-physical systems:</strong> how to reduce risk when patching may break safety-critical systems.</li><li><strong>Privacy-preserving endpoint management:</strong> how to prove compliance without collecting unnecessary user data.</li><li><strong>Autonomous remediation:</strong> how far systems should go in automatically changing endpoint configuration without human approval.</li></ul><p>Notable research directions include attack-informed vulnerability prioritization, exploit-prediction scoring, software bill of materials integration with endpoint inventory, reproducible infrastructure, and policy-as-code for endpoint baselines.</p></section>
+
+<section id="case-studies"><h2>13. Case Studies</h2><h3>13.1 WannaCry and missing patches</h3><p>WannaCry demonstrated how rapidly malware can affect systems when a serious vulnerability is widely present and reachable. Lesson: emergency patching, segmentation, inventory, and unsupported-system retirement matter together.</p><h3>13.2 Equifax and delayed remediation</h3><p>The Equifax breach is commonly studied as a failure of vulnerability management and asset visibility. Lesson: publishing a patch does not protect an organization unless affected assets are identified, patched, verified, and monitored.</p><h3>13.3 NotPetya and destructive impact</h3><p>NotPetya showed that endpoint compromise and weak enterprise controls can produce operational disruption far beyond a single device. Lesson: hardening, segmentation, backups, privilege control, and tested recovery are part of endpoint resilience.</p><h3>13.4 Fragile legacy systems</h3><p>Some hospitals, laboratories, factories, and research environments operate legacy systems that cannot be patched immediately. Lesson: exceptions need owners, expiration dates, compensating controls, and replacement plans.</p></section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul><li><strong>Misconception:</strong> “If the system is patched, it is secure.” <strong>Correction:</strong> patching fixes known defects, but misconfiguration, weak identity, exposed services, and user risk can remain.</li><li><strong>Misconception:</strong> “Hardening means disabling everything.” <strong>Correction:</strong> hardening means reducing unnecessary risk while preserving required function.</li><li><strong>Misconception:</strong> “A vulnerability scanner is the patch program.” <strong>Correction:</strong> scanning identifies evidence; remediation requires ownership, deployment, verification, and exception handling.</li><li><strong>Misconception:</strong> “CVSS equals risk.” <strong>Correction:</strong> CVSS helps describe severity; risk also depends on asset context, exposure, threat activity, and controls.</li><li><strong>Misconception:</strong> “Legacy systems are exempt forever.” <strong>Correction:</strong> they require documented risk treatment and eventual upgrade, isolation, or replacement.</li><li><strong>Misconception:</strong> “Rollback planning is pessimism.” <strong>Correction:</strong> rollback planning protects availability and makes teams more willing to patch promptly.</li><li><strong>Misconception:</strong> “All endpoints should have the same baseline.” <strong>Correction:</strong> baseline requirements must fit endpoint class and mission.</li></ul></section>
+
+<section id="summary"><h2>15. Summary</h2><p>Endpoint hardening reduces unnecessary exposure. Patch management repairs known defects. A mature endpoint program combines accurate inventory, secure baselines, risk-based prioritization, phased rollout, verification, monitoring, exception management, and rollback planning.</p><p>The central lesson is evidence: do not assume devices are secure because a policy exists. Measure actual configuration, update status, service exposure, local privileges, firewall state, logging, and drift. Then make risk decisions that protect both security and mission continuity.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl><dt>Endpoint hardening</dt><dd>Configuring endpoints to reduce unnecessary attack surface and enforce secure defaults.</dd><dt>Patch management</dt><dd>The process of identifying, prioritizing, testing, deploying, and verifying software, firmware, driver, and operating-system updates.</dd><dt>Secure baseline</dt><dd>An approved configuration standard for a class of systems.</dd><dt>Configuration drift</dt><dd>Movement away from the approved baseline over time.</dd><dt>Attack surface</dt><dd>The set of ways a system can be interacted with or attacked.</dd><dt>Update ring</dt><dd>A phased deployment group used to roll updates out gradually.</dd><dt>Compensating control</dt><dd>A temporary or alternative control used to reduce risk when the preferred control cannot be applied immediately.</dd><dt>Patch compliance</dt><dd>The percentage of applicable systems that have required updates installed.</dd><dt>Mean time to remediate</dt><dd>The average time between identifying a fix requirement and verifying remediation.</dd><dt>End-of-life software</dt><dd>Software that no longer receives normal security updates from the vendor.</dd><dt>Golden image</dt><dd>A trusted system image used to build endpoints consistently.</dd><dt>Rollback</dt><dd>A planned return to a previous working state after a problematic change.</dd><dt>Exception register</dt><dd>A record of approved deviations from baseline or patch requirements.</dd><dt>Vulnerability management</dt><dd>The process of identifying, assessing, prioritizing, remediating, and reporting vulnerabilities.</dd><dt>Virtual patching</dt><dd>A compensating control that blocks or reduces exploitation without changing the vulnerable software itself.</dd></dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><ol><li>What is endpoint hardening? A. Buying faster hardware B. Reducing unnecessary attack surface through configuration C. Ignoring patches D. Opening all ports<br><strong>Answer:</strong> B</li><li>What is patch management? A. Installing wallpaper B. Identifying, deploying, and verifying updates C. Writing passwords down D. Disabling logs<br><strong>Answer:</strong> B</li><li>Which is a secure baseline? A. An approved configuration standard B. A random screenshot C. A password hint D. A cable type<br><strong>Answer:</strong> A</li><li>Configuration drift means: A. Improved screen resolution B. Moving away from approved state C. More RAM D. DNS lookup<br><strong>Answer:</strong> B</li><li>Which factor increases patch priority? A. Active exploitation B. Favorite color C. Bigger monitor D. Longer hostname<br><strong>Answer:</strong> A</li><li>What is an update ring? A. A phased deployment group B. A CPU socket C. A Wi-Fi antenna D. A keyboard layout<br><strong>Answer:</strong> A</li><li>Patch compliance is meaningful only when: A. Inventory is accurate B. Users are ignored C. Logs are deleted D. Ports are hidden from admins<br><strong>Answer:</strong> A</li><li>Which is a compensating control? A. Network isolation for a temporarily unpatched system B. Public password sharing C. Removing all backups D. Disabling authentication<br><strong>Answer:</strong> A</li><li>Which is a hardening action? A. Disable an unnecessary service B. Install a game C. Share admin accounts D. Turn off logs<br><strong>Answer:</strong> A</li><li>What is a rollback plan? A. A plan to recover from a problematic change B. A way to skip testing C. A firewall rule name D. A password type<br><strong>Answer:</strong> A</li><li>Why test patches? A. To detect compatibility problems before broad deployment B. To delay forever C. To avoid evidence D. To bypass ownership<br><strong>Answer:</strong> A</li><li>Which system is highest patch priority in most cases? A. Internet-facing critical service with active exploit evidence B. Offline toy VM C. Unused lab image D. Powered-off spare device<br><strong>Answer:</strong> A</li><li>What is end-of-life software? A. Software without normal vendor security updates B. Newly released software C. Software with dark mode D. A browser bookmark<br><strong>Answer:</strong> A</li><li>Which is not enough by itself? A. CVSS score alone B. Asset context C. Exposure data D. Exploit evidence<br><strong>Answer:</strong> A</li><li>What should an exception include? A. Owner and expiration date B. No reason C. No review D. Hidden approval<br><strong>Answer:</strong> A</li><li>What does host firewall hardening reduce? A. Unnecessary network exposure B. CPU temperature only C. Keyboard delay D. File size<br><strong>Answer:</strong> A</li><li>Which is verification evidence? A. Installed version report B. Guessing C. Rumor D. A vague email<br><strong>Answer:</strong> A</li><li>Why is local administrator access risky? A. It enables powerful system changes B. It improves fonts C. It blocks all attacks D. It removes logs automatically<br><strong>Answer:</strong> A</li><li>Which metric measures average remediation time? A. MTTR B. RGB C. DPI D. TTL only<br><strong>Answer:</strong> A</li><li>What is the safest lab target? A. Your own authorized VM B. A public website C. A company laptop you do not administer D. A random IP address<br><strong>Answer:</strong> A</li></ol>
+<h3>10 short questions</h3><ol><li>Define endpoint hardening in your own words.</li><li>Explain the difference between hardening and patching.</li><li>List five endpoint settings that belong in a secure baseline.</li><li>Why can patch compliance be misleading?</li><li>What is configuration drift?</li><li>What evidence would prove a patch installed successfully?</li><li>Why are update rings useful?</li><li>What should be included in an exception register?</li><li>Why is end-of-life software risky?</li><li>How does rollback planning support availability?</li></ol>
+<h3>5 long questions</h3><ol><li>Design a secure baseline for a university public-lab workstation.</li><li>Explain how a vulnerability-management team should prioritize patches across 5,000 endpoints.</li><li>Discuss the trade-off between rapid emergency patching and operational stability.</li><li>Compare manual hardening, policy-based hardening, and immutable rebuilds.</li><li>Explain how endpoint hardening supports ransomware resilience.</li></ol>
+<h3>Scenario-based questions</h3><p>A hospital workstation runs a legacy imaging application. The vendor says the latest operating-system patch may break the application. The workstation is connected to the internal network and stores no patient data locally, but it can access imaging systems. Write a risk statement, temporary compensating controls, exception requirements, and long-term remediation plan.</p>
+<h3>Interview questions</h3><ul><li>How would you build a patch-management program from scratch?</li><li>How do you prioritize a critical patch that may break a business application?</li><li>What metrics would you present to executives?</li><li>How do you handle systems that cannot be patched?</li><li>How do you verify endpoint hardening at scale?</li></ul>
+<h3>Critical thinking questions</h3><ul><li>Can strict hardening reduce security by encouraging users to bypass controls?</li><li>Should security teams be allowed to force emergency patches without business approval?</li><li>When is isolation better than immediate patching?</li></ul>
+<h3>Research questions</h3><ul><li>How can exploit prediction improve patch prioritization?</li><li>How can organizations prove compliance without over-collecting endpoint data?</li><li>What is the best way to automate baseline verification across heterogeneous systems?</li></ul></section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2><h3>Lab title</h3><p>Safe Endpoint Hardening and Patch Review</p><h3>Prerequisites</h3><ul><li>Your own local VM or personal lab machine.</li><li>Permission to inspect the system.</li><li>No production changes unless explicitly authorized.</li><li>Basic Linux or Windows command-line familiarity.</li></ul><h3>Objectives</h3><ul><li>Document current endpoint state.</li><li>Compare current state against a small training baseline.</li><li>Identify patch and configuration gaps.</li><li>Write a safe remediation plan with rollback notes.</li></ul><h3>Training baseline</h3><ul><li>Operating system version recorded.</li><li>Automatic updates enabled or documented.</li><li>Host firewall enabled.</li><li>No unnecessary local administrator users.</li><li>No unnecessary listening services.</li><li>Disk encryption status recorded.</li><li>Security logs available.</li><li>Installed applications reviewed for obvious unnecessary software.</li></ul><h3>Tasks</h3><ol><li>Record OS version, hostname, and endpoint owner.</li><li>List installed updates or available updates.</li><li>List local administrators or privileged users.</li><li>List enabled services and listening ports.</li><li>Check firewall status.</li><li>Check disk encryption status if available.</li><li>Identify three hardening gaps.</li><li>Assign each gap a risk level and evidence statement.</li><li>Write a remediation step and rollback note for each gap.</li><li>Submit a one-page report with sensitive values redacted.</li></ol><h3>Expected outcome</h3><p>You should produce a concise endpoint hardening and patch review. The report should be evidence-based and safe to share with a course instructor. It must not contain real passwords, private keys, tokens, personal files, or unrelated user data.</p><h3>Safety rules</h3><ul><li>Do not scan public networks.</li><li>Do not disable real security tools.</li><li>Do not remove patches from a production system.</li><li>Do not publish hostnames, usernames, IP addresses, or screenshots from real organizations.</li><li>Do not change systems you do not own or administer with written authorization.</li></ul></section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul><li>NIST SP 800-40 Rev. 4, <em>Guide to Enterprise Patch Management Planning</em>.</li><li>NIST SP 800-123, <em>Guide to General Server Security</em>.</li><li>CIS Critical Security Controls v8.1, especially secure configuration and continuous vulnerability management.</li><li>CISA Known Exploited Vulnerabilities Catalog.</li><li>Microsoft Security Baselines and Security Compliance Toolkit.</li><li>Microsoft Intune Windows Update Rings documentation.</li><li>Ubuntu and Linux distribution documentation on package updates and unattended security updates.</li><li>Research topics: exploit prediction, automated baseline verification, configuration drift detection, patch reliability modeling, endpoint privacy, and legacy-system risk mitigation.</li></ul></section>
+    </article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div><div class="prev-next"><a class="btn" href="malware-concepts-and-safe-analysis.html">← Lesson 9.2</a><a class="btn btn-primary" href="edr-telemetry-and-detection.html">Lesson 9.4 →</a></div></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

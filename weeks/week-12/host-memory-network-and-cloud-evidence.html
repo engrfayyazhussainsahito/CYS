@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 12.3: Host, Memory, Network, and Cloud Evidence | MS Cybersecurity</title>
+  <meta name="description" content="Learn how to evaluate host, memory, network, cloud, SaaS, identity, and container evidence for defensive incident response and digital forensics.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-12/host-memory-network-and-cloud-evidence" data-title="Lesson 12.3: Host, Memory, Network, and Cloud Evidence">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <a class="brand" href="../../index.html"><span class="brand-mark">MS</span><span><strong>Cybersecurity</strong><small>Interactive course</small></span></a>
+    <div class="sidebar-actions"><button class="theme-toggle">Toggle theme</button></div>
+    <nav id="courseNav"></nav>
+  </aside>
+  <main class="main" id="main">
+    <div class="hero"><div class="hero-content"><p class="eyebrow">Week 12 · Lesson 12.3</p><h1>Host, Memory, Network, and Cloud Evidence</h1><p>This lesson teaches how to choose, preserve, and interpret evidence sources during defensive incident response. The goal is not to collect everything. The goal is to answer incident questions with the right evidence, in the right order, with known limitations.</p><div class="hero-meta"><span>Incident Response & Forensics</span><span>Volatility-aware evidence planning</span><span>Safe local lab</span></div></div></div>
+    <div class="content-wrap">
+      <div class="content-grid">
+        <article class="card lesson-content">
+<section id="learning-objectives"><h2>1. Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ul><li>Explain the evidence value and limitations of host, memory, network, cloud, SaaS, identity, and container sources.</li><li>Use volatility, retention, authorization, privacy sensitivity, and business impact to prioritize collection.</li><li>Distinguish control-plane evidence, data-plane evidence, endpoint artifacts, telemetry summaries, and full-content evidence.</li><li>Build an investigation plan that maps each incident question to evidence sources and preservation actions.</li><li>Document uncertainty when a source is incomplete, lossy, delayed, sampled, disabled, or outside authorized scope.</li><li>Practice evidence-source prioritization with a safe fictional local Python lab.</li></ul>
+</section>
+
+<section id="why-this-matters"><h2>2. Why This Matters</h2>
+<p>Incident responders often fail in two opposite ways. One team collects too little and loses volatile evidence. Another team collects too much and creates privacy, legal, storage, and analysis problems without improving the answer. Professional evidence handling sits between these extremes: define the incident question, select the minimum evidence needed to answer it, preserve what may disappear first, and document every limitation.</p>
+<div class="warning"><strong>Important boundary:</strong> This lesson is defensive and educational. Do not acquire memory, inspect devices, export user content, copy cloud logs, review SaaS records, or query another person’s system unless you have explicit authorization, approved scope, and an evidence-handling process.</div>
+</section>
+
+<section id="research-basis"><h2>3. Research Basis</h2>
+<p>This lesson is based on current and authoritative defensive references, with practical interpretation for a student course:</p>
+<ul><li><a href="https://csrc.nist.gov/pubs/sp/800/86/final">NIST SP 800-86</a> frames computer and network forensics for incident response and uses collection, examination, analysis, and reporting as the core process.</li><li><a href="https://nvlpubs.nist.gov/nistpubs/ir/2022/NIST.IR.8354.pdf">NIST IR 8354</a> emphasizes that digital investigation techniques have limitations and should be used with awareness of tool behavior, changing artifacts, and incomplete discovery.</li><li><a href="https://csrc.nist.gov/pubs/ir/8006/final">NIST IR 8006</a> summarizes cloud forensic challenges, including architecture, data collection, analysis, role management, legal, and standards concerns in cloud ecosystems.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/92/final">NIST SP 800-92</a> supports disciplined log management, including planning, collection, storage, analysis, and retention.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/61/r3/final">NIST SP 800-61 Rev. 3</a> provides the current incident-response context aligned to CSF 2.0 risk-management outcomes.</li><li><a href="https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/aws-security-incident-response-guide.html">AWS Security Incident Response Guide</a> highlights preparation steps such as enabling logs, defining forensic artifacts, preparing access, building playbooks, and running simulations.</li><li><a href="https://docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide/select-and-enable-log-sources.html">AWS log-source guidance</a> identifies CloudTrail, VPC Flow Logs, and Route 53 Resolver query logs as a basic logging trio for AWS security investigations.</li><li><a href="https://learn.microsoft.com/en-us/azure/azure-monitor/platform/activity-log">Microsoft Azure Monitor Activity Log documentation</a> explains activity-log retrieval and export to destinations such as Log Analytics, Event Hubs, and Storage.</li><li><a href="https://learn.microsoft.com/en-us/azure/sentinel/connect-azure-active-directory">Microsoft Sentinel Entra ID connector documentation</a> describes collecting sign-in, audit, provisioning, risky-user, service-principal, and Microsoft 365 audit data.</li><li><a href="https://docs.cloud.google.com/logging/docs/audit">Google Cloud Audit Logs documentation</a> describes Admin Activity, Data Access, System Event, and Policy Denied audit logs.</li><li><a href="https://docs.cloud.google.com/vpc/docs/flow-logs">Google Cloud VPC Flow Logs documentation</a> describes flow logs as useful for network monitoring, forensics, security analysis, and cost optimization.</li></ul>
+</section>
+
+<section id="first-principle"><h2>4. First Principle: Evidence Must Answer a Question</h2>
+<p>Evidence planning starts with the question, not the tool. A memory capture may be valuable for active malware, but excessive for a simple password-reset audit. A cloud control-plane log may be essential for infrastructure change, but insufficient for data-content exposure. A DNS log may show a lookup, but not prove payload transfer.</p>
+<table><thead><tr><th>Incident question</th><th>High-value evidence families</th><th>Common mistake</th></tr></thead><tbody>
+<tr><td>Which account was used?</td><td>Identity sign-in logs, SaaS audit logs, cloud audit logs, endpoint user session records.</td><td>Assuming source IP alone identifies a person.</td></tr>
+<tr><td>What changed?</td><td>Cloud control-plane logs, configuration history, admin audit records, CI/CD logs, endpoint process telemetry.</td><td>Looking only at alerts and ignoring control-plane state changes.</td></tr>
+<tr><td>What executed?</td><td>EDR telemetry, process lineage, file metadata, prefetch or execution artifacts, memory where justified.</td><td>Treating file presence as proof of execution.</td></tr>
+<tr><td>Where did traffic go?</td><td>Network flows, DNS logs, proxy logs, cloud flow logs, endpoint network telemetry.</td><td>Assuming flow metadata proves content exfiltration.</td></tr>
+<tr><td>Was data accessed?</td><td>SaaS audit logs, storage access logs, database audit logs, cloud data-plane logs, application logs.</td><td>Using control-plane logs when data-plane logging was required but disabled.</td></tr>
+<tr><td>What is still active?</td><td>Live response telemetry, memory, active sessions, running processes, network connections, cloud session/token state.</td><td>Rebooting or isolating before preserving volatile evidence when preservation was justified.</td></tr>
+</tbody></table>
+</section>
+
+<section id="evidence-taxonomy"><h2>5. Evidence Taxonomy</h2>
+<p>Different evidence families answer different questions. The table below gives a practical taxonomy for responders.</p>
+<table><thead><tr><th>Evidence family</th><th>Typical examples</th><th>Best for</th><th>Main limitation</th></tr></thead><tbody>
+<tr><td>Host evidence</td><td>Event logs, process telemetry, service changes, scheduled tasks, file metadata, registry or configuration artifacts.</td><td>Execution, persistence, user session, local scope.</td><td>Can be altered by containment, cleanup, reboot, or missing telemetry.</td></tr>
+<tr><td>Memory evidence</td><td>RAM capture, running processes, loaded modules, network sockets, secrets in volatile memory.</td><td>Active malware, in-memory payloads, current sessions.</td><td>Highly sensitive, volatile, and collection can affect system state.</td></tr>
+<tr><td>Network evidence</td><td>Firewall logs, flow logs, DNS logs, proxy logs, IDS alerts, packet captures where authorized.</td><td>Movement, external destinations, command-and-control hypotheses, rough transfer volume.</td><td>Often metadata only; NAT, sampling, encryption, and time skew limit interpretation.</td></tr>
+<tr><td>Cloud evidence</td><td>Audit logs, activity logs, API events, object access logs, flow logs, snapshots, resource configuration history.</td><td>Control-plane changes, cloud identity abuse, resource exposure, storage activity.</td><td>Provider, service, license, region, retention, and logging settings vary.</td></tr>
+<tr><td>SaaS evidence</td><td>Admin audit logs, file-sharing audit records, mailbox audit logs, collaboration logs, app access events.</td><td>Account takeover, document access, sharing changes, suspicious downloads.</td><td>Content review can be privacy-sensitive and plan-dependent.</td></tr>
+<tr><td>Identity evidence</td><td>Sign-ins, MFA prompts, conditional access decisions, token events, role changes, service principal activity.</td><td>Who authenticated, how, from where, and with which access path.</td><td>Authentication success does not always prove legitimate user intent.</td></tr>
+<tr><td>Container/platform evidence</td><td>Kubernetes audit logs, container runtime logs, image metadata, namespace events, service account use.</td><td>Ephemeral workload changes, deployment abuse, cluster privilege paths.</td><td>Pods and nodes can disappear quickly; audit verbosity may be limited.</td></tr>
+</tbody></table>
+</section>
+
+<section id="order-of-volatility"><h2>6. Order of Volatility</h2>
+<p>Order of volatility means some sources disappear faster than others. It is not an excuse to collect everything immediately. It is a decision aid that must be balanced against authorization, active harm, safety, business continuity, and privacy.</p>
+<pre class="mermaid"><code>flowchart TD
+  A[Incident question] --> B{Could evidence disappear soon?}
+  B -->|Yes| C{Is collection authorized and proportionate?}
+  B -->|No| D[Document source and plan normal export]
+  C -->|Yes| E[Preserve volatile source with custody record]
+  C -->|No| F[Escalate for approval or use less intrusive source]
+  E --> G[Hash/export/store master evidence]
+  D --> G
+  F --> H[Record decision and limitation]
+  G --> I[Analyze working copy and update timeline]</code></pre>
+<table><thead><tr><th>Volatility level</th><th>Examples</th><th>Response implication</th></tr></thead><tbody>
+<tr><td>Very high</td><td>Memory, current processes, open network connections, active sessions.</td><td>Preserve quickly only when justified and approved.</td></tr>
+<tr><td>High</td><td>Short-retention application logs, ephemeral containers, autoscaled nodes, temporary files.</td><td>Export or snapshot before retention or automation removes state.</td></tr>
+<tr><td>Medium</td><td>Endpoint logs, firewall logs, DNS logs, proxy logs, Kubernetes audit events.</td><td>Record source, time window, retention, filters, and export method.</td></tr>
+<tr><td>Low</td><td>Archived logs, case records, stored disk images, cloud configuration snapshots.</td><td>Still preserve integrity and custody; do not assume completeness.</td></tr>
+</tbody></table>
+</section>
+
+<section id="host-evidence"><h2>7. Host Evidence</h2>
+<p>Host evidence describes what happened on a device, server, or virtual machine. It can connect identity, process execution, files, services, persistence, and local network activity. The evidence value depends on logging configuration, EDR health, time synchronization, and whether the host was altered after the incident.</p>
+<table><thead><tr><th>Host source</th><th>Useful question</th><th>Preservation note</th></tr></thead><tbody>
+<tr><td>Security and system logs</td><td>Who logged in? Was a service created? Did a privileged action occur?</td><td>Export with source host, UTC conversion, event IDs/categories, and time window.</td></tr>
+<tr><td>Process telemetry</td><td>What executed? What parent process launched it?</td><td>Preserve raw records before enrichment changes or alert grouping hide detail.</td></tr>
+<tr><td>File metadata</td><td>What file appeared, changed, or was deleted?</td><td>Record path, timestamps, hashes, owner, and acquisition method.</td></tr>
+<tr><td>Persistence locations</td><td>Will something run again?</td><td>Do not clean before documenting the mechanism and related context.</td></tr>
+<tr><td>Endpoint agent state</td><td>Was telemetry available and trustworthy?</td><td>Record agent version, policy, last check-in, and known outages.</td></tr>
+</tbody></table>
+<div class="callout"><strong>Interpretation rule:</strong> File creation, file presence, and detection of a tool are not the same as confirmed execution. Link execution claims to process events, command history, service creation, scheduled execution, prefetch/execution artifacts, or other corroborating records.</div>
+</section>
+
+<section id="memory-evidence"><h2>8. Memory Evidence</h2>
+<p>Memory is valuable because it can show active state: running code, injected modules, network sockets, decrypted material, and process relationships that may not exist on disk. It is risky because it is volatile, sensitive, and collection changes the system. Treat memory capture as a scoped forensic action, not a routine curiosity.</p>
+<table><thead><tr><th>Use memory when...</th><th>Avoid or defer memory when...</th></tr></thead><tbody>
+<tr><td>There is a credible hypothesis of in-memory malware, active credential theft, or volatile session abuse.</td><td>The question can be answered from less intrusive logs.</td></tr>
+<tr><td>The system can remain stable long enough for approved collection.</td><td>Collection could cause unacceptable operational harm.</td></tr>
+<tr><td>Legal/privacy approval and evidence custody are defined.</td><td>The team lacks authorization or a documented procedure.</td></tr>
+<tr><td>The capture will materially improve containment or scope decisions.</td><td>The team is collecting it only because “forensics usually does memory.”</td></tr>
+</tbody></table>
+<div class="warning"><strong>Privacy warning:</strong> Memory can contain credentials, messages, documents, browser data, personal information, and privileged material. Minimize scope and restrict access.</div>
+</section>
+
+<section id="network-evidence"><h2>9. Network Evidence</h2>
+<p>Network evidence helps responders understand direction, timing, destinations, rough volume, and control paths. It often cannot reveal content because encryption and metadata-only logging are common. That limitation is not a defect; it is a property to document.</p>
+<table><thead><tr><th>Source</th><th>Evidence value</th><th>Limitation</th></tr></thead><tbody>
+<tr><td>Flow logs</td><td>Source, destination, protocol, port, bytes, action, and time.</td><td>May be sampled or aggregated; usually lacks payload.</td></tr>
+<tr><td>DNS logs</td><td>Client, query, response, resolver, and timing.</td><td>Encrypted DNS, caching, and shared clients can obscure behavior.</td></tr>
+<tr><td>Proxy logs</td><td>URL or domain access, user, user agent, category, action.</td><td>May miss direct connections or non-web protocols.</td></tr>
+<tr><td>IDS/IPS alerts</td><td>Known signatures, suspicious patterns, packet metadata.</td><td>Alert does not automatically prove compromise.</td></tr>
+<tr><td>Packet capture</td><td>High-detail network evidence when scoped and authorized.</td><td>High privacy sensitivity and storage volume; encryption limits content analysis.</td></tr>
+</tbody></table>
+</section>
+
+<section id="cloud-evidence"><h2>10. Cloud Evidence</h2>
+<p>Cloud investigations differ from traditional host investigations because many meaningful actions happen through APIs. Control-plane logs answer who changed resources, roles, policies, keys, networks, instances, storage, and logging configuration. Data-plane logs answer whether data objects, records, or service operations were read or written. Both may require explicit enablement, retention planning, and provider-specific interpretation.</p>
+<table><thead><tr><th>Cloud evidence type</th><th>Typical question</th><th>Examples of fields to preserve</th></tr></thead><tbody>
+<tr><td>Control-plane audit/activity logs</td><td>Who created, deleted, modified, or authorized a resource?</td><td>Principal, API method, resource ID, source IP, user agent, region, result, time.</td></tr>
+<tr><td>Data-plane access logs</td><td>Was data read, copied, written, or deleted?</td><td>Object/table/resource, actor, operation, bytes, request ID, result, time.</td></tr>
+<tr><td>Cloud identity logs</td><td>How did the identity authenticate and what roles changed?</td><td>User/service principal, MFA, conditional access, token/session indicators, role change.</td></tr>
+<tr><td>Network flow logs</td><td>Which resources communicated and how much?</td><td>VPC/subnet/interface, source/destination, ports, protocol, bytes, allow/deny, time.</td></tr>
+<tr><td>Snapshots and images</td><td>What state existed at a point in time?</td><td>Snapshot ID, source resource, region, collection time, encryption, custody, hash/metadata.</td></tr>
+<tr><td>Logging configuration history</td><td>Was monitoring disabled or altered?</td><td>Who changed sinks, trails, diagnostic settings, retention, filters, or storage policy.</td></tr>
+</tbody></table>
+</section>
+
+<section id="provider-patterns"><h2>11. Provider Patterns Without Tool Lock-In</h2>
+<p>Provider names and services change, but the investigation pattern is stable: identity, control plane, data plane, network, workload, and logging configuration. Use vendor documentation for exact field names and retention behavior.</p>
+<table><thead><tr><th>Pattern</th><th>AWS examples</th><th>Azure/Microsoft examples</th><th>Google Cloud examples</th></tr></thead><tbody>
+<tr><td>Control plane</td><td>CloudTrail management events.</td><td>Azure Activity Log.</td><td>Admin Activity audit logs.</td></tr>
+<tr><td>Identity</td><td>IAM and Identity Center events, CloudTrail actor context.</td><td>Microsoft Entra sign-in, audit, provisioning, risky-user/service-principal logs.</td><td>IAM principal fields in Cloud Audit Logs.</td></tr>
+<tr><td>Network metadata</td><td>VPC Flow Logs, Route 53 Resolver query logs.</td><td>NSG flow logs or network telemetry depending on configuration.</td><td>VPC Flow Logs, DNS/logging integrations where configured.</td></tr>
+<tr><td>Data access</td><td>CloudTrail data events, storage/server access logs where enabled.</td><td>Service-specific resource logs and Microsoft 365 audit sources.</td><td>Data Access audit logs and service-specific logs.</td></tr>
+<tr><td>Log export/retention</td><td>S3/CloudWatch destinations and log archive account patterns.</td><td>Log Analytics, Event Hubs, Storage exports.</td><td>Cloud Logging sinks, exports, and retention settings.</td></tr>
+</tbody></table>
+</section>
+
+<section id="containers"><h2>12. Containers, Kubernetes, and Ephemeral Workloads</h2>
+<p>Containers and orchestration platforms create evidence problems because workloads can be short-lived. A pod may be replaced before an analyst opens a ticket. Node autoscaling can remove local traces. Image tags can move. Service accounts can be more important than human usernames.</p>
+<table><thead><tr><th>Source</th><th>Use</th><th>Weak point</th></tr></thead><tbody>
+<tr><td>Kubernetes audit logs</td><td>Who requested what resource action in the cluster?</td><td>Audit policy may omit useful fields.</td></tr>
+<tr><td>Container runtime logs</td><td>What did the container output or report?</td><td>Logs may rotate quickly or be centralized with delay.</td></tr>
+<tr><td>Image metadata</td><td>Which image digest ran?</td><td>Tags are mutable; prefer digests when available.</td></tr>
+<tr><td>Namespace and RBAC records</td><td>Which identities could act?</td><td>Current policy may differ from incident-time policy.</td></tr>
+<tr><td>Cloud workload identity events</td><td>Which workload assumed cloud permissions?</td><td>Correlation requires cluster, cloud, and identity timestamps.</td></tr>
+</tbody></table>
+</section>
+
+<section id="evidence-matrix"><h2>13. Evidence Selection Matrix</h2>
+<p>A selection matrix prevents noisy, unbounded collection. Each evidence request should have an incident question, expected answer, source owner, authorization scope, retention risk, and limitation.</p>
+<table><thead><tr><th>Factor</th><th>Why it matters</th><th>Decision question</th></tr></thead><tbody>
+<tr><td>Relevance</td><td>Evidence should answer a defined question.</td><td>Which hypothesis will this source confirm or weaken?</td></tr>
+<tr><td>Volatility</td><td>Some sources disappear quickly.</td><td>Will the evidence be lost before normal collection?</td></tr>
+<tr><td>Retention</td><td>Logs may expire or be overwritten.</td><td>What is the retention window and export deadline?</td></tr>
+<tr><td>Authorization</td><td>Evidence collection can invade privacy or exceed role authority.</td><td>Who approved collection and what is the scope?</td></tr>
+<tr><td>Integrity</td><td>Exported records must be traceable and tamper-evident.</td><td>How will the team preserve, hash, store, and verify?</td></tr>
+<tr><td>Interpretability</td><td>Fields can be ambiguous or provider-specific.</td><td>What does this field actually mean in this service/version?</td></tr>
+<tr><td>Business impact</td><td>Collection or containment can disrupt operations.</td><td>Can evidence be preserved without increasing harm?</td></tr>
+</tbody></table>
+</section>
+
+<section id="correlation"><h2>14. Correlation and Timeline Discipline</h2>
+<p>No single source is perfect. Reliable conclusions usually come from correlation. A cloud API call, sign-in event, endpoint process, and network flow may tell a consistent story, or they may expose gaps. Correlation requires disciplined timestamps and clear source semantics.</p>
+<ul><li>Record original timezone and normalized UTC time.</li><li>Separate event time, collection time, ingestion time, and analyst note time.</li><li>Do not mix alert creation time with the time of the underlying event.</li><li>Record query filters, API endpoints, page tokens, export format, and tenant/account/region/project scope for cloud evidence.</li><li>Preserve raw exports before parsing and enrichment.</li><li>Label each statement as fact, inference, assumption, or open question.</li></ul>
+<pre class="mermaid"><code>sequenceDiagram
+  participant I as Identity log
+  participant C as Cloud audit log
+  participant H as Host telemetry
+  participant N as Network flow
+  participant T as Timeline
+  I->>T: Sign-in from unusual source at 09:12 UTC
+  C->>T: Role assignment changed at 09:18 UTC
+  H->>T: Script execution on admin workstation at 09:21 UTC
+  N->>T: Outbound connection spike at 09:26 UTC
+  T->>T: Mark confirmed facts separately from inferred sequence</code></pre>
+</section>
+
+<section id="common-failure-points"><h2>15. Common Failure Points</h2>
+<table><thead><tr><th>Failure</th><th>Why it hurts</th><th>Better practice</th></tr></thead><tbody>
+<tr><td>Collecting after cleanup</td><td>Evidence is destroyed or changed.</td><td>Preserve first when safe and authorized; clean later.</td></tr>
+<tr><td>Ignoring logging configuration</td><td>Missing logs are mistaken for no activity.</td><td>Record what was enabled, disabled, excluded, sampled, or retained.</td></tr>
+<tr><td>Assuming one provider’s fields equal another’s</td><td>Incorrect comparisons across environments.</td><td>Use provider documentation and field-specific interpretation notes.</td></tr>
+<tr><td>Over-trusting alerts</td><td>Alert logic may suppress, aggregate, or enrich evidence.</td><td>Trace alert back to raw source records.</td></tr>
+<tr><td>Skipping source ownership</td><td>Analysts pull data without context or authorization.</td><td>Identify data owner, approved collector, and evidence custodian.</td></tr>
+<tr><td>Using local time casually</td><td>Timelines become inconsistent.</td><td>Normalize to UTC and preserve original timestamp context.</td></tr>
+<tr><td>Writing conclusions beyond evidence</td><td>Reports become misleading.</td><td>State confidence, limitations, gaps, and alternative explanations.</td></tr>
+</tbody></table>
+</section>
+
+<section id="playbook-pattern"><h2>16. Evidence Planning Playbook Pattern</h2>
+<p>A repeatable playbook for evidence planning should include:</p>
+<ol><li><strong>Declare the incident question:</strong> Example: “Was the admin account used to change cloud storage policy?”</li><li><strong>List candidate sources:</strong> Identity sign-in logs, cloud audit logs, storage access logs, admin workstation telemetry.</li><li><strong>Rank by volatility and retention:</strong> Prioritize sources that will disappear soon.</li><li><strong>Check authorization:</strong> Confirm who can collect, who approves, and what privacy boundaries apply.</li><li><strong>Preserve raw evidence:</strong> Export raw records, record filters, hash files, and store master copies.</li><li><strong>Analyze working copies:</strong> Parse, normalize, enrich, and correlate without altering the preserved master.</li><li><strong>Record limitations:</strong> Missing logs, disabled data-plane logging, sampled flows, unclear user agent, clock skew, or provider-specific ambiguity.</li><li><strong>Update the timeline:</strong> Add facts, inferences, assumptions, and open questions.</li></ol>
+</section>
+
+<section id="worked-example"><h2>17. Worked Example: Suspected Cloud Account Takeover</h2>
+<p>Scenario: A fictional company receives an alert that a cloud admin role was assigned to a new service principal shortly after a suspicious sign-in.</p>
+<table><thead><tr><th>Question</th><th>Evidence source</th><th>Reason</th><th>Limitation</th></tr></thead><tbody>
+<tr><td>Who authenticated?</td><td>Identity sign-in logs.</td><td>Shows user, source, MFA, device, conditional access, and time.</td><td>Successful MFA may still be social-engineered or session-based.</td></tr>
+<tr><td>What changed?</td><td>Cloud activity/audit logs.</td><td>Shows role assignment API method, actor, target, result, and time.</td><td>Data access requires separate source if enabled.</td></tr>
+<tr><td>What did the admin workstation do?</td><td>Endpoint process telemetry.</td><td>Correlates scripts, browser, CLI, or automation use.</td><td>Endpoint agent may have incomplete command-line data.</td></tr>
+<tr><td>Was data accessed?</td><td>Storage access/data-plane logs and SaaS audit logs.</td><td>Shows read/list/download/share operations where logging exists.</td><td>If data-plane logs were disabled, absence of evidence is weak.</td></tr>
+<tr><td>What network path was used?</td><td>Flow, proxy, or DNS logs.</td><td>Helps compare sign-in source, admin host, and external destinations.</td><td>NAT, VPN, proxies, and encryption limit identity/content claims.</td></tr>
+</tbody></table>
+</section>
+
+<section id="reporting-language"><h2>18. Good Reporting Language</h2>
+<p>Forensic reporting should be precise. Avoid overstating what a source proves.</p>
+<table><thead><tr><th>Weak wording</th><th>Better wording</th></tr></thead><tbody>
+<tr><td>“The user stole data.”</td><td>“The SaaS audit log records 247 file download events attributed to the user account between 09:22 and 09:41 UTC. The available logs do not prove who physically controlled the account.”</td></tr>
+<tr><td>“There was no exfiltration.”</td><td>“No exfiltration was observed in the reviewed proxy and flow logs. Data-plane storage logs were not enabled, so this conclusion is limited.”</td></tr>
+<tr><td>“Malware ran on the server.”</td><td>“Endpoint telemetry records process execution for file X with hash Y at 14:03 UTC under account Z. Memory evidence was not collected.”</td></tr>
+<tr><td>“The cloud was hacked.”</td><td>“Cloud audit logs show unauthorized role and storage-policy changes after a suspicious sign-in sequence. Scope is limited to the reviewed account and region.”</td></tr>
+</tbody></table>
+</section>
+
+<section id="lab"><h2>19. Safe Local Lab: Evidence Source Prioritizer</h2>
+<p>This lab uses fictional records only. It does not collect system data, query cloud APIs, inspect memory, or connect to a network. It helps you practice ranking evidence sources based on incident questions, volatility, retention, complexity, sensitivity, and preservation risk.</p>
+<h3>Step 1: Create <code>evidence_sources.json</code></h3>
+<pre><code>[
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-001&quot;,
+    &quot;source_name&quot;: &quot;Endpoint process and command telemetry&quot;,
+    &quot;source_family&quot;: &quot;host&quot;,
+    &quot;question_fit&quot;: [&quot;malware_execution&quot;, &quot;lateral_movement&quot;, &quot;persistence_review&quot;],
+    &quot;volatility&quot;: &quot;medium&quot;,
+    &quot;retention_days&quot;: 30,
+    &quot;collection_complexity&quot;: &quot;medium&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;endpoint_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;host_id&quot;, &quot;user&quot;, &quot;process_name&quot;, &quot;parent_process&quot;, &quot;command_line&quot;, &quot;hash&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;EDR agent health may vary&quot;, &quot;command lines can be truncated&quot;, &quot;events may be delayed&quot;],
+    &quot;notes&quot;: &quot;Useful for asking what ran, under which identity, and with which parent-child relationship.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-002&quot;,
+    &quot;source_name&quot;: &quot;Memory capture from affected host&quot;,
+    &quot;source_family&quot;: &quot;memory&quot;,
+    &quot;question_fit&quot;: [&quot;malware_execution&quot;, &quot;credential_exposure&quot;, &quot;active_session_review&quot;],
+    &quot;volatility&quot;: &quot;very_high&quot;,
+    &quot;retention_days&quot;: 0,
+    &quot;collection_complexity&quot;: &quot;high&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;high&quot;,
+    &quot;authorization_scope&quot;: &quot;forensics_approved&quot;,
+    &quot;preservation_risk&quot;: &quot;high&quot;,
+    &quot;key_fields&quot;: [&quot;capture_time_utc&quot;, &quot;host_id&quot;, &quot;collector&quot;, &quot;tool_version&quot;, &quot;hash&quot;, &quot;storage_location&quot;],
+    &quot;limitations&quot;: [&quot;Can contain sensitive data&quot;, &quot;Collection can change system state&quot;, &quot;Requires approved procedure&quot;],
+    &quot;notes&quot;: &quot;Consider only when the incident question justifies volatility, privacy, and operational risk.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-003&quot;,
+    &quot;source_name&quot;: &quot;Firewall and network flow metadata&quot;,
+    &quot;source_family&quot;: &quot;network&quot;,
+    &quot;question_fit&quot;: [&quot;lateral_movement&quot;, &quot;possible_data_exfiltration&quot;, &quot;command_and_control_review&quot;],
+    &quot;volatility&quot;: &quot;medium&quot;,
+    &quot;retention_days&quot;: 14,
+    &quot;collection_complexity&quot;: &quot;low&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;network_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;src_ip&quot;, &quot;dst_ip&quot;, &quot;src_port&quot;, &quot;dst_port&quot;, &quot;protocol&quot;, &quot;bytes&quot;, &quot;action&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;Flow metadata usually lacks payload&quot;, &quot;NAT can obscure source identity&quot;, &quot;Clock skew can confuse timelines&quot;],
+    &quot;notes&quot;: &quot;Useful for scope and movement questions, but it rarely proves content by itself.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-004&quot;,
+    &quot;source_name&quot;: &quot;DNS resolver logs&quot;,
+    &quot;source_family&quot;: &quot;network&quot;,
+    &quot;question_fit&quot;: [&quot;command_and_control_review&quot;, &quot;possible_data_exfiltration&quot;, &quot;phishing_followup&quot;],
+    &quot;volatility&quot;: &quot;medium&quot;,
+    &quot;retention_days&quot;: 7,
+    &quot;collection_complexity&quot;: &quot;low&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;network_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;client_ip&quot;, &quot;query_name&quot;, &quot;query_type&quot;, &quot;response_code&quot;, &quot;resolver&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;Encrypted DNS may bypass monitored resolvers&quot;, &quot;Cached responses can reduce visibility&quot;, &quot;Domain reputation can change&quot;],
+    &quot;notes&quot;: &quot;Useful for investigating suspicious destinations and time correlation.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-005&quot;,
+    &quot;source_name&quot;: &quot;Cloud audit/control-plane logs&quot;,
+    &quot;source_family&quot;: &quot;cloud_control_plane&quot;,
+    &quot;question_fit&quot;: [&quot;account_takeover&quot;, &quot;cloud_resource_change&quot;, &quot;privilege_escalation&quot;, &quot;possible_data_exfiltration&quot;],
+    &quot;volatility&quot;: &quot;low&quot;,
+    &quot;retention_days&quot;: 90,
+    &quot;collection_complexity&quot;: &quot;medium&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;cloud_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;principal&quot;, &quot;api_method&quot;, &quot;resource&quot;, &quot;source_ip&quot;, &quot;user_agent&quot;, &quot;result&quot;, &quot;region&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;Data events may require explicit enablement&quot;, &quot;API pagination can omit records if mishandled&quot;, &quot;Provider fields differ&quot;],
+    &quot;notes&quot;: &quot;Often central to cloud investigations because infrastructure changes are API-mediated.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-006&quot;,
+    &quot;source_name&quot;: &quot;Cloud identity sign-in and audit logs&quot;,
+    &quot;source_family&quot;: &quot;identity&quot;,
+    &quot;question_fit&quot;: [&quot;account_takeover&quot;, &quot;privilege_escalation&quot;, &quot;phishing_followup&quot;],
+    &quot;volatility&quot;: &quot;low&quot;,
+    &quot;retention_days&quot;: 30,
+    &quot;collection_complexity&quot;: &quot;low&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;identity_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;low&quot;,
+    &quot;key_fields&quot;: [&quot;user&quot;, &quot;service_principal&quot;, &quot;ip_address&quot;, &quot;device&quot;, &quot;mfa_result&quot;, &quot;conditional_access&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;License and retention settings affect availability&quot;, &quot;Legacy protocols may have different fields&quot;, &quot;Successful MFA does not always mean legitimate user intent&quot;],
+    &quot;notes&quot;: &quot;Use to establish authentication sequence, MFA state, source network, and account behavior.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-007&quot;,
+    &quot;source_name&quot;: &quot;SaaS application audit logs&quot;,
+    &quot;source_family&quot;: &quot;saas&quot;,
+    &quot;question_fit&quot;: [&quot;account_takeover&quot;, &quot;possible_data_exfiltration&quot;, &quot;insider_activity_review&quot;],
+    &quot;volatility&quot;: &quot;low&quot;,
+    &quot;retention_days&quot;: 30,
+    &quot;collection_complexity&quot;: &quot;medium&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;high&quot;,
+    &quot;authorization_scope&quot;: &quot;application_owner_plus_security&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;actor&quot;, &quot;object&quot;, &quot;action&quot;, &quot;ip_address&quot;, &quot;user_agent&quot;, &quot;result&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;Tenant plans affect audit depth&quot;, &quot;Export formats differ&quot;, &quot;Content access may require legal or privacy approval&quot;],
+    &quot;notes&quot;: &quot;Strong for user action questions, but content review must be scoped and approved.&quot;
+  },
+  {
+    &quot;evidence_id&quot;: &quot;SRC-1203-008&quot;,
+    &quot;source_name&quot;: &quot;Kubernetes and container audit events&quot;,
+    &quot;source_family&quot;: &quot;container_cloud&quot;,
+    &quot;question_fit&quot;: [&quot;cloud_resource_change&quot;, &quot;persistence_review&quot;, &quot;privilege_escalation&quot;],
+    &quot;volatility&quot;: &quot;medium&quot;,
+    &quot;retention_days&quot;: 14,
+    &quot;collection_complexity&quot;: &quot;medium&quot;,
+    &quot;privacy_sensitivity&quot;: &quot;medium&quot;,
+    &quot;authorization_scope&quot;: &quot;platform_security_team&quot;,
+    &quot;preservation_risk&quot;: &quot;moderate&quot;,
+    &quot;key_fields&quot;: [&quot;cluster&quot;, &quot;namespace&quot;, &quot;service_account&quot;, &quot;verb&quot;, &quot;resource&quot;, &quot;image&quot;, &quot;time_utc&quot;],
+    &quot;limitations&quot;: [&quot;Pods are ephemeral&quot;, &quot;Audit policy controls verbosity&quot;, &quot;Node-level evidence may disappear after autoscaling&quot;],
+    &quot;notes&quot;: &quot;Correlate orchestrator events with image, node, identity, and cloud audit records.&quot;
+  }
+]</code></pre>
+<h3>Step 2: Create <code>evidence_source_planner.py</code></h3>
+<pre><code>import json
+from collections import Counter, defaultdict
+
+VOLATILITY_WEIGHT = {
+    &quot;very_high&quot;: 40,
+    &quot;high&quot;: 30,
+    &quot;medium&quot;: 18,
+    &quot;low&quot;: 8,
+}
+
+COMPLEXITY_PENALTY = {
+    &quot;low&quot;: 0,
+    &quot;medium&quot;: 6,
+    &quot;high&quot;: 14,
+}
+
+SENSITIVITY_PENALTY = {
+    &quot;low&quot;: 0,
+    &quot;medium&quot;: 5,
+    &quot;high&quot;: 12,
+}
+
+RISK_WARNING = {
+    &quot;low&quot;: &quot;standard custody controls still required&quot;,
+    &quot;moderate&quot;: &quot;record query scope, collector, storage, and hash for exported files&quot;,
+    &quot;high&quot;: &quot;requires explicit approval, minimal scope, documented method, and evidence custodian review&quot;,
+}
+
+
+def load_sources(path=&quot;evidence_sources.json&quot;):
+    with open(path, &quot;r&quot;, encoding=&quot;utf-8&quot;) as handle:
+        return json.load(handle)
+
+
+def score_source(source, incident_question):
+    direct_fit = incident_question in source.get(&quot;question_fit&quot;, [])
+    fit_score = 55 if direct_fit else 12
+    volatility_score = VOLATILITY_WEIGHT.get(source.get(&quot;volatility&quot;), 0)
+    retention_days = int(source.get(&quot;retention_days&quot;) or 0)
+    retention_score = 20 if retention_days &lt;= 7 else 12 if retention_days &lt;= 30 else 6
+    complexity_penalty = COMPLEXITY_PENALTY.get(source.get(&quot;collection_complexity&quot;), 0)
+    sensitivity_penalty = SENSITIVITY_PENALTY.get(source.get(&quot;privacy_sensitivity&quot;), 0)
+    score = fit_score + volatility_score + retention_score - complexity_penalty - sensitivity_penalty
+    return max(score, 0)
+
+
+def recommended_collection_posture(source):
+    volatility = source.get(&quot;volatility&quot;)
+    sensitivity = source.get(&quot;privacy_sensitivity&quot;)
+    if volatility in {&quot;very_high&quot;, &quot;high&quot;} and sensitivity == &quot;high&quot;:
+        return &quot;seek approval immediately; preserve only if the incident question justifies high volatility and sensitivity&quot;
+    if volatility in {&quot;very_high&quot;, &quot;high&quot;}:
+        return &quot;prioritize preservation before reboot, shutdown, reimage, or containment that destroys state&quot;
+    if source.get(&quot;retention_days&quot;, 999) &lt;= 7:
+        return &quot;export promptly because retention is short&quot;
+    return &quot;collect with documented scope, UTC time window, source system, and custody record&quot;
+
+
+def plan_for_question(sources, incident_question, top_n=5):
+    ranked = []
+    for source in sources:
+        score = score_source(source, incident_question)
+        ranked.append({
+            &quot;evidence_id&quot;: source[&quot;evidence_id&quot;],
+            &quot;source_name&quot;: source[&quot;source_name&quot;],
+            &quot;source_family&quot;: source[&quot;source_family&quot;],
+            &quot;score&quot;: score,
+            &quot;volatility&quot;: source[&quot;volatility&quot;],
+            &quot;retention_days&quot;: source[&quot;retention_days&quot;],
+            &quot;authorization_scope&quot;: source[&quot;authorization_scope&quot;],
+            &quot;collection_posture&quot;: recommended_collection_posture(source),
+            &quot;preservation_warning&quot;: RISK_WARNING.get(source[&quot;preservation_risk&quot;], &quot;review with evidence custodian&quot;),
+            &quot;key_fields&quot;: source[&quot;key_fields&quot;],
+            &quot;limitations&quot;: source[&quot;limitations&quot;],
+        })
+    ranked.sort(key=lambda item: (-item[&quot;score&quot;], item[&quot;retention_days&quot;], item[&quot;source_name&quot;]))
+    return ranked[:top_n]
+
+
+def summarize_coverage(sources):
+    by_family = Counter(source[&quot;source_family&quot;] for source in sources)
+    by_question = defaultdict(list)
+    for source in sources:
+        for question in source.get(&quot;question_fit&quot;, []):
+            by_question[question].append(source[&quot;evidence_id&quot;])
+    return {
+        &quot;source_families&quot;: dict(sorted(by_family.items())),
+        &quot;questions_with_coverage&quot;: {k: sorted(v) for k, v in sorted(by_question.items())},
+    }
+
+
+def main():
+    sources = load_sources()
+    questions = [
+        &quot;account_takeover&quot;,
+        &quot;malware_execution&quot;,
+        &quot;lateral_movement&quot;,
+        &quot;possible_data_exfiltration&quot;,
+        &quot;cloud_resource_change&quot;,
+    ]
+    report = {
+        &quot;coverage_summary&quot;: summarize_coverage(sources),
+        &quot;plans&quot;: {question: plan_for_question(sources, question) for question in questions},
+    }
+    print(json.dumps(report, indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<h3>Step 3: Run the planner</h3>
+<pre><code>python3 evidence_source_planner.py
+# or on Windows:
+python evidence_source_planner.py</code></pre>
+<p>The output ranks sources for fictional incident questions and includes collection posture, authorization scope, preservation warnings, key fields, and limitations.</p>
+<h3>Step 4: Optional tests</h3>
+<p>Save this as <code>test_evidence_source_planner.py</code> if you want to check the logic with <code>pytest</code>.</p>
+<pre><code>from evidence_source_planner import load_sources, plan_for_question, summarize_coverage
+
+
+def test_cloud_audit_is_high_for_account_takeover():
+    sources = load_sources()
+    plan = plan_for_question(sources, &quot;account_takeover&quot;, top_n=3)
+    ids = [item[&quot;evidence_id&quot;] for item in plan]
+    assert &quot;SRC-1203-005&quot; in ids
+    assert &quot;SRC-1203-006&quot; in ids
+
+
+def test_memory_is_prioritized_for_malware_execution():
+    sources = load_sources()
+    plan = plan_for_question(sources, &quot;malware_execution&quot;, top_n=2)
+    assert any(item[&quot;source_family&quot;] == &quot;memory&quot; for item in plan)
+    memory_item = next(item for item in plan if item[&quot;source_family&quot;] == &quot;memory&quot;)
+    assert &quot;requires explicit approval&quot; in memory_item[&quot;preservation_warning&quot;]
+
+
+def test_network_sources_cover_exfiltration():
+    sources = load_sources()
+    plan = plan_for_question(sources, &quot;possible_data_exfiltration&quot;, top_n=5)
+    families = {item[&quot;source_family&quot;] for item in plan}
+    assert &quot;network&quot; in families
+    assert &quot;cloud_control_plane&quot; in families or &quot;saas&quot; in families
+
+
+def test_coverage_summary_lists_questions():
+    sources = load_sources()
+    summary = summarize_coverage(sources)
+    assert &quot;account_takeover&quot; in summary[&quot;questions_with_coverage&quot;]
+    assert summary[&quot;source_families&quot;][&quot;host&quot;] == 1</code></pre>
+</section>
+
+<section id="lab-interpretation"><h2>20. How to Interpret the Lab Output</h2>
+<p>The planner should usually rank cloud audit and identity logs highly for account takeover. It should rank memory evidence highly for malware execution, but also warn that memory requires explicit approval and careful handling. It should use network, cloud, and SaaS sources for possible data exfiltration instead of pretending one source can answer everything.</p>
+<p>This lab deliberately uses simple scoring. Real teams should not blindly follow a score. They should use the score to expose tradeoffs, then document the actual decision with scope, authorization, and evidence limitations.</p>
+</section>
+
+<section id="self-assessment"><h2>21. Self-Assessment</h2>
+<ol><li>Why should evidence collection start with an incident question?</li><li>What makes memory evidence both valuable and risky?</li><li>What is the difference between control-plane and data-plane cloud evidence?</li><li>Why does flow metadata not prove the content of data transfer?</li><li>How can logging configuration create false confidence?</li><li>Why should cloud evidence collection record account, region, project, tenant, query, and time window?</li><li>What does “absence of evidence is not evidence of absence” mean in logging?</li><li>How should an analyst report uncertainty when a high-value source was not enabled?</li></ol>
+</section>
+
+<section id="practical-deliverables"><h2>22. Practical Deliverables</h2>
+<p>After completing this lesson, produce:</p>
+<ul><li>An evidence-source matrix for host, memory, network, cloud, SaaS, identity, and container incidents.</li><li>A collection-priority checklist using volatility, retention, authorization, sensitivity, and business impact.</li><li>A cloud evidence request template that records tenant/account/project, region, time range, filters, export method, and collector.</li><li>A timeline note format that separates event time, ingestion time, collection time, and analyst note time.</li><li>A reporting paragraph that states what the available evidence can and cannot prove.</li></ul>
+</section>
+
+<section id="further-reading"><h2>23. Further Reading</h2>
+<ul><li>NIST SP 800-86 — Guide to Integrating Forensic Techniques into Incident Response.</li><li>NIST IR 8354 — Digital Investigation Techniques: A NIST Scientific Foundation Review.</li><li>NIST IR 8006 — NIST Cloud Computing Forensic Science Challenges.</li><li>NIST SP 800-92 — Guide to Computer Security Log Management.</li><li>NIST SP 800-61 Rev. 3 — Incident Response Recommendations and Considerations for Cybersecurity Risk Management.</li><li>AWS Security Incident Response Guide and AWS log-source guidance.</li><li>Microsoft Azure Monitor Activity Log and Microsoft Sentinel Entra ID connector documentation.</li><li>Google Cloud Audit Logs and VPC Flow Logs documentation.</li></ul>
+</section>
+
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="evidence-preservation-and-digital-forensics-fundamentals.html">← Lesson 12.2</a><a class="btn btn-primary" href="containment-eradication-and-recovery-runbooks.html">Lesson 12.4 →</a></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

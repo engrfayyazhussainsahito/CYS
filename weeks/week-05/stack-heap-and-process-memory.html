@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 5.2: Stack, Heap, and Process Memory | MS Cybersecurity</title>
+  <meta name="description" content="Stack, heap, process memory, virtual memory, address spaces, memory mappings, permissions, stack frames, heap allocation, and defensive analysis from first principles.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-05-02" data-title="Lesson 5.2: Stack, Heap, and Process Memory">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 5</a> / Lesson 5.2</div>
+    <header class="hero"><div class="eyebrow">Week 5 · Memory Safety and Binary Foundations</div><h1>Lesson 5.2: Stack, Heap, and Process Memory</h1><p class="lead">This lesson explains how a running program is arranged in memory: stack frames for function calls, heap allocations for dynamic objects, executable code, global data, shared libraries, virtual memory mappings, and permissions.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>300–420 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Lesson 5.1 recommended; no assembly background required</div><div class="meta-item"><strong>Practice time</strong>5–8 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="Process memory learning path illustration"><svg viewBox="0 0 820 430" role="img" aria-labelledby="svg-title-52 svg-desc-52"><title id="svg-title-52">Process memory from code to stack and heap</title><desc id="svg-desc-52">A visual learning path from process creation to stack frames, heap objects, mappings, and defenses.</desc><defs><linearGradient id="memGrad52" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#8f7cff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient><marker id="arrow52" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#41d6b3"/></marker></defs><rect x="28" y="34" width="764" height="356" rx="30" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><rect x="92" y="80" width="160" height="64" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><rect x="330" y="80" width="160" height="64" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><rect x="568" y="80" width="160" height="64" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><text x="172" y="107" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Process</text><text x="172" y="127" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">virtual address space</text><text x="410" y="107" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Memory regions</text><text x="410" y="127" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">text · data · heap · stack</text><text x="648" y="107" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Defenses</text><text x="648" y="127" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">ASLR · NX · sanitizers</text><g stroke="#41d6b3" stroke-width="4" marker-end="url(#arrow52)"><line x1="255" y1="112" x2="326" y2="112"/><line x1="493" y1="112" x2="564" y2="112"/></g><rect x="104" y="210" width="612" height="72" rx="22" fill="url(#memGrad52)" opacity="0.2"/><text x="410" y="240" text-anchor="middle" font-family="Arial" font-size="18" fill="var(--text)">Security goal: know where data lives, how long it lives, and what can access it</text><text x="410" y="265" text-anchor="middle" font-family="Arial" font-size="14" fill="var(--muted)">Root-cause analysis, evidence handling, and mitigation — not weaponization</text></svg></div></section>
+    <div class="content-grid"><article class="lesson-content card">
+      <section id="introduction"><h2>1. Introduction</h2>
+<p>A running program is not just a file on disk. When you double-click an application or run a command, the operating system creates a <strong>process</strong>. That process receives a private-looking memory space where it can keep instructions, variables, temporary data, dynamically allocated objects, shared libraries, environment variables, and stack frames.</p>
+<p>This lesson explains that memory space from first principles. You will learn the difference between the <strong>stack</strong>, the <strong>heap</strong>, code sections, global data, memory mappings, virtual memory, pages, and permissions. These concepts are needed before studying buffer overflows, use-after-free bugs, memory forensics, malware behavior, and operating-system mitigations.</p>
+<h3>Why the topic exists</h3><p>Programs need places to store data while they run. Some data lives only during a function call, some lives until the program frees it, some is loaded from the executable file, and some is mapped from shared libraries or files. Operating systems organize these regions so programs can run efficiently and with isolation.</p>
+<h3>Why it matters</h3><ul><li>Many vulnerabilities are described in terms of stack buffers, heap objects, memory mappings, or address-space layout.</li><li>Defenders need to interpret crash reports, sanitizer logs, process maps, core dumps, and vulnerability advisories.</li><li>Security controls such as address space layout randomization, no-execute memory, guard pages, and sandboxing depend on the process-memory model.</li></ul>
+<h3>Where it is used</h3><p>This topic appears in secure coding, malware analysis, exploit mitigation, digital forensics, reverse engineering, incident response, performance debugging, compiler security, and operating-system hardening.</p>
+<h3>Who uses it</h3><ul><li><strong>Developers</strong> use it to reason about object lifetime, recursion, allocation, and crashes.</li><li><strong>Security engineers</strong> use it to triage memory-corruption advisories and validate mitigations.</li><li><strong>Forensic analysts</strong> use it to interpret memory snapshots and process maps.</li><li><strong>Researchers</strong> use it to design safer runtimes, allocators, sanitizers, and hardware-assisted protections.</li></ul>
+<div class="callout warning"><strong>Safety boundary:</strong> all examples inspect your own local processes or toy programs. Do not inspect, dump, attach to, fuzz, or manipulate processes that you do not own or administer.</div>
+</section><section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Define process, address space, virtual memory, page, stack, stack frame, call stack, heap, allocation, deallocation, memory mapping, segment, section, shared library, guard page, and memory permission.</li>
+<li>Explain how the operating system creates an isolated memory view for each process.</li>
+<li>Distinguish stack memory from heap memory using lifetime, ownership, size, and common failure modes.</li>
+<li>Read a simple process-memory map and identify code, heap, stack, shared libraries, and permissions.</li>
+<li>Explain why local variables usually live on the stack and dynamically allocated objects usually live on the heap.</li>
+<li>Use safe local commands to inspect your own process memory layout.</li>
+<li>Explain stack overflow, heap corruption, memory leak, dangling pointer, and double free at a root-cause level.</li>
+<li>Describe defensive controls such as ASLR, NX/DEP, guard pages, sanitizers, allocator hardening, and least privilege.</li>
+<li>Write a short technical report comparing stack and heap risks in a toy program.</li>
+</ul></section><section id="prerequisites"><h2>3. Prerequisites</h2>
+<details open><summary>Process</summary><p>A process is a running instance of a program. The same program can have many processes running at once, and each process has its own process identifier, memory mappings, open files, and execution state.</p></details>
+<details open><summary>Memory address</summary><p>A memory address is a number used to locate bytes. In modern operating systems, a process usually sees <em>virtual addresses</em>, not raw physical memory addresses.</p></details>
+<details open><summary>Pointer</summary><p>A pointer is a variable whose value is an address. A pointer can point to stack memory, heap memory, global data, mapped files, or invalid memory.</p></details>
+<details open><summary>Function call</summary><p>A function call transfers control to another block of code. The program must remember where to return and must store function-local data somewhere. That temporary function data is commonly kept in a stack frame.</p></details>
+<details open><summary>Hexadecimal notation</summary><p>Process memory maps often show addresses in hexadecimal because memory addresses are large binary values. For example, <code>0x1000</code> is 4096 in decimal.</p></details>
+</section><section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 Process memory is a controlled illusion</h3><p>Each process appears to have its own large continuous memory space. This is mostly an illusion created by the operating system and hardware memory-management unit. The process uses <strong>virtual addresses</strong>. The operating system maps those virtual addresses to physical memory, files, shared libraries, or nothing at all.</p>
+<p><strong>Analogy:</strong> a hotel guest sees room numbers and hallways. The guest does not know the building’s wiring, plumbing, or structural layout. Virtual memory is similar: the process sees organized addresses, while the operating system manages the real hardware underneath.</p>
+<h3>4.2 Address space</h3><p>An <strong>address space</strong> is the set of addresses a process can use. If a process tries to use an address that is not mapped or lacks the needed permission, the operating system can stop it with a memory fault.</p>
+<h3>4.3 Pages</h3><p>Memory is commonly managed in fixed-size chunks called <strong>pages</strong>. A common page size is 4096 bytes, although systems can use other sizes. Permissions are often tracked per page or per mapping.</p>
+<h3>4.4 Memory permissions</h3><p>Memory regions have permissions such as read, write, and execute. A code page may be readable and executable, while a stack page is usually readable and writable but not executable. This separation supports no-execute defenses.</p>
+<h3>4.5 Program sections</h3><p>A compiled program file contains sections. Common examples include:</p><ul><li><strong>.text:</strong> executable instructions.</li><li><strong>.rodata:</strong> read-only constants and string literals.</li><li><strong>.data:</strong> initialized global/static variables.</li><li><strong>.bss:</strong> zero-initialized global/static variables.</li></ul>
+<h3>4.6 Stack</h3><p>The <strong>stack</strong> stores short-lived data related to function calls. Each call gets a <strong>stack frame</strong>, which can contain local variables, saved state, and return information. When the function returns, its frame is no longer valid.</p>
+<p><strong>Intuition:</strong> a stack is like a stack of trays. You add a tray when a function starts and remove it when the function finishes. The last tray added is the first removed.</p>
+<h3>4.7 Call stack</h3><p>The <strong>call stack</strong> is the current chain of active function calls. If <code>main()</code> calls <code>read_file()</code>, and <code>read_file()</code> calls <code>parse_line()</code>, those calls form a stack.</p>
+<h3>4.8 Stack overflow</h3><p>A <strong>stack overflow</strong> can occur when the stack grows beyond its allowed size, often because of uncontrolled recursion or very large local variables. In security, the term is also used for stack-based buffer overflows, where a local stack buffer is overwritten. This lesson focuses on root cause, not exploitation.</p>
+<h3>4.9 Heap</h3><p>The <strong>heap</strong> stores data requested dynamically while the program runs. In C, a program can request heap memory using <code>malloc</code> and release it using <code>free</code>. In other languages, the runtime or garbage collector may manage heap objects automatically.</p>
+<h3>4.10 Heap lifetime</h3><p>Heap memory can outlive the function that allocated it if a pointer is returned or stored elsewhere. That flexibility is useful, but it creates lifetime risk: memory can be leaked, freed too early, freed twice, or used after being freed.</p>
+<h3>4.11 Memory leak</h3><p>A <strong>memory leak</strong> happens when a program allocates memory and loses the ability to free it. Long-running services can become unavailable if leaks slowly consume memory.</p>
+<h3>4.12 Dangling pointer</h3><p>A <strong>dangling pointer</strong> points to memory that is no longer valid. Using it may crash the program, corrupt data, or expose security risk.</p>
+<h3>4.13 Memory mapping</h3><p>A <strong>memory mapping</strong> connects part of a process address space to something: anonymous memory, a file, a shared library, the heap, the stack, or a special kernel-provided region.</p>
+<h3>4.14 Shared libraries</h3><p>A <strong>shared library</strong> is code loaded into a process at runtime so multiple programs can reuse common functionality. Shared libraries appear as mappings in process memory.</p>
+<h3>4.15 Guard pages</h3><p>A <strong>guard page</strong> is an intentionally inaccessible page placed near sensitive regions such as stacks. If a program crosses into the guard page, it triggers a fault instead of silently corrupting nearby memory.</p>
+<h3>4.16 ASLR</h3><p><strong>Address Space Layout Randomization</strong> changes where memory regions are placed each time a process runs. It does not fix bugs. It makes some classes of attack less reliable by reducing address predictability.</p>
+<h3>4.17 NX/DEP</h3><p><strong>No-execute</strong> or <strong>Data Execution Prevention</strong> marks some memory as non-executable. For example, stack and heap pages should usually not execute code.</p>
+<h3>4.18 Stack vs heap comparison</h3><table><thead><tr><th>Property</th><th>Stack</th><th>Heap</th></tr></thead><tbody><tr><td>Typical use</td><td>Function calls and local variables</td><td>Dynamically sized or long-lived objects</td></tr><tr><td>Lifetime</td><td>Ends when function returns</td><td>Until freed or garbage-collected</td></tr><tr><td>Management</td><td>Automatic</td><td>Manual in C; runtime-managed in many languages</td></tr><tr><td>Common risks</td><td>Stack overflow, local buffer overwrite, stale address return</td><td>Use-after-free, double free, memory leak, heap overflow</td></tr><tr><td>Security controls</td><td>Stack canaries, guard pages, ASLR, NX</td><td>Allocator hardening, ASLR, NX, sanitizers, safe ownership models</td></tr></tbody></table>
+</section><section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>Typical process memory layout</h3><div class="diagram"><pre class="mermaid">flowchart TB
+  High[High virtual addresses] --&gt; Stack[Stack
+function frames and local variables
+grows downward on many systems]
+  Stack --&gt; Gap[Unmapped / guard / randomized gap]
+  Gap --&gt; Heap[Heap
+dynamic allocation
+often grows upward]
+  Heap --&gt; BSS[.bss
+zero-initialized globals]
+  BSS --&gt; Data[.data
+initialized globals]
+  Data --&gt; Rodata[.rodata
+read-only constants]
+  Rodata --&gt; Text[.text
+program instructions]
+  Text --&gt; Low[Low virtual addresses]
+</pre></div>
+<h3>Function calls create stack frames</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant Main as main()
+  participant A as load_config()
+  participant B as parse_line()
+  participant Stack as Stack
+  Main-&gt;&gt;Stack: create main frame
+  Main-&gt;&gt;A: call
+  A-&gt;&gt;Stack: push load_config frame
+  A-&gt;&gt;B: call
+  B-&gt;&gt;Stack: push parse_line frame
+  B--&gt;&gt;A: return and pop parse_line frame
+  A--&gt;&gt;Main: return and pop load_config frame
+</pre></div>
+<h3>Heap object lifecycle</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; Unallocated
+  Unallocated --&gt; Allocated: malloc / new
+  Allocated --&gt; InUse: pointer references object
+  InUse --&gt; Freed: free / delete
+  Freed --&gt; Invalid: pointer should not be used
+  Invalid --&gt; UseAfterFree: stale pointer dereferenced
+  InUse --&gt; Leak: all references lost without free
+  Freed --&gt; DoubleFree: free called again
+</pre></div>
+<h3>Mapping permissions idea</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  T[.text mapping
+r-x
+execute code] --&gt; R[.rodata mapping
+r--
+constants]
+  R --&gt; D[.data mapping
+rw-
+globals]
+  D --&gt; H[heap mapping
+rw-
+dynamic objects]
+  H --&gt; S[stack mapping
+rw-
+frames]
+  S --&gt; X[blocked
+no execute]
+</pre></div>
+<h3>Stack frame ASCII diagram</h3><pre><code class="language-text">Higher addresses
++------------------------------+
+| caller stack frame           |
++------------------------------+
+| return information           |
+| saved state                  |
+| local variable: count        |
+| local buffer: char buf[32]   |
++------------------------------+
+Lower addresses
+
+This is a teaching model. Real layouts vary by architecture,
+compiler, optimization level, ABI, and mitigation settings.</code></pre>
+<h3>Heap allocation ASCII diagram</h3><pre><code class="language-text">Heap region
++-----------+-----------+-------------------+-----------+
+| block A   | block B   | free space        | block C   |
++-----------+-----------+-------------------+-----------+
+     ^           ^                              ^
+     |           |                              |
+ pointer a   pointer b                     pointer c
+
+If pointer b is used after block B is freed, it becomes a stale pointer.</code></pre>
+</section><section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Process Memory))
+    Address space
+      virtual addresses
+      mappings
+      pages
+      permissions
+    Stack
+      stack frames
+      local variables
+      recursion
+      guard pages
+      stack overflow
+    Heap
+      malloc
+      free
+      object lifetime
+      leaks
+      use after free
+      double free
+    Program image
+      text
+      rodata
+      data
+      bss
+      shared libraries
+    Defenses
+      ASLR
+      NX DEP
+      canaries
+      sanitizers
+      allocator hardening
+      memory safe languages
+</pre></div></section><section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Page size and page count</h3><p>If a system uses 4096-byte pages, then memory size divided by 4096 gives the number of pages needed, rounded up.</p><p><code>pages_needed = ceil(bytes_needed / page_size)</code></p><p><strong>Worked example:</strong> 10,000 bytes with 4096-byte pages needs <code>ceil(10000 / 4096) = 3</code> pages, because two pages hold only 8192 bytes.</p>
+<h3>7.2 Address range size</h3><p>If a mapping starts at address <code>S</code> and ends at address <code>E</code>, its size is:</p><p><code>size = E - S</code></p><p><strong>Worked example:</strong> a mapping from <code>0x1000</code> to <code>0x3000</code> has size <code>0x2000</code>, which is 8192 bytes.</p>
+<h3>7.3 Stack-frame growth model</h3><p>If a program uses approximately <code>F</code> bytes per recursive call and the allowed stack size is <code>L</code>, then a rough upper bound on recursive depth is:</p><p><code>max_depth ≈ floor(L / F)</code></p><p>This is only a model. Real systems need additional space for saved registers, alignment, runtime metadata, guard pages, and library calls.</p>
+<h3>7.4 Pointer arithmetic reminder</h3><p>For an array starting at base address <code>B</code>, element index <code>i</code>, and element size <code>S</code>:</p><p><code>address = B + i × S</code></p><p>This formula explains why an off-by-one index can move a pointer outside the intended object.</p>
+<h3>7.5 Entropy intuition for ASLR</h3><p>If a randomized placement has <code>n</code> unpredictable bits, there are <code>2^n</code> possible placements. More entropy means more possible layouts, but real protection depends on implementation, information leaks, architecture, and attack model.</p>
+</section><section id="practical-examples"><h2>8. Practical Examples</h2>
+<h3>Linux examples</h3><pre><code class="language-bash"># Show memory mappings for your current shell process.
+cat /proc/$$/maps | head
+
+# Show your shell process ID.
+echo $$
+
+# Show stack-size limit for your shell session.
+ulimit -s
+
+# Show rough memory use for your shell process.
+ps -o pid,comm,vsz,rss -p $$</code></pre>
+<p>The file <code>/proc/PID/maps</code> lists mapped memory regions and their permissions for a process. Access is controlled by the operating system; only inspect processes you own or administer.</p>
+<h3>Windows examples</h3><pre><code class="language-powershell"># PowerShell: show the current PowerShell process.
+Get-Process -Id $PID | Select-Object Id,ProcessName,VirtualMemorySize64,WorkingSet64
+
+# Show loaded modules for the current PowerShell process.
+(Get-Process -Id $PID).Modules | Select-Object -First 5 ModuleName,FileName</code></pre>
+<h3>Python example: stack-like recursion</h3><pre><code class="language-python">import sys
+
+print("Python recursion limit:", sys.getrecursionlimit())
+
+def countdown(n):
+    if n == 0:
+        return "done"
+    return countdown(n - 1)
+
+print(countdown(5))
+
+# Do not intentionally set huge recursion values on shared systems.</code></pre>
+<h3>Network example</h3><p>A network daemon may allocate a heap buffer for each connection. If it forgets to release buffers when clients disconnect, memory use can grow until availability is affected.</p>
+<h3>Web example</h3><p>A web server written in C or C++ may parse request headers into stack or heap buffers. Even if the web application is written in a safer language, native libraries underneath may still parse images, compression formats, TLS records, or HTTP data.</p>
+<h3>Cloud example</h3><p>Containers do not remove process-memory risks. A containerized service still has stack, heap, mappings, loaded libraries, and memory limits. Cloud teams monitor memory usage, crashes, restart loops, and out-of-memory events as reliability and security signals.</p>
+</section><section id="code-examples"><h2>9. Code Examples</h2>
+<h3>9.1 C program: observe stack, heap, and global addresses</h3><pre><code class="language-c">#include &lt;stdio.h&gt;   // printf
+#include &lt;stdlib.h&gt;  // malloc, free
+
+int global_counter = 7; // global variable, usually in .data
+
+void show_addresses(void) {
+    int local_number = 42;             // local variable, usually on stack
+    int *heap_number = malloc(sizeof(int)); // heap allocation
+
+    if (heap_number == NULL) {         // always check allocation result
+        printf("malloc failed\n");
+        return;
+    }
+
+    *heap_number = 99;                 // write to allocated heap memory
+
+    printf("address of function      : %p\n", (void *)&amp;show_addresses);
+    printf("address of global_counter: %p\n", (void *)&amp;global_counter);
+    printf("address of local_number  : %p\n", (void *)&amp;local_number);
+    printf("address stored in pointer: %p\n", (void *)heap_number);
+
+    free(heap_number);                 // release heap memory once
+}
+
+int main(void) {
+    show_addresses();
+    return 0;
+}</code></pre>
+<p><strong>Line-by-line explanation:</strong></p><ul><li><code>global_counter</code> exists for the lifetime of the process.</li><li><code>local_number</code> exists while <code>show_addresses</code> is active.</li><li><code>malloc</code> requests heap memory.</li><li><code>heap_number == NULL</code> checks whether allocation failed.</li><li><code>free</code> releases the heap memory exactly once.</li><li>The printed addresses may change between runs because of ASLR.</li></ul>
+<h3>9.2 Compile and run</h3><pre><code class="language-bash">gcc -Wall -Wextra -Wpedantic -O0 address_demo.c -o address_demo
+./address_demo
+./address_demo</code></pre>
+<p>Run it more than once. If address randomization is enabled, some addresses will likely change.</p>
+<h3>9.3 Toy lifetime mistake: returning address of a local variable</h3><pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int *bad_pointer(void) {
+    int local_value = 123;
+    return &amp;local_value; // WRONG: local_value stops being valid after return
+}
+
+int main(void) {
+    int *p = bad_pointer();
+    // Do not dereference p. It is a dangling pointer.
+    printf("dangling pointer value: %p\n", (void *)p);
+    return 0;
+}</code></pre>
+<p><strong>Why this is wrong:</strong> the local variable belongs to a stack frame. When the function returns, that frame is gone. The pointer remains as a number, but it no longer points to a valid object.</p>
+<h3>9.4 Safer alternative: caller owns the storage</h3><pre><code class="language-c">#include &lt;stdio.h&gt;
+
+void set_value(int *output) {
+    if (output == NULL) {
+        return;
+    }
+    *output = 123;
+}
+
+int main(void) {
+    int value = 0;
+    set_value(&amp;value);
+    printf("value: %d\n", value);
+    return 0;
+}</code></pre>
+<p><strong>Why this is safer:</strong> the caller provides storage that remains valid after <code>set_value</code> returns.</p>
+<h3>9.5 Heap allocation with cleanup path</h3><pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+    size_t count = 10;
+    int *items = calloc(count, sizeof(int));
+
+    if (items == NULL) {
+        fprintf(stderr, "allocation failed\n");
+        return 1;
+    }
+
+    for (size_t i = 0; i &lt; count; i++) {
+        items[i] = (int)i;
+    }
+
+    printf("last item: %d\n", items[count - 1]);
+
+    free(items);
+    items = NULL; // reduces accidental reuse in this scope
+    return 0;
+}</code></pre>
+<h3>Common mistakes</h3><ul><li>Returning a pointer to a local stack variable.</li><li>Freeing heap memory twice.</li><li>Forgetting to free memory in long-running services.</li><li>Assuming printed addresses will be stable across runs.</li><li>Assuming stack and heap always grow in the same direction on every platform.</li><li>Ignoring memory permissions in process maps.</li></ul>
+</section><section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li>Triggering stack or heap boundary errors through malformed local input in vulnerable programs.</li><li>Causing excessive recursion or allocation to exhaust memory.</li><li>Abusing use-after-free conditions when stale pointers reference memory that has been reused.</li><li>Using information leaks to learn memory layout and weaken randomization.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li><strong>Stack-based overflow:</strong> a local stack buffer receives more data than it can hold.</li><li><strong>Heap-based overflow:</strong> a dynamically allocated heap buffer is overwritten beyond its bounds.</li><li><strong>Use-after-free:</strong> code uses heap memory after it is released.</li><li><strong>Double free:</strong> code releases the same heap object twice.</li><li><strong>Memory leak:</strong> code loses references to allocated memory and cannot release it.</li><li><strong>Stack exhaustion:</strong> uncontrolled recursion or large frames exceed the stack limit.</li></ul>
+<h3>Defensive strategies</h3><ul><li>Prefer memory-safe languages for new high-risk components where feasible.</li><li>Use clear ownership rules for heap objects.</li><li>Keep local stack buffers small and bounds-checked.</li><li>Check allocation failures and integer-size calculations.</li><li>Compile with warnings, hardening flags, and sanitizers in test builds.</li><li>Use fuzzing and regression tests for parsers and input-heavy components.</li><li>Run exposed services with least privilege and sandboxing.</li></ul>
+<h3>Detection methods</h3><ul><li>AddressSanitizer and related runtime sanitizers.</li><li>Static analyzers that find lifetime and allocation errors.</li><li>Crash telemetry, core dumps, minidumps, and debugger stack traces.</li><li>Out-of-memory alerts and restart-loop detection.</li><li>Code review focused on ownership, bounds, and cleanup paths.</li></ul>
+<h3>Mitigation</h3><ul><li>Patch root cause rather than only catching the crash.</li><li>Add regression tests that reproduce the old failure safely.</li><li>Enable ASLR, NX/DEP, stack canaries, hardened allocators, and compiler hardening where supported.</li><li>Limit blast radius with process isolation, containers, seccomp-style filtering, and privilege reduction.</li></ul>
+<h3>Best practices</h3><ul><li>Document who owns each heap allocation.</li><li>Use one cleanup path for complex C functions when appropriate.</li><li>Set pointers to <code>NULL</code> after freeing only when it reduces accidental reuse in the same scope.</li><li>Do not treat ASLR or NX as substitutes for memory-safe code.</li><li>Do not collect process memory dumps casually; they may contain credentials, tokens, personal data, or cryptographic material.</li></ul>
+</section><section id="industry-perspective"><h2>11. Industry Perspective</h2>
+<h3>Banks</h3><p>Banks run low-latency systems, payment platforms, fraud engines, and legacy C/C++ components. They care about memory safety because crashes affect availability and memory disclosure can expose customer or transaction data.</p>
+<h3>Governments</h3><p>Government systems often include long-lived legacy code, classified workloads, and critical services. Memory-safety roadmaps help prioritize risky components without claiming all legacy code can be replaced immediately.</p>
+<h3>Cloud providers</h3><p>Cloud providers operate kernels, hypervisors, storage engines, proxies, databases, and container runtimes. Process isolation and memory protection are central to tenant separation and service reliability.</p>
+<h3>Healthcare</h3><p>Healthcare devices and systems may include embedded software and native libraries. Memory failures can affect privacy, availability, and in some cases patient safety.</p>
+<h3>Defense</h3><p>Defense environments treat memory corruption as a high-risk class because it can affect mission systems, embedded platforms, sensors, and communications software.</p>
+<h3>Universities</h3><p>Universities teach process memory because it connects programming, operating systems, compilers, reverse engineering, and security research.</p>
+<h3>Large enterprises</h3><p>Large enterprises use memory concepts to triage vendor advisories, interpret crash telemetry, manage endpoint stability, and choose where memory-safe migration is worth the cost.</p>
+</section><section id="research-perspective"><h2>12. Research Perspective</h2>
+<p>Current research does not focus only on finding more memory bugs. It also asks how to prevent, contain, or reason about entire classes of memory errors.</p>
+<h3>Research directions</h3><ul><li><strong>Memory-safe language migration:</strong> how to replace or wrap risky C/C++ components without breaking existing systems.</li><li><strong>Safe interoperability:</strong> how Rust, Java, Go, Swift, or other safer languages call legacy C libraries without losing safety guarantees.</li><li><strong>Hardware memory tagging:</strong> how processors can tag memory and pointers to detect invalid use.</li><li><strong>Capability machines:</strong> how hardware-enforced capabilities can restrict pointer authority.</li><li><strong>Allocator hardening:</strong> how heap allocators can detect or reduce impact of corruption.</li><li><strong>Formal verification:</strong> how to mathematically prove memory properties for critical code.</li><li><strong>Sanitizer and fuzzer scalability:</strong> how to detect bugs earlier with acceptable performance and false-positive trade-offs.</li></ul>
+<h3>Open problems</h3><ul><li>How can organizations measure memory-safety risk across millions of lines of legacy code?</li><li>How can high-performance systems gain strong memory protection with low overhead?</li><li>How can teams verify safety across language boundaries?</li><li>How should vulnerability severity account for mitigations, memory layout, exposure, and exploit maturity?</li></ul>
+<h3>Notable reading areas</h3><p>Look for research on AddressSanitizer, memory tagging, CHERI capabilities, Rust adoption in systems code, WebAssembly memory safety, C/C++ hardening, and formal methods for memory safety. Do not reproduce papers; read abstracts, threat models, evaluation methods, and limitations.</p>
+</section><section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Heartbleed</h3><p><strong>What happened:</strong> a flaw in OpenSSL’s heartbeat handling allowed extra memory to be returned to a requester under certain conditions.</p><p><strong>Root cause:</strong> insufficient validation of a length value before reading memory.</p><p><strong>Impact:</strong> sensitive process memory could be exposed, including data that should have remained private.</p><p><strong>Lessons learned:</strong> validate length fields, test protocol parsers aggressively, minimize sensitive data exposure in memory, and treat out-of-bounds reads as serious.</p>
+<h3>Stack Clash class of issues</h3><p><strong>What happened:</strong> researchers showed that stack growth behavior and guard-page assumptions could be abused in certain circumstances.</p><p><strong>Root cause:</strong> stack memory could grow into other memory regions without sufficient probing or guard enforcement in affected configurations.</p><p><strong>Impact:</strong> privilege and process-boundary risk depended on platform and vulnerable software.</p><p><strong>Lessons learned:</strong> stack layout, guard pages, compiler behavior, and operating-system policies all matter.</p>
+<h3>Use-after-free in browsers</h3><p><strong>What happened:</strong> browsers have repeatedly patched use-after-free bugs in complex components such as rendering engines and JavaScript runtimes.</p><p><strong>Root cause:</strong> object lifetimes in large asynchronous systems are difficult to manage manually.</p><p><strong>Impact:</strong> browser memory bugs can be serious because browsers process untrusted web content.</p><p><strong>Lessons learned:</strong> use safer ownership models, sandbox risky components, fuzz heavily, and deploy rapid patch mechanisms.</p>
+<h3>Cloud service memory exhaustion</h3><p><strong>What happened:</strong> services can become unavailable when memory leaks or unbounded allocation consume available memory.</p><p><strong>Root cause:</strong> missing cleanup, unbounded queues, per-request allocation without limits, or failure to release resources.</p><p><strong>Impact:</strong> availability degradation, restarts, increased cost, and possible incident response workload.</p><p><strong>Lessons learned:</strong> monitor memory growth, set resource limits, test long-running behavior, and build graceful failure paths.</p>
+</section><section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul>
+<li><strong>Misconception:</strong> stack means insecure and heap means secure. <strong>Correction:</strong> both can be safe or unsafe depending on code and controls.</li>
+<li><strong>Misconception:</strong> ASLR fixes memory bugs. <strong>Correction:</strong> ASLR makes some attacks harder; it does not remove the bug.</li>
+<li><strong>Misconception:</strong> a program that does not crash is memory-safe. <strong>Correction:</strong> undefined behavior can silently corrupt data or appear stable during testing.</li>
+<li><strong>Misconception:</strong> setting a pointer to <code>NULL</code> after <code>free</code> solves all use-after-free risk. <strong>Correction:</strong> other aliases may still point to the freed object.</li>
+<li><strong>Misconception:</strong> garbage-collected languages have no memory problems. <strong>Correction:</strong> they reduce many manual memory bugs but can still have leaks, resource exhaustion, unsafe native extensions, and logic flaws.</li>
+<li><strong>Misconception:</strong> process memory maps are secret attack instructions. <strong>Correction:</strong> they are normal diagnostic information, but they must be handled responsibly and only for authorized systems.</li>
+<li><strong>Misconception:</strong> small local buffers are always safe. <strong>Correction:</strong> safety depends on bounds checks, input size, encoding, and use context.</li>
+</ul></section><section id="summary"><h2>15. Summary</h2><p>A running program is a process with an address space. That address space contains mappings such as executable code, global data, shared libraries, heap, and stack. The stack supports function calls and short-lived local data. The heap supports dynamic allocation and flexible object lifetimes. Security failures happen when code crosses bounds, mismanages object lifetimes, leaks memory, or assumes layout details that are not guaranteed. Defenders reduce risk through careful design, ownership rules, safe APIs, compiler warnings, sanitizers, fuzzing, runtime mitigations, sandboxing, monitoring, and migration to memory-safe languages where feasible.</p></section><section id="glossary"><h2>16. Glossary</h2><dl>
+<dt>Address Space</dt><dd>The set of memory addresses visible to a process.</dd>
+<dt>ASLR</dt><dd>Address Space Layout Randomization; a mitigation that randomizes memory-region locations.</dd>
+<dt>Call Stack</dt><dd>The chain of currently active function calls.</dd>
+<dt>Dangling Pointer</dt><dd>A pointer that refers to memory that is no longer valid.</dd>
+<dt>DEP</dt><dd>Data Execution Prevention; a control that prevents execution from memory regions marked as data.</dd>
+<dt>Double Free</dt><dd>Freeing the same heap allocation more than once.</dd>
+<dt>Guard Page</dt><dd>An inaccessible memory page used to catch unintended memory growth or boundary crossing.</dd>
+<dt>Heap</dt><dd>A process memory region used for dynamic allocation.</dd>
+<dt>Memory Leak</dt><dd>Allocated memory that is no longer reachable and cannot be released.</dd>
+<dt>Memory Mapping</dt><dd>A region of process address space connected to memory, a file, a library, or a special system region.</dd>
+<dt>NX</dt><dd>No-execute; a memory permission preventing code execution from a region.</dd>
+<dt>Page</dt><dd>A fixed-size unit used by the operating system to manage virtual memory.</dd>
+<dt>Process</dt><dd>A running instance of a program.</dd>
+<dt>Shared Library</dt><dd>Reusable code loaded into a process at runtime.</dd>
+<dt>Stack</dt><dd>A memory region used for function calls and short-lived local data.</dd>
+<dt>Stack Frame</dt><dd>The portion of the stack used by one active function call.</dd>
+<dt>Use-After-Free</dt><dd>Using memory after it has been released.</dd>
+<dt>Virtual Memory</dt><dd>An abstraction that gives processes virtual addresses mapped by the operating system and hardware.</dd>
+</dl></section><section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><ol><li><p>What is a process?</p><ol type="A"><li>A running instance of a program</li><li>Only a text file</li><li>Only a password</li><li>A DNS record</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is an address space?</p><ol type="A"><li>The set of addresses visible to a process</li><li>A list of email addresses</li><li>A routing table only</li><li>A username database</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does the stack commonly store?</p><ol type="A"><li>Function frames and local variables</li><li>Only long-term files</li><li>Only DNS packets</li><li>Only certificates</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does the heap commonly store?</p><ol type="A"><li>Dynamically allocated objects</li><li>Only CPU instructions</li><li>Only user names</li><li>Only browser bookmarks</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a stack frame?</p><ol type="A"><li>Memory for one active function call</li><li>A firewall rule</li><li>A hard drive sector</li><li>A public key</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a memory leak?</p><ol type="A"><li>Allocated memory that is not released or reachable</li><li>A strong backup</li><li>A signed certificate</li><li>A Linux user</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a dangling pointer?</p><ol type="A"><li>A pointer to invalid or expired memory</li><li>A valid password</li><li>A DNS alias</li><li>A software license</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is use-after-free?</p><ol type="A"><li>Using memory after releasing it</li><li>Using MFA</li><li>Using a log file</li><li>Using an allowlist</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is double free?</p><ol type="A"><li>Freeing the same allocation twice</li><li>Encrypting twice</li><li>Two-factor login</li><li>Two backups</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does ASLR do?</p><ol type="A"><li>Randomizes memory layout</li><li>Hashes passwords</li><li>Blocks spam</li><li>Compresses logs</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does NX/DEP restrict?</p><ol type="A"><li>Execution from non-executable memory</li><li>All file reads</li><li>All usernames</li><li>All DNS responses</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a page?</p><ol type="A"><li>A fixed-size unit for memory management</li><li>Only a web page</li><li>Only a PDF page</li><li>Only a manual page</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does /proc/PID/maps show on Linux?</p><ol type="A"><li>Mapped memory regions and permissions</li><li>Only Wi-Fi passwords</li><li>Only installed packages</li><li>Only browser history</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Why can returning a pointer to a local variable be wrong?</p><ol type="A"><li>The local variable stops being valid after return</li><li>It always encrypts data</li><li>It creates a user account</li><li>It disables ASLR</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which region usually contains executable program instructions?</p><ol type="A"><li>.text</li><li>.bss only</li><li>heap only</li><li>stack only</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which region usually contains zero-initialized globals?</p><ol type="A"><li>.bss</li><li>.text</li><li>DNS</li><li>TLS</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a guard page?</p><ol type="A"><li>An inaccessible page used to catch boundary crossing</li><li>A password rule</li><li>A printed report</li><li>A browser cookie</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Why inspect only your own processes in labs?</p><ol type="A"><li>Authorization and privacy boundaries matter</li><li>Other processes have no memory</li><li>It improves Wi-Fi speed</li><li>It disables logging</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which statement is most accurate?</p><ol type="A"><li>Stack and heap can both have security bugs</li><li>Only the stack can have bugs</li><li>Only the heap can have bugs</li><li>Neither can have bugs</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What should a defensive memory report include?</p><ol type="A"><li>Root cause, evidence, impact, and mitigation</li><li>Only a screenshot</li><li>Only a guess</li><li>Only an exploit payload</li></ol><details><summary>Answer</summary><p>A.</p></details></li></ol>
+<h3>10 Short Questions</h3><ol>
+<li>Define stack in one sentence.</li><li>Define heap in one sentence.</li><li>What is a stack frame?</li><li>Why can recursion cause stack exhaustion?</li><li>What is a memory mapping?</li><li>What is the difference between virtual and physical memory?</li><li>What does a memory permission such as <code>r-x</code> mean?</li><li>Why can heap memory outlive a function call?</li><li>What is a dangling pointer?</li><li>Why should memory dumps be handled carefully?</li></ol>
+<h3>5 Long Questions</h3><ol>
+<li>Compare stack and heap memory using lifetime, ownership, risk, and defensive controls.</li>
+<li>Explain how a process address space supports isolation and why this matters for cybersecurity.</li>
+<li>Describe how a memory leak can become an availability incident in a long-running server.</li>
+<li>Explain how ASLR and NX/DEP help reduce risk while not replacing secure coding.</li>
+<li>Design a safe diagnostic workflow for investigating a local crash in a C program.</li></ol>
+<h3>Scenario-Based Questions</h3><ol>
+<li>A local service crashes after processing deeply nested input. What stack-related issue might you investigate first?</li>
+<li>A C function returns a pointer to a local buffer. What is the root cause and safer alternative?</li>
+<li>A service’s memory usage grows every hour until it restarts. What heap-related issue might be involved?</li>
+<li>A sanitizer reports use-after-free in code reachable from file parsing. How should a security team respond?</li>
+<li>A crash dump may contain authentication tokens. What evidence-handling controls should be applied?</li></ol>
+<h3>Interview Questions</h3><ol>
+<li>Explain stack vs heap to a beginner.</li><li>What is a process memory map?</li><li>What are ASLR and NX?</li><li>What is a memory leak, and why can it be a security issue?</li><li>How would you review C code for object-lifetime bugs?</li></ol>
+<h3>Critical Thinking Questions</h3><ol>
+<li>Why is process isolation not enough if a process handles secrets and untrusted input?</li><li>When is it better to rewrite a component than to add more mitigations?</li><li>How should organizations balance performance with stronger memory-safety controls?</li><li>Why can information leaks weaken memory-randomization defenses?</li><li>How should a team communicate memory-corruption risk without overstating exploitability?</li></ol>
+<h3>Research Questions</h3><ol>
+<li>How can hardware memory tagging reduce use-after-free risk?</li><li>How can static analysis infer object ownership in large C codebases?</li><li>How can fuzzers better target heap-lifetime bugs?</li><li>How can operating systems make process memory diagnostics safer for privacy?</li><li>How can memory-safe languages safely interoperate with legacy C libraries?</li></ol>
+</section><section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Title</h3><p><strong>Safe Local Stack, Heap, and Process Map Lab</strong></p>
+<h3>Prerequisites</h3><ul><li>Local Linux VM, macOS terminal, or Windows with WSL.</li><li>GCC or Clang installed.</li><li>No external targets. No unauthorized process inspection.</li></ul>
+<h3>Objectives</h3><ul><li>Observe stack, heap, and global addresses in a toy program.</li><li>Inspect your own process mapping safely.</li><li>Compare address changes between runs.</li><li>Write a short defensive analysis.</li></ul>
+<h3>Step 1: Create the lab folder</h3><pre><code class="language-bash">mkdir -p process-memory-lab
+cd process-memory-lab</code></pre>
+<h3>Step 2: Create the address demo</h3><pre><code class="language-bash">cat &gt; address_demo.c &lt;&lt;'C'
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int global_value = 7;
+
+void show_addresses(void) {
+    int local_value = 42;
+    int *heap_value = malloc(sizeof(int));
+    if (heap_value == NULL) {
+        puts("allocation failed");
+        return;
+    }
+    *heap_value = 99;
+
+    printf("function address : %p\n", (void *)&amp;show_addresses);
+    printf("global address   : %p\n", (void *)&amp;global_value);
+    printf("local address    : %p\n", (void *)&amp;local_value);
+    printf("heap address     : %p\n", (void *)heap_value);
+
+    free(heap_value);
+}
+
+int main(void) {
+    show_addresses();
+    puts("Press Enter to exit.");
+    getchar();
+    return 0;
+}
+C</code></pre>
+<h3>Step 3: Compile and run</h3><pre><code class="language-bash">gcc -Wall -Wextra -Wpedantic -O0 address_demo.c -o address_demo
+./address_demo</code></pre>
+<p>Leave the program waiting at <code>Press Enter to exit</code> while you inspect it from another terminal.</p>
+<h3>Step 4: Inspect the process map</h3><pre><code class="language-bash"># In a second terminal inside the same lab folder:
+pidof address_demo
+cat /proc/$(pidof address_demo)/maps | head -30</code></pre>
+<p>Identify lines that correspond to the program, heap, stack, shared libraries, and permissions. Do not inspect unrelated processes.</p>
+<h3>Step 5: Run twice and compare</h3><pre><code class="language-bash">./address_demo
+./address_demo</code></pre>
+<p>Record whether the printed addresses change. Explain whether ASLR may be involved. Do not disable system protections for this course lab.</p>
+<h3>Step 6: Optional sanitizer check</h3><pre><code class="language-bash">gcc -fsanitize=address -g -O1 address_demo.c -o address_demo_asan
+./address_demo_asan</code></pre>
+<h3>Expected outcomes</h3><ul><li>You can identify stack-like, heap-like, global, and code addresses in a toy program.</li><li>You can read basic process-map permissions.</li><li>You can explain that printed addresses are diagnostic evidence, not stable design assumptions.</li><li>You can write a short report without creating exploit instructions.</li></ul>
+<h3>Report template</h3><ul><li>System used.</li><li>Compiler used.</li><li>Observed addresses from two runs.</li><li>Process-map regions identified.</li><li>Explanation of stack vs heap lifetime.</li><li>Security controls observed or inferred.</li><li>Safety statement confirming only local authorized processes were inspected.</li></ul>
+</section><section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li>Linux manual page: <code>/proc/pid/maps</code> for mapped memory regions and permissions.</li>
+<li>Clang AddressSanitizer documentation.</li>
+<li>Microsoft AddressSanitizer documentation for MSVC.</li>
+<li>MITRE CWE-125 Out-of-bounds Read, CWE-787 Out-of-bounds Write, CWE-415 Double Free, and CWE-416 Use After Free.</li>
+<li>CISA/NSA guidance on memory-safe languages and memory-safe roadmaps.</li>
+<li>Operating-systems textbooks on virtual memory, paging, process isolation, and memory protection.</li>
+<li>Research topics: memory tagging, CHERI capabilities, allocator hardening, Rust for systems programming, WebAssembly memory isolation, and formal memory-safety models.</li>
+</ul></section>
+      <div class="prev-next"><a class="btn" href="memory-c-and-unsafe-code-from-first-principles.html">← Lesson 5.1</a><a class="btn" href="index.html">Week 5 Overview</a><a class="btn btn-primary" href="buffer-overflows-and-memory-corruption.html">Next: Lesson 5.3 →</a></div>
+    </article><aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside></div>
+  </div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

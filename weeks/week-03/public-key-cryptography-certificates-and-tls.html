@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 3.4: Public-Key Cryptography, Certificates, and TLS | MS Cybersecurity</title>
+  <meta name="description" content="Public-key cryptography, certificates, PKI, and TLS from first principles for MS-level cybersecurity learners.">
+  <meta name="keywords" content="public-key cryptography, certificates, PKI, TLS, HTTPS, certificate authority, digital signatures, key exchange, cybersecurity course">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Course","name":"MS Cybersecurity Interactive Learning Platform","hasCourseInstance":{"@type":"CourseInstance","courseMode":"online"},"educationalLevel":"Graduate","about":"Public-key cryptography, certificates, and TLS"}</script>
+</head>
+<body data-root="../../" data-page-id="lesson-03-04" data-title="Lesson 3.4: Public-Key Cryptography, Certificates, and TLS">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 3</a> / Lesson 3.4</div>
+      <header class="hero">
+        <div class="eyebrow">Week 3 · Cryptography</div>
+        <h1>Lesson 3.4: Public-Key Cryptography, Certificates, and TLS</h1>
+        <p class="lead">Public-key cryptography solves a problem symmetric cryptography does not solve by itself: how can two parties communicate securely before they already share a secret? This lesson builds from public/private key pairs to digital signatures, certificates, public key infrastructure, HTTPS, and the TLS 1.3 handshake.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>220–320 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 3.1–3.3 recommended; all prerequisites reintroduced</div>
+          <div class="meta-item"><strong>Practice time</strong>5–8 hours</div>
+        </div>
+        <div class="toolbar">
+          <button class="bookmark-btn" type="button">☆ Bookmark lesson</button>
+          <button class="complete-btn" type="button">Mark complete</button>
+          <button class="quiz-toggle" type="button">Start quiz mode</button>
+          <button onclick="window.print()" type="button">Download lesson as PDF</button>
+          <button class="theme-toggle" type="button">Toggle dark mode</button>
+        </div>
+      </header>
+
+      <section class="lesson-visual card" aria-label="Visual overview">
+        <div class="visual-graphic">
+          <svg viewBox="0 0 560 360" role="img" aria-label="Browser validates a certificate chain and then establishes TLS keys">
+            <defs>
+              <linearGradient id="pkig" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#2458d3"/><stop offset="1" stop-color="#0b8f7a"/></linearGradient>
+            </defs>
+            <rect x="26" y="48" width="132" height="72" rx="18" fill="var(--bg)" stroke="var(--border)"/>
+            <text x="92" y="90" text-anchor="middle" font-size="18">Browser</text>
+            <rect x="402" y="48" width="132" height="72" rx="18" fill="var(--bg)" stroke="var(--border)"/>
+            <text x="468" y="90" text-anchor="middle" font-size="18">Server</text>
+            <circle cx="280" cy="84" r="58" fill="url(#pkig)" opacity=".92"/>
+            <text x="280" y="78" text-anchor="middle" font-size="18" fill="#fff">TLS</text>
+            <text x="280" y="102" text-anchor="middle" font-size="13" fill="#fff">handshake</text>
+            <path d="M158 84 H222" stroke="url(#pkig)" stroke-width="8" stroke-linecap="round"/>
+            <path d="M338 84 H402" stroke="url(#pkig)" stroke-width="8" stroke-linecap="round"/>
+            <rect x="54" y="224" width="120" height="66" rx="16" fill="var(--bg)" stroke="var(--border)"/>
+            <text x="114" y="250" text-anchor="middle" font-size="15">Root CA</text>
+            <text x="114" y="271" text-anchor="middle" font-size="12">trust anchor</text>
+            <rect x="220" y="224" width="120" height="66" rx="16" fill="var(--bg)" stroke="var(--border)"/>
+            <text x="280" y="250" text-anchor="middle" font-size="15">Intermediate</text>
+            <text x="280" y="271" text-anchor="middle" font-size="12">issuer</text>
+            <rect x="386" y="224" width="120" height="66" rx="16" fill="var(--bg)" stroke="var(--border)"/>
+            <text x="446" y="250" text-anchor="middle" font-size="15">Server Cert</text>
+            <text x="446" y="271" text-anchor="middle" font-size="12">public key + name</text>
+            <path d="M174 257 H220" stroke="url(#pkig)" stroke-width="6" stroke-linecap="round"/>
+            <path d="M340 257 H386" stroke="url(#pkig)" stroke-width="6" stroke-linecap="round"/>
+            <path d="M446 224 C446 180 468 146 468 120" stroke="url(#pkig)" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <path d="M114 224 C104 176 92 144 92 120" stroke="url(#pkig)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="visual-panel">
+          <h2>Keys do not prove identity by themselves.</h2>
+          <p>A server can send a public key, but the client must know whether that key really belongs to the intended domain. Certificates, certificate authorities, hostname validation, and TLS combine to answer that question.</p>
+          <div class="visual-steps">
+            <div class="visual-step"><strong>1. Key pair</strong><span>Private key stays secret; public key is shareable.</span></div>
+            <div class="visual-step"><strong>2. Certificate</strong><span>An issuer binds a public key to a subject name.</span></div>
+            <div class="visual-step"><strong>3. TLS</strong><span>The client validates identity and derives session keys.</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview" class="card">
+            <h2>Overview</h2>
+            <p><strong>Topic:</strong> asymmetric cryptography, key pairs, signatures, key establishment, certificates, certificate authorities, public key infrastructure, HTTPS, and TLS.</p>
+            <p><strong>Learning objective:</strong> understand how modern systems authenticate servers, protect communication, manage certificate trust, and avoid dangerous TLS mistakes.</p>
+            <p><strong>Required background:</strong> no prior PKI knowledge is assumed. You should know basic encryption, hashing, MACs, and symmetric encryption from Lessons 3.1–3.3, but this lesson re-explains required ideas.</p>
+            <p><strong>Difficulty:</strong> begins with lock-and-signature analogies and ends with graduate-level reasoning about trust paths, certificate lifecycle, TLS termination, mTLS, revocation, transparency, and post-quantum migration.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p><strong>Public-key cryptography</strong>, also called <strong>asymmetric cryptography</strong>, uses two mathematically related keys. One key is public and can be shared. The other key is private and must be protected. This is different from symmetric cryptography, where both parties need the same secret key.</p>
+            <p>The topic exists because the internet connects strangers. Your browser does not already share a secret key with every bank, hospital, university, cloud service, and government website. Public-key cryptography makes it possible to authenticate a party or establish a shared secret across an untrusted network.</p>
+            <p>But a public key alone does not prove identity. An attacker can generate their own key pair and claim, “this is the bank.” A <strong>certificate</strong> helps solve that by binding a public key to an identity, such as a domain name. A <strong>certificate authority</strong> signs that binding. A client accepts it only if it can build a valid chain from the server certificate to a trusted root.</p>
+            <p><strong>TLS</strong>, Transport Layer Security, is the protocol used by HTTPS and many other applications to protect communication from eavesdropping, tampering, and message forgery. In modern TLS, public-key cryptography is mainly used for authentication and key establishment, while symmetric authenticated encryption protects the actual application data.</p>
+            <p>Who uses this? Web browsers, mobile apps, APIs, banks, governments, cloud providers, hospitals, universities, defense systems, software update systems, container registries, VPNs, service meshes, and researchers working on secure communication protocols.</p>
+            <div class="callout warning"><strong>Safety boundary:</strong> All demonstrations are local or defensive. Do not intercept, downgrade, spoof, scan, test, or manipulate TLS traffic for systems you do not own or have explicit written authorization to examine.</div>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <ul>
+              <li>Define public key, private key, key pair, asymmetric cryptography, digital signature, certificate, CA, root CA, intermediate CA, trust store, and TLS.</li>
+              <li>Explain why public-key cryptography helps solve key-establishment and authentication problems.</li>
+              <li>Explain the difference between encryption, key exchange, digital signatures, and certificates.</li>
+              <li>Explain how a browser validates a certificate chain at a high level.</li>
+              <li>Explain what TLS protects and what HTTPS does not guarantee.</li>
+              <li>Describe a TLS 1.3 handshake at a conceptual level.</li>
+              <li>Generate and inspect safe local keys and certificates in an isolated lab.</li>
+              <li>Write safe Python examples for signatures and TLS client configuration.</li>
+              <li>Identify common attacks: man-in-the-middle, certificate misissuance, expired certificates, stolen private keys, validation bypass, weak algorithms, downgrade risk, and poor certificate lifecycle management.</li>
+              <li>Explain industry uses of PKI and TLS in banks, governments, cloud providers, healthcare, defense, universities, and enterprises.</li>
+              <li>Discuss research directions: Certificate Transparency, ACME automation, post-quantum TLS, revocation, formal verification, and identity alternatives.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <p>This lesson uses these concepts. Each is explained here before advanced use:</p>
+            <ul>
+              <li><strong>Secret:</strong> information that must not be known by unauthorized people or systems.</li>
+              <li><strong>Key:</strong> data used by a cryptographic algorithm to encrypt, decrypt, sign, verify, or establish other keys.</li>
+              <li><strong>Hash:</strong> a fixed-size fingerprint of data. A cryptographic hash should be hard to reverse or collide intentionally.</li>
+              <li><strong>Signature:</strong> cryptographic evidence that a private key was used to sign specific data.</li>
+              <li><strong>Identity:</strong> the name or subject being authenticated, such as a domain, service, device, or organization.</li>
+              <li><strong>Protocol:</strong> a defined conversation between computers. TLS is a protocol.</li>
+              <li><strong>Client and server:</strong> the client starts a connection; the server responds. In HTTPS, a browser is usually the client.</li>
+            </ul>
+            <details class="callout"><summary>Prerequisite mini-explanation: authentication vs encryption</summary><p>Encryption hides content. Authentication answers “who am I talking to?” or “who produced this message?” TLS needs both. A connection can be encrypted to the wrong party if certificate validation is disabled or broken.</p></details>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 The problem with only symmetric keys</h3>
+            <p>Symmetric encryption is efficient, but both sides need the same secret key. That creates a bootstrapping problem: how do two parties agree on a secret when the network may be observed by attackers?</p>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  A[Alice wants secure communication] --&gt; P{Do Alice and Bob already share a secret?}
+  P -- Yes --&gt; S[Use symmetric authenticated encryption]
+  P -- No --&gt; K[Need public-key authentication or key establishment]
+  K --&gt; T[TLS-style handshake]
+  T --&gt; AEAD[Use symmetric AEAD for application data]</pre></div>
+            <p>Public-key cryptography helps by separating the shareable part from the secret part.</p>
+
+            <h3>4.2 Public/private key pairs</h3>
+            <p>A <strong>key pair</strong> contains a public key and a private key. The private key must remain secret. The public key can be distributed widely. The mathematical relationship lets one key perform an operation that can be checked or paired with the other, depending on the algorithm.</p>
+            <table><thead><tr><th>Term</th><th>Plain meaning</th><th>Security role</th></tr></thead><tbody>
+              <tr><td>Private key</td><td>The secret half of the pair</td><td>Signs data, decrypts in some schemes, or participates in key agreement</td></tr>
+              <tr><td>Public key</td><td>The shareable half of the pair</td><td>Verifies signatures, encrypts in some schemes, or participates in key agreement</td></tr>
+              <tr><td>Key pair</td><td>Mathematically related keys</td><td>Enables asymmetric cryptographic operations</td></tr>
+            </tbody></table>
+
+            <h3>4.3 Encryption, signatures, and key establishment are different</h3>
+            <p>Beginners often say “public key encryption” for every public-key operation. That is imprecise. Modern systems use different primitives for different goals.</p>
+            <table><thead><tr><th>Primitive</th><th>Question answered</th><th>Example use</th></tr></thead><tbody>
+              <tr><td>Public-key encryption</td><td>Can only the private-key holder read this small encrypted value?</td><td>Hybrid encryption designs; RSA-OAEP in some applications</td></tr>
+              <tr><td>Digital signature</td><td>Did the private-key holder sign this exact data?</td><td>Certificates, software updates, signed tokens, documents</td></tr>
+              <tr><td>Key agreement / key encapsulation</td><td>Can two sides establish a shared secret over an untrusted network?</td><td>TLS handshakes, VPNs, secure messaging</td></tr>
+            </tbody></table>
+
+            <h3>4.4 Digital signatures</h3>
+            <p>A <strong>digital signature</strong> is like a tamper-evident seal, but stronger when implemented correctly. The signer uses a private key to sign data. Anyone with the public key can verify that the signature matches the data and public key.</p>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  M[Message] --&gt; H[Hash message]
+  H --&gt; S[Sign hash with private key]
+  SK[(Private key)] --&gt; S
+  S --&gt; Sig[Signature]
+  M --&gt; V[Verifier]
+  Sig --&gt; V
+  PK[(Public key)] --&gt; V
+  V --&gt; R{Valid?}
+  R -- Yes --&gt; OK[Accept signature]
+  R -- No --&gt; NO[Reject]</pre></div>
+            <p>A signature does not automatically mean the signer was honest, authorized, or human. It means the private key corresponding to the public key produced a valid signature over that data. Identity and authorization still require context.</p>
+
+            <h3>4.5 Certificates</h3>
+            <p>A <strong>certificate</strong> is a signed data structure that binds a public key to subject information. For a website, the subject is usually a domain name such as <code>example.edu</code>. The certificate includes fields such as subject, issuer, public key, validity dates, serial number, extensions, and the issuer's signature.</p>
+            <p>An analogy: a student ID card contains a name and photo, but it is trusted because the university issued it. A certificate contains a public key and names, but it is trusted because an issuer signed it and the client trusts the issuer chain.</p>
+
+            <h3>4.6 Certificate authorities and PKI</h3>
+            <p>A <strong>certificate authority</strong> is an entity trusted to issue certificates. A <strong>public key infrastructure</strong>, or PKI, is the larger system of certificate authorities, policies, validation rules, trust stores, issuance workflows, revocation mechanisms, audits, and lifecycle processes.</p>
+            <p>A typical public TLS certificate chain has:</p>
+            <ol>
+              <li><strong>Server certificate:</strong> belongs to the website or service.</li>
+              <li><strong>Intermediate CA certificate:</strong> signs server certificates and limits exposure of root keys.</li>
+              <li><strong>Root CA certificate:</strong> a trust anchor stored in operating systems or browsers.</li>
+            </ol>
+            <div class="diagram"><pre class="mermaid">flowchart TB
+              R[Trusted Root CA
+installed in browser or OS trust store] --&gt; I[Intermediate CA
+validated by root signature]
+              I --&gt; S[Server certificate
+validated by intermediate signature]
+              S --&gt; D[Domain name and server public key]
+              D --&gt; C[Client accepts only if chain, dates, names, constraints, and policies validate]</pre></div>
+
+            <h3>4.7 Certificate validation</h3>
+            <p>Certificate validation is not one check. A client normally checks:</p>
+            <ul>
+              <li>The certificate chain signatures are valid.</li>
+              <li>The chain ends at a trusted root.</li>
+              <li>The current time is within each certificate's validity period.</li>
+              <li>The server name matches the certificate's Subject Alternative Name.</li>
+              <li>The certificate is allowed for server authentication.</li>
+              <li>Basic constraints and key usage restrictions are respected.</li>
+              <li>The algorithms and key sizes satisfy policy.</li>
+              <li>Revocation or status information is considered according to client policy.</li>
+            </ul>
+            <div class="callout danger"><strong>High-risk mistake:</strong> disabling certificate validation does not merely hide a warning. It removes the client's evidence that it is connected to the intended server.</div>
+
+            <h3>4.8 TLS and HTTPS</h3>
+            <p><strong>TLS</strong> protects application communication. <strong>HTTPS</strong> is HTTP over TLS. TLS aims to prevent network attackers from reading or modifying application data and from impersonating the server when validation works.</p>
+            <p>HTTPS does not prove that a website is ethical, truthful, safe to buy from, free from malware, or immune to server-side compromise. It mainly proves that the browser built an encrypted and authenticated connection to the named site according to certificate-validation rules.</p>
+
+            <h3>4.9 TLS 1.3 handshake at a high level</h3>
+            <p>TLS 1.3 simplified the handshake compared with older TLS versions. At a high level:</p>
+            <ol>
+              <li>The client proposes supported cryptographic parameters and sends key-share material.</li>
+              <li>The server chooses parameters, sends its key-share material, and provides a certificate.</li>
+              <li>The client validates the certificate chain and hostname.</li>
+              <li>Both sides derive shared secrets and handshake keys.</li>
+              <li>The server proves possession of the private key using a signature.</li>
+              <li>Both sides switch to symmetric authenticated encryption for application data.</li>
+            </ol>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant S as Server
+  C-&gt;&gt;S: ClientHello + supported versions + key share
+  S-&gt;&gt;C: ServerHello + selected parameters + key share
+  S-&gt;&gt;C: Certificate + CertificateVerify + Finished
+  Note over C: Validate chain, hostname, dates, policy
+  C-&gt;&gt;S: Finished
+  Note over C,S: Both derive symmetric traffic keys
+  C--&gt;&gt;S: Encrypted HTTP request
+  S--&gt;&gt;C: Encrypted HTTP response</pre></div>
+
+            <h3>4.10 Mutual TLS</h3>
+            <p>Ordinary HTTPS usually authenticates the server to the client. <strong>Mutual TLS</strong>, or <strong>mTLS</strong>, also authenticates the client using a client certificate. It is common in service-to-service communication, high-security APIs, device fleets, and some enterprise systems.</p>
+
+            <h3>4.11 Certificate lifecycle</h3>
+            <p>Certificate security is an operational process, not a one-time install. Teams must manage issuance, private-key custody, renewal, inventory, monitoring, revocation, emergency replacement, and decommissioning. Certificate expiration can cause outages. Private-key leakage can cause impersonation. Misissuance can create trust risk.</p>
+
+            <h3>4.12 Post-quantum awareness</h3>
+            <p>Large cryptographically relevant quantum computers could threaten RSA and elliptic-curve public-key systems. That does not mean TLS is broken today, but organizations need crypto inventory, crypto agility, and migration planning. Modern research and standards work includes post-quantum key-establishment and signature schemes and hybrid TLS experiments.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>5.1 Public-key communication model</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  Bob[Bob] --&gt; Pub[Bob publishes public key]
+  Pub --&gt; Alice[Alice obtains public key]
+  Alice --&gt; Enc[Encrypt small secret or verify signature]
+  Bob --&gt; Priv[(Bob protects private key)]
+  Priv --&gt; Dec[Decrypt or sign]
+  Enc --&gt; Shared[Shared secret or authenticated data]</pre></div>
+
+            <h3>5.2 Certificate architecture</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TB
+  TrustStore[(Client trust store)] --&gt; Root[Root CA]
+  Root --&gt; Intermediate[Intermediate CA]
+  Intermediate --&gt; ServerCert[Server certificate]
+  ServerCert --&gt; Domain[Subject Alternative Name: www.example.edu]
+  ServerCert --&gt; ServerKey[Server public key]
+  Client[Browser or API client] --&gt; Validate{Validate chain and hostname?}
+  TrustStore --&gt; Validate
+  Domain --&gt; Validate
+  Validate -- Yes --&gt; TLS[Continue TLS handshake]
+  Validate -- No --&gt; Stop[Reject connection]</pre></div>
+
+            <h3>5.3 TLS termination network diagram</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  U[User browser] == HTTPS/TLS ==&gt; LB[Load balancer or CDN]
+  LB == mTLS or private TLS ==&gt; API[Application service]
+  API --&gt; DB[(Database)]
+  LB --&gt; Logs[Certificate and handshake logs]
+  KMS[(KMS / secrets manager)] --&gt; LB
+  IAM[IAM policy] --&gt; KMS</pre></div>
+
+            <h3>5.4 Certificate lifecycle timeline</h3>
+            <div class="diagram"><pre class="mermaid">timeline
+  title Public TLS Certificate Lifecycle
+  Day 0 : Generate private key or request managed key
+        : Prove domain control
+        : CA issues certificate
+  Day 1 : Install certificate and chain
+        : Monitor HTTPS health
+  Before expiry : Renew automatically
+                : Test new chain
+  Emergency : Revoke or replace after key compromise or misissuance
+  End : Remove unused certificate and key material</pre></div>
+
+            <h3>5.5 Validation decision tree</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  A[Received server certificate] --&gt; B{Chain signatures valid?}
+  B -- No --&gt; Reject[Reject]
+  B -- Yes --&gt; C{Trusted root?}
+  C -- No --&gt; Reject
+  C -- Yes --&gt; D{Date valid?}
+  D -- No --&gt; Reject
+  D -- Yes --&gt; E{Hostname matches SAN?}
+  E -- No --&gt; Reject
+  E -- Yes --&gt; F{Usage and policy allowed?}
+  F -- No --&gt; Reject
+  F -- Yes --&gt; Accept[Accept and continue TLS]</pre></div>
+
+            <h3>5.6 State diagram: TLS client trust decision</h3>
+            <div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; StartConnection
+  StartConnection --&gt; ReceiveCertificate
+  ReceiveCertificate --&gt; ValidateChain
+  ValidateChain --&gt; ValidateName
+  ValidateName --&gt; ValidateTime
+  ValidateTime --&gt; ValidatePolicy
+  ValidatePolicy --&gt; Trusted: all checks pass
+  ValidateChain --&gt; Rejected: check fails
+  ValidateName --&gt; Rejected: check fails
+  ValidateTime --&gt; Rejected: check fails
+  ValidatePolicy --&gt; Rejected: check fails
+  Trusted --&gt; EncryptedApplicationData
+  Rejected --&gt; [*]
+  EncryptedApplicationData --&gt; [*]</pre></div>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Public-Key Crypto, PKI, TLS))
+    Key pairs
+      Public key
+      Private key
+      Key custody
+    Operations
+      Signatures
+      Key exchange
+      Hybrid encryption
+    Certificates
+      Subject name
+      Issuer
+      Validity period
+      Extensions
+      Signature
+    PKI
+      Root CA
+      Intermediate CA
+      Trust store
+      Revocation
+      Transparency logs
+    TLS
+      Handshake
+      Certificate validation
+      Symmetric traffic keys
+      HTTPS
+      mTLS
+    Risks
+      MITM
+      Expired certificate
+      Stolen private key
+      Misissuance
+      Validation bypass
+      Weak algorithms
+    Research
+      Post-quantum TLS
+      Revocation privacy
+      Formal verification
+      Certificate automation</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <p>This section gives intuition, not enough detail to design your own cryptographic algorithm. Do not invent crypto from these examples.</p>
+            <h3>7.1 One-way functions</h3>
+            <p>Public-key cryptography relies on mathematical problems that are easy in one direction and hard in the reverse direction without secret information. A beginner analogy is mixing paint: it is easy to mix colors, hard to recover the original exact amounts. The real mathematics is more precise.</p>
+
+            <h3>7.2 Modular arithmetic</h3>
+            <p><strong>Modulo</strong> means remainder after division. For example, <code>17 mod 5 = 2</code> because 17 divided by 5 leaves remainder 2. Modular arithmetic is used in many public-key systems.</p>
+            <p>Example:</p>
+            <ul>
+              <li><code>7 × 8 = 56</code></li>
+              <li><code>56 mod 11 = 1</code></li>
+              <li>So <code>7 × 8 ≡ 1 mod 11</code></li>
+            </ul>
+
+            <h3>7.3 Toy Diffie-Hellman example</h3>
+            <p>Diffie-Hellman-style key agreement lets two parties derive the same shared value while an observer sees only public values. Real systems use much larger groups or elliptic curves. This tiny example is only for learning.</p>
+            <ol>
+              <li>Public values: prime <code>p = 23</code>, generator <code>g = 5</code>.</li>
+              <li>Alice chooses private number <code>a = 6</code>.</li>
+              <li>Bob chooses private number <code>b = 15</code>.</li>
+              <li>Alice sends <code>A = g^a mod p = 5^6 mod 23 = 8</code>.</li>
+              <li>Bob sends <code>B = g^b mod p = 5^15 mod 23 = 19</code>.</li>
+              <li>Alice computes <code>B^a mod p = 19^6 mod 23 = 2</code>.</li>
+              <li>Bob computes <code>A^b mod p = 8^15 mod 23 = 2</code>.</li>
+            </ol>
+            <p>Both get 2. An attacker saw 23, 5, 8, and 19, but not the private exponents. Real security depends on using approved large parameters and safe implementations.</p>
+
+            <h3>7.4 RSA intuition</h3>
+            <p>RSA is based on arithmetic modulo a large number <code>n</code> that is the product of two large primes. Multiplying two large primes is easy for a computer; factoring the product back into the original primes is believed to be hard at sufficient sizes for classical computers. Practical RSA must use secure padding such as OAEP for encryption or PSS for signatures. Raw textbook RSA is unsafe.</p>
+
+            <h3>7.5 Elliptic-curve intuition</h3>
+            <p>Elliptic-curve cryptography uses points on special curves and operations on those points. The useful property is that repeated point addition is easy, but reversing it—the elliptic-curve discrete logarithm problem—is believed to be hard for classical computers at approved sizes. ECC often provides similar classical security with smaller keys than RSA.</p>
+
+            <h3>7.6 Certificate path validation as a graph problem</h3>
+            <p>You can model certificates as directed edges: issuer signs subject. A client tries to find a valid path from the server certificate to a trusted root. A path is accepted only when signatures, dates, constraints, names, and policies all pass.</p>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  S[Server cert] --&gt; I[Intermediate CA]
+  I --&gt; R[Root CA]
+  R --&gt; T[(Trust store)]
+  S -. hostname, dates, usage .-&gt; Checks[Policy checks]
+  I -. constraints .-&gt; Checks
+  R -. trusted anchor .-&gt; Checks
+  Checks --&gt; Decision{Accept?}</pre></div>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>8.1 Linux examples</h3>
+            <pre><code class="language-bash"># Safe local public-key and TLS lab.
+# This creates demo keys and a self-signed certificate on your own computer.
+# It does not scan or test any external host.
+
+mkdir -p lesson-3-4-lab
+cd lesson-3-4-lab
+
+# 1) Generate an elliptic-curve private key for local testing.
+openssl ecparam -name prime256v1 -genkey -noout -out lab-server.key
+chmod 600 lab-server.key
+
+# 2) Create a self-signed certificate for localhost.
+openssl req -new -x509 -key lab-server.key -out lab-server.crt -days 7 \
+  -subj &quot;/CN=localhost&quot; \
+  -addext &quot;subjectAltName=DNS:localhost,IP:127.0.0.1&quot;
+
+# 3) Inspect the certificate fields.
+openssl x509 -in lab-server.crt -noout -subject -issuer -dates -fingerprint -sha256 -text | less
+
+# 4) Start a local TLS test server in one terminal.
+# Stop with Ctrl+C when finished.
+openssl s_server -accept 8443 -cert lab-server.crt -key lab-server.key -www
+
+# 5) In a second terminal, connect to your local server.
+openssl s_client -connect 127.0.0.1:8443 -servername localhost -showcerts</code></pre>
+            <h3>8.2 Windows examples</h3>
+            <pre><code class="language-powershell"># Safe Windows PowerShell local certificate inspection.
+# This uses the Windows certificate store and local commands only.
+
+# Show certificates in the current user&#x27;s personal store.
+Get-ChildItem Cert:\CurrentUser\My | Select-Object Subject, Issuer, NotAfter, Thumbprint
+
+# Create a temporary self-signed certificate for localhost testing.
+$cert = New-SelfSignedCertificate `
+  -DnsName &quot;localhost&quot; `
+  -CertStoreLocation &quot;Cert:\CurrentUser\My&quot; `
+  -NotAfter (Get-Date).AddDays(7)
+
+$cert | Format-List Subject, Issuer, NotBefore, NotAfter, Thumbprint
+
+# Clean-up reminder:
+# Remove-Item &quot;Cert:\CurrentUser\My\$($cert.Thumbprint)&quot;</code></pre>
+            <h3>8.3 Python examples</h3>
+            <pre><code class="language-python"># Safe local signature example.
+# Requires: python -m pip install cryptography
+# Goal: sign a message with a private key and verify it with the public key.
+
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.exceptions import InvalidSignature
+
+# Generate a local teaching key pair.
+private_key = ec.generate_private_key(ec.SECP256R1())
+public_key = private_key.public_key()
+
+message = b&quot;course=ms-cybersecurity;lesson=3.4;status=draft&quot;
+
+# Sign the message digest with the private key.
+signature = private_key.sign(message, ec.ECDSA(hashes.SHA256()))
+print(&quot;Signature length:&quot;, len(signature))
+
+# Verify with the public key. Verification returns None when valid.
+public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+print(&quot;Valid signature&quot;)
+
+# Tampering changes the message and makes verification fail.
+try:
+    public_key.verify(signature, b&quot;course=changed&quot;, ec.ECDSA(hashes.SHA256()))
+except InvalidSignature:
+    print(&quot;Tampered message rejected&quot;)
+
+# Export the public key in PEM format so others can verify signatures.
+pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo,
+)
+print(pem.decode())</code></pre>
+            <h3>8.4 Network examples</h3>
+            <pre><code class="language-bash"># Safe network example: inspect TLS negotiation only for a local lab server.
+# Start the OpenSSL s_server command from the Linux lab first.
+
+openssl s_client -connect 127.0.0.1:8443 -servername localhost -tls1_3
+
+# Look for:
+# - Protocol version
+# - Cipher suite
+# - Certificate subject
+# - Certificate issuer
+# - Verification result</code></pre>
+            <h3>8.5 Web examples</h3>
+            <pre><code class="language-text"># Web security checklist for HTTPS configuration.
+# This is a defensive checklist, not an attack procedure.
+
+1. Redirect HTTP to HTTPS.
+2. Use TLS 1.2 or TLS 1.3; prefer TLS 1.3 where available.
+3. Use certificates from a trusted CA for public sites.
+4. Automate renewal before expiry.
+5. Keep private keys outside the web root.
+6. Disable old protocols and weak cipher suites.
+7. Enable HSTS only after HTTPS is correctly deployed everywhere.
+8. Monitor certificate transparency logs for unexpected certificates.
+9. Never disable certificate validation in backend clients.
+10. Document certificate owner, renewal path, and emergency rotation process.</code></pre>
+            <h3>8.6 Cloud examples</h3>
+            <pre><code class="language-text"># Cloud TLS architecture pattern.
+# Names are generic; use your provider&#x27;s official documentation in real deployments.
+
+User browser
+  -&gt; CDN or load balancer terminates public TLS
+  -&gt; internal service connection uses mTLS or private network policy
+  -&gt; service identity is authorized by IAM
+  -&gt; secrets manager stores private keys or references managed certificates
+  -&gt; logs record certificate changes, TLS errors, and failed handshakes
+
+Security question: where is TLS terminated, who can access the private key,
+and how is certificate renewal audited?</code></pre>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Safe Python signature code</h3>
+            <pre><code class="language-python"># Safe local signature example.
+# Requires: python -m pip install cryptography
+# Goal: sign a message with a private key and verify it with the public key.
+
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.exceptions import InvalidSignature
+
+# Generate a local teaching key pair.
+private_key = ec.generate_private_key(ec.SECP256R1())
+public_key = private_key.public_key()
+
+message = b&quot;course=ms-cybersecurity;lesson=3.4;status=draft&quot;
+
+# Sign the message digest with the private key.
+signature = private_key.sign(message, ec.ECDSA(hashes.SHA256()))
+print(&quot;Signature length:&quot;, len(signature))
+
+# Verify with the public key. Verification returns None when valid.
+public_key.verify(signature, message, ec.ECDSA(hashes.SHA256()))
+print(&quot;Valid signature&quot;)
+
+# Tampering changes the message and makes verification fail.
+try:
+    public_key.verify(signature, b&quot;course=changed&quot;, ec.ECDSA(hashes.SHA256()))
+except InvalidSignature:
+    print(&quot;Tampered message rejected&quot;)
+
+# Export the public key in PEM format so others can verify signatures.
+pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo,
+)
+print(pem.decode())</code></pre>
+            <p><strong>Line-by-line explanation:</strong></p>
+            <ul>
+              <li><code>ec.generate_private_key(...)</code> creates a local teaching key pair.</li>
+              <li><code>public_key()</code> derives the public key from the private key.</li>
+              <li><code>message</code> is harmless data to sign.</li>
+              <li><code>private_key.sign(...)</code> signs the exact bytes of the message using ECDSA with SHA-256.</li>
+              <li><code>public_key.verify(...)</code> checks the signature against the message and public key.</li>
+              <li>The tampering block shows that changing the message invalidates the signature.</li>
+              <li>The PEM export shows a common text format for public keys.</li>
+            </ul>
+            <h3>9.2 Safe TLS client configuration</h3>
+            <pre><code class="language-python"># Safe TLS client configuration pattern in Python.
+# This example shows correct certificate verification settings.
+# It does not connect unless you call create_connection yourself.
+
+import ssl
+
+context = ssl.create_default_context()
+context.minimum_version = ssl.TLSVersion.TLSv1_2
+context.check_hostname = True
+context.verify_mode = ssl.CERT_REQUIRED
+
+# Bad patterns to avoid:
+# context.check_hostname = False
+# context.verify_mode = ssl.CERT_NONE
+# requests.get(&quot;https://example.com&quot;, verify=False)
+
+print(&quot;TLS context requires certificate validation and hostname checking.&quot;)</code></pre>
+            <h3>9.3 Dangerous certificate-validation bypass</h3>
+            <pre><code class="language-python"># Dangerous pattern: do not copy into real software.
+# Problem: certificate validation is disabled, allowing man-in-the-middle attacks.
+
+import requests
+
+response = requests.get(&quot;https://example.com&quot;, verify=False)
+print(response.status_code)
+
+# Correct pattern: use default validation or a trusted CA bundle.
+# response = requests.get(&quot;https://example.com&quot;, timeout=10)</code></pre>
+            <div class="callout danger"><strong>Why this matters:</strong> A backend service that disables certificate validation can leak API tokens, session cookies, private data, or transaction details to a man-in-the-middle attacker.</div>
+            <h3>9.4 Common mistakes</h3>
+            <ul>
+              <li>Using self-signed certificates in public production systems without a trust-distribution plan.</li>
+              <li>Disabling hostname validation to fix a certificate-name mismatch.</li>
+              <li>Storing private keys in Git repositories or container images.</li>
+              <li>Letting certificates expire without monitoring.</li>
+              <li>Using one certificate and private key everywhere, increasing blast radius.</li>
+              <li>Assuming HTTPS means the website is trustworthy in a business sense.</li>
+              <li>Confusing digital signatures with encryption.</li>
+            </ul>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>10.1 Common attacks</h3>
+            <ul>
+              <li><strong>Man-in-the-middle:</strong> attacker positions between client and server and tries to impersonate one side.</li>
+              <li><strong>Certificate misissuance:</strong> a CA incorrectly issues a certificate for a domain.</li>
+              <li><strong>Private-key theft:</strong> attacker steals a server, code-signing, or CA private key.</li>
+              <li><strong>Expired certificate outage:</strong> legitimate service becomes unavailable or untrusted after expiry.</li>
+              <li><strong>Validation bypass:</strong> code disables certificate or hostname checks.</li>
+              <li><strong>Downgrade attack:</strong> attacker tries to force weaker protocol versions or cipher suites.</li>
+              <li><strong>Weak algorithm use:</strong> old hashes, short keys, or deprecated protocols remain enabled.</li>
+              <li><strong>Improper TLS termination:</strong> traffic is protected on the public internet but exposed internally without adequate controls.</li>
+            </ul>
+            <h3>10.2 Common vulnerabilities</h3>
+            <ul>
+              <li>No certificate inventory.</li>
+              <li>No certificate expiry monitoring.</li>
+              <li>Private keys readable by too many users or services.</li>
+              <li>Certificates issued for wrong names.</li>
+              <li>Backend clients using <code>verify=False</code>.</li>
+              <li>Old TLS versions or weak cipher suites enabled for compatibility.</li>
+              <li>Missing incident plan for key compromise.</li>
+            </ul>
+            <h3>10.3 Defensive strategies</h3>
+            <ul>
+              <li>Use modern TLS libraries and default validation.</li>
+              <li>Automate certificate issuance and renewal.</li>
+              <li>Maintain a certificate and key inventory.</li>
+              <li>Restrict private-key access with filesystem permissions, secrets managers, HSMs, or managed certificate services.</li>
+              <li>Monitor Certificate Transparency logs for unexpected public certificates.</li>
+              <li>Disable deprecated protocols and weak cipher suites according to policy.</li>
+              <li>Use mTLS for service-to-service or device authentication where appropriate.</li>
+              <li>Document emergency rotation and revocation processes.</li>
+            </ul>
+            <h3>10.4 Detection methods</h3>
+            <ul>
+              <li>Alert on certificates near expiry.</li>
+              <li>Alert on certificate changes for critical domains.</li>
+              <li>Monitor CT logs for unexpected domains or issuers.</li>
+              <li>Scan internal code for validation-bypass patterns such as <code>verify=False</code> or disabled hostname checks.</li>
+              <li>Log TLS handshake failures and unusual client-certificate failures.</li>
+              <li>Monitor private-key file access where supported.</li>
+            </ul>
+            <h3>10.5 Mitigation and best practices</h3>
+            <ul>
+              <li>Prefer TLS 1.3 where supported and keep TLS libraries patched.</li>
+              <li>Use trusted public CAs for public websites and managed private CAs for internal PKI.</li>
+              <li>Use short-lived certificates with automation instead of long-lived manual certificates.</li>
+              <li>Never commit private keys to source control.</li>
+              <li>Use defense in depth: TLS plus authentication, authorization, input validation, logging, and monitoring.</li>
+              <li>Plan for post-quantum migration by maintaining a crypto inventory.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <table><thead><tr><th>Sector</th><th>How PKI/TLS is used</th><th>Security concern</th></tr></thead><tbody>
+              <tr><td>Banks</td><td>Online banking, API gateways, payment systems, HSM-backed key custody, client certificates for partner access</td><td>Fraud, impersonation, regulatory evidence, high availability</td></tr>
+              <tr><td>Governments</td><td>Citizen portals, inter-agency systems, smart cards, document signing, secure email gateways</td><td>Identity assurance, long-term trust, sensitive data, national policy</td></tr>
+              <tr><td>Cloud providers</td><td>Managed certificates, TLS load balancers, private CA services, mTLS service meshes, KMS integration</td><td>Multi-tenant isolation, automation, certificate inventory, private-key custody</td></tr>
+              <tr><td>Healthcare</td><td>Patient portals, EHR APIs, medical device communication, secure data exchange</td><td>Protected health information, uptime, device lifecycle</td></tr>
+              <tr><td>Defense</td><td>Classified networks, device certificates, mission systems, mutual authentication</td><td>High-assurance identity, key compromise, supply chain, resilience</td></tr>
+              <tr><td>Universities</td><td>Student portals, research systems, eduroam-style identity, internal PKI, lab services</td><td>Decentralized ownership, expired certs, open research networks</td></tr>
+              <tr><td>Large enterprises</td><td>Zero-trust access, VPNs, service-to-service TLS, code signing, device certificates</td><td>Scale, automation, visibility, legacy dependencies</td></tr>
+            </tbody></table>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Research on public-key cryptography and TLS is active because real-world trust systems are large, messy, and constantly changing.</p>
+            <ul>
+              <li><strong>Post-quantum TLS:</strong> designing and deploying key-establishment and signature systems resistant to future quantum attacks.</li>
+              <li><strong>Hybrid key exchange:</strong> combining classical and post-quantum methods during migration.</li>
+              <li><strong>Certificate Transparency:</strong> improving public auditability of certificates and detection of misissuance.</li>
+              <li><strong>Revocation:</strong> making certificate revocation private, reliable, fast, and deployable.</li>
+              <li><strong>Formal verification:</strong> mathematically analyzing protocol designs and implementations to reduce subtle bugs.</li>
+              <li><strong>Implementation security:</strong> preventing side-channel leaks, parsing bugs, memory-safety failures, and unsafe API usage.</li>
+              <li><strong>Identity alternatives:</strong> studying decentralized identifiers, verifiable credentials, DANE, and private PKI models.</li>
+              <li><strong>Certificate lifecycle automation:</strong> reducing outages caused by manual processes and hidden certificate dependencies.</li>
+            </ul>
+            <p>Notable research directions include the original Diffie-Hellman public-key exchange idea, RSA, elliptic-curve cryptography, Certificate Transparency, analyses of TLS certificate validation failures, and modern post-quantum cryptography standardization. Do not reproduce papers; read abstracts, threat models, methodology, and conclusions, then write your own critique.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>13.1 DigiNotar CA compromise</h3>
+            <p><strong>What happened:</strong> Attackers compromised a certificate authority and fraudulent certificates were issued. Some were reportedly used to intercept traffic.</p>
+            <p><strong>Root cause:</strong> CA security and monitoring failures, combined with broad trust placed in public root programs.</p>
+            <p><strong>Impact:</strong> Browser and operating-system vendors distrusted the CA, and the incident became a major example of systemic PKI risk.</p>
+            <p><strong>Lessons learned:</strong> CA compromise can affect many users; transparency, monitoring, segmentation, auditing, and incident response matter.</p>
+
+            <h3>13.2 Heartbleed and private-key exposure risk</h3>
+            <p><strong>What happened:</strong> A memory disclosure vulnerability in OpenSSL allowed attackers to read memory from vulnerable systems.</p>
+            <p><strong>Root cause:</strong> Implementation bug in a widely used TLS library.</p>
+            <p><strong>Impact:</strong> Sensitive memory, potentially including keys and credentials, could be exposed. Many organizations had to patch, rotate keys, and reissue certificates.</p>
+            <p><strong>Lessons learned:</strong> Strong protocols still depend on secure implementations, patching, key rotation, and incident planning.</p>
+
+            <h3>13.3 Certificate expiration outages</h3>
+            <p><strong>What happened:</strong> Organizations have repeatedly suffered outages when certificates expired unexpectedly in public services, internal APIs, or device chains.</p>
+            <p><strong>Root cause:</strong> poor inventory, ownership ambiguity, manual renewal, hidden dependencies, and insufficient monitoring.</p>
+            <p><strong>Impact:</strong> service downtime, failed API calls, customer disruption, and emergency operational work.</p>
+            <p><strong>Lessons learned:</strong> certificate management is an availability and resilience issue, not only a cryptography issue.</p>
+
+            <h3>13.4 Backend validation bypass</h3>
+            <p><strong>What happened:</strong> In many real codebases, developers disable TLS validation to work around local testing or misconfigured certificates.</p>
+            <p><strong>Root cause:</strong> confusing errors, missing local development CA, pressure to ship, and lack of secure defaults.</p>
+            <p><strong>Impact:</strong> backend services can leak secrets or trust attacker-controlled endpoints.</p>
+            <p><strong>Lessons learned:</strong> testing environments need proper local trust configuration; production code should fail closed.</p>
+          </section>
+
+          <section id="misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <table><thead><tr><th>Misconception</th><th>Why it is wrong</th></tr></thead><tbody>
+              <tr><td>HTTPS means the website is safe.</td><td>HTTPS protects the connection to a named site; it does not prove the business is honest or the application has no vulnerabilities.</td></tr>
+              <tr><td>A public key proves identity.</td><td>Anyone can generate a key. Identity requires validation, usually through certificates and trust paths.</td></tr>
+              <tr><td>Self-signed certificates are always bad.</td><td>They can be appropriate in controlled labs or private systems with managed trust distribution, but they are not automatically trusted by public clients.</td></tr>
+              <tr><td>Disabling certificate validation is acceptable for production if traffic is encrypted.</td><td>Encryption to an attacker is not secure communication with the intended server.</td></tr>
+              <tr><td>TLS replaces application authentication.</td><td>TLS protects the channel. Applications still need user, device, or service authentication and authorization.</td></tr>
+              <tr><td>Certificates only matter for public websites.</td><td>Internal APIs, service meshes, devices, VPNs, and software update systems also depend on certificates and keys.</td></tr>
+              <tr><td>Public-key encryption should encrypt large files directly.</td><td>Practical systems use hybrid encryption: public-key methods establish or protect a small key, then symmetric AEAD encrypts data.</td></tr>
+              <tr><td>Certificate pinning is always good.</td><td>It can reduce some MITM risk but can also cause outages and renewal failures if not designed carefully.</td></tr>
+            </tbody></table>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Public-key cryptography lets systems authenticate identities, verify signatures, and establish shared secrets across untrusted networks. Certificates bind public keys to names. Certificate authorities and PKI create a trust system around those bindings. TLS uses these mechanisms to authenticate servers and derive symmetric traffic keys, while modern AEAD protects the application data.</p>
+            <p>The most important practical lesson is that algorithms are not enough. Real security depends on correct validation, private-key protection, certificate lifecycle management, monitoring, safe defaults, and migration planning.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody>
+              <tr><td>Asymmetric cryptography</td><td>Cryptography that uses a public/private key pair.</td></tr>
+              <tr><td>Public key</td><td>The shareable key in a key pair.</td></tr>
+              <tr><td>Private key</td><td>The secret key in a key pair.</td></tr>
+              <tr><td>Digital signature</td><td>Cryptographic evidence that data was signed by the holder of a private key.</td></tr>
+              <tr><td>Certificate</td><td>A signed data structure binding a public key to identity information.</td></tr>
+              <tr><td>Certificate authority</td><td>An entity trusted to issue certificates.</td></tr>
+              <tr><td>PKI</td><td>Public key infrastructure: the ecosystem of CAs, policies, certificates, trust stores, revocation, and lifecycle management.</td></tr>
+              <tr><td>Root CA</td><td>A trusted certificate authority used as a trust anchor.</td></tr>
+              <tr><td>Intermediate CA</td><td>A CA certificate signed by a root or another CA, often used to issue end-entity certificates.</td></tr>
+              <tr><td>Trust store</td><td>A set of trusted root certificates used by a client.</td></tr>
+              <tr><td>Subject Alternative Name</td><td>Certificate extension listing names, such as DNS names, for which the certificate is valid.</td></tr>
+              <tr><td>TLS</td><td>Transport Layer Security, a protocol for protecting application communication.</td></tr>
+              <tr><td>HTTPS</td><td>HTTP over TLS.</td></tr>
+              <tr><td>mTLS</td><td>Mutual TLS, where both client and server authenticate using certificates.</td></tr>
+              <tr><td>Certificate Transparency</td><td>Public logging ecosystem for issued certificates.</td></tr>
+              <tr><td>ACME</td><td>A protocol for automating certificate issuance and renewal.</td></tr>
+              <tr><td>Revocation</td><td>Process of marking a certificate untrusted before its normal expiration.</td></tr>
+              <tr><td>Hostname validation</td><td>Checking that the certificate name matches the server name requested.</td></tr>
+              <tr><td>Trust anchor</td><td>A root certificate or key that a client already trusts.</td></tr>
+              <tr><td>Post-quantum cryptography</td><td>Cryptography designed to resist attacks by future quantum computers.</td></tr>
+            </tbody></table>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <div class="quiz-card" data-answer="A">
+              <p><strong>1. What problem does public-key cryptography help solve?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q1" value="A"> A. Sharing a secret key before any communication</label>
+<label class="quiz-option"><input type="radio" name="q1" value="B"> B. Making files smaller</label>
+<label class="quiz-option"><input type="radio" name="q1" value="C"> C. Replacing all passwords automatically</label>
+<label class="quiz-option"><input type="radio" name="q1" value="D"> D. Removing the need for authentication</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Public-key cryptography lets parties use public keys for encryption, signatures, or key establishment without first sharing the same secret key.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>2. Which key should remain secret in a public-key pair?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q2" value="A"> A. The public key</label>
+<label class="quiz-option"><input type="radio" name="q2" value="B"> B. The private key</label>
+<label class="quiz-option"><input type="radio" name="q2" value="C"> C. The certificate serial number</label>
+<label class="quiz-option"><input type="radio" name="q2" value="D"> D. The domain name</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. The private key must be protected. The public key is designed to be shared.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>3. What does a digital signature primarily provide?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q3" value="A"> A. Compression</label>
+<label class="quiz-option"><input type="radio" name="q3" value="B"> B. Integrity, origin authentication, and signer accountability depending on key control</label>
+<label class="quiz-option"><input type="radio" name="q3" value="C"> C. Guaranteed secrecy</label>
+<label class="quiz-option"><input type="radio" name="q3" value="D"> D. Faster DNS</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. A signature lets verifiers check that a private-key holder signed data and that the signed data was not changed.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>4. What is a certificate?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q4" value="A"> A. A public key plus identity information signed by an issuer</label>
+<label class="quiz-option"><input type="radio" name="q4" value="B"> B. A password hash</label>
+<label class="quiz-option"><input type="radio" name="q4" value="C"> C. A network packet</label>
+<label class="quiz-option"><input type="radio" name="q4" value="D"> D. A firewall rule</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. An X.509 certificate binds a public key to subject information and is signed by a certificate authority or issuer.</p>
+            </div>
+<div class="quiz-card" data-answer="B">
+              <p><strong>5. What is a certificate authority?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q5" value="A"> A. A system that compresses HTTPS traffic</label>
+<label class="quiz-option"><input type="radio" name="q5" value="B"> B. An entity trusted to issue certificates</label>
+<label class="quiz-option"><input type="radio" name="q5" value="C"> C. A browser cache</label>
+<label class="quiz-option"><input type="radio" name="q5" value="D"> D. A password generator</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: B. A CA issues certificates and signs them so clients can build trust paths.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>6. What does hostname validation check?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q6" value="A"> A. Whether the certificate name matches the server name requested by the client</label>
+<label class="quiz-option"><input type="radio" name="q6" value="B"> B. Whether the server has enough disk space</label>
+<label class="quiz-option"><input type="radio" name="q6" value="C"> C. Whether the password is long</label>
+<label class="quiz-option"><input type="radio" name="q6" value="D"> D. Whether the network uses UDP</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. A valid certificate for the wrong name should not authenticate the site you meant to visit.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>7. What is TLS used for?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q7" value="A"> A. Protecting application communication against eavesdropping, tampering, and forgery</label>
+<label class="quiz-option"><input type="radio" name="q7" value="B"> B. Formatting source code</label>
+<label class="quiz-option"><input type="radio" name="q7" value="C"> C. Replacing operating systems</label>
+<label class="quiz-option"><input type="radio" name="q7" value="D"> D. Encrypting passwords with SHA-256</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. TLS protects network application communication, including HTTPS.</p>
+            </div>
+<div class="quiz-card" data-answer="C">
+              <p><strong>8. Which version is the modern IETF standard that simplified the TLS handshake?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q8" value="A"> A. TLS 1.0</label>
+<label class="quiz-option"><input type="radio" name="q8" value="B"> B. TLS 1.1</label>
+<label class="quiz-option"><input type="radio" name="q8" value="C"> C. TLS 1.3</label>
+<label class="quiz-option"><input type="radio" name="q8" value="D"> D. SSL 2.0</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: C. TLS 1.3 is specified in RFC 8446 and modernizes the handshake and cipher suite design.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>9. Why is public-key cryptography often combined with symmetric encryption?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q9" value="A"> A. Symmetric encryption is efficient for bulk data</label>
+<label class="quiz-option"><input type="radio" name="q9" value="B"> B. Public-key encryption can never use keys</label>
+<label class="quiz-option"><input type="radio" name="q9" value="C"> C. Certificates cannot contain names</label>
+<label class="quiz-option"><input type="radio" name="q9" value="D"> D. TLS forbids symmetric encryption</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Hybrid designs use public-key methods to authenticate or establish keys and symmetric AEAD for data protection.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>10. What is a root certificate?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q10" value="A"> A. A trust anchor installed in a client trust store</label>
+<label class="quiz-option"><input type="radio" name="q10" value="B"> B. A Linux root password</label>
+<label class="quiz-option"><input type="radio" name="q10" value="C"> C. A packet header</label>
+<label class="quiz-option"><input type="radio" name="q10" value="D"> D. A certificate that never expires</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Root certificates are trust anchors used to validate certificate chains.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>11. What is a certificate chain?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q11" value="A"> A. A sequence from server certificate through intermediates to a trusted root</label>
+<label class="quiz-option"><input type="radio" name="q11" value="B"> B. A list of passwords</label>
+<label class="quiz-option"><input type="radio" name="q11" value="C"> C. A blockchain requirement for all TLS</label>
+<label class="quiz-option"><input type="radio" name="q11" value="D"> D. A Wi-Fi password list</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Clients validate chains by checking signatures, validity periods, names, and constraints.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>12. What is revocation intended to handle?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q12" value="A"> A. Certificates that should no longer be trusted before normal expiry</label>
+<label class="quiz-option"><input type="radio" name="q12" value="B"> B. Files that are too large</label>
+<label class="quiz-option"><input type="radio" name="q12" value="C"> C. DNS records that are slow</label>
+<label class="quiz-option"><input type="radio" name="q12" value="D"> D. Passwords that are too long</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Revocation mechanisms help reject certificates after compromise or misissuance.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>13. What is Certificate Transparency?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q13" value="A"> A. A public logging system for issued certificates</label>
+<label class="quiz-option"><input type="radio" name="q13" value="B"> B. A way to make private keys visible</label>
+<label class="quiz-option"><input type="radio" name="q13" value="C"> C. A password encryption mode</label>
+<label class="quiz-option"><input type="radio" name="q13" value="D"> D. A method to hide all certificates</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. CT helps detect unexpected or misissued public certificates.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>14. What is the main danger of disabling certificate validation?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q14" value="A"> A. The client may trust an attacker-controlled server</label>
+<label class="quiz-option"><input type="radio" name="q14" value="B"> B. The page loads too slowly</label>
+<label class="quiz-option"><input type="radio" name="q14" value="C"> C. The public key becomes shorter</label>
+<label class="quiz-option"><input type="radio" name="q14" value="D"> D. The browser cannot display images</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Without validation, a man-in-the-middle can present an untrusted certificate and intercept traffic.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>15. What does mTLS add compared with ordinary server-authenticated TLS?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q15" value="A"> A. The client also presents a certificate for authentication</label>
+<label class="quiz-option"><input type="radio" name="q15" value="B"> B. It removes encryption</label>
+<label class="quiz-option"><input type="radio" name="q15" value="C"> C. It uses no keys</label>
+<label class="quiz-option"><input type="radio" name="q15" value="D"> D. It works only for printers</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Mutual TLS authenticates both server and client using certificates.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>16. What is a private-key custody problem?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q16" value="A"> A. Deciding who or what can access and use the private key</label>
+<label class="quiz-option"><input type="radio" name="q16" value="B"> B. Choosing a font for a certificate</label>
+<label class="quiz-option"><input type="radio" name="q16" value="C"> C. Compressing log files</label>
+<label class="quiz-option"><input type="radio" name="q16" value="D"> D. Renaming a domain</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Private keys are high-value secrets and require restricted access, auditing, backup, and rotation planning.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>17. Why are self-signed certificates not enough for public websites?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q17" value="A"> A. Browsers do not automatically trust arbitrary self-signed certificates</label>
+<label class="quiz-option"><input type="radio" name="q17" value="B"> B. They cannot contain a public key</label>
+<label class="quiz-option"><input type="radio" name="q17" value="C"> C. They are always malware</label>
+<label class="quiz-option"><input type="radio" name="q17" value="D"> D. They cannot expire</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Public clients need a trust path to a known trust anchor.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>18. What is ACME commonly used for?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q18" value="A"> A. Automating certificate issuance and renewal</label>
+<label class="quiz-option"><input type="radio" name="q18" value="B"> B. Breaking TLS</label>
+<label class="quiz-option"><input type="radio" name="q18" value="C"> C. Encoding images</label>
+<label class="quiz-option"><input type="radio" name="q18" value="D"> D. Writing firewall rules</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. ACME is a protocol used to automate certificate management.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>19. What is a post-quantum concern for public-key cryptography?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q19" value="A"> A. Future quantum computers could weaken widely used public-key algorithms</label>
+<label class="quiz-option"><input type="radio" name="q19" value="B"> B. Symmetric encryption stops working today</label>
+<label class="quiz-option"><input type="radio" name="q19" value="C"> C. Certificates cannot have dates</label>
+<label class="quiz-option"><input type="radio" name="q19" value="D"> D. All TLS traffic is already public</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Post-quantum migration addresses the risk that large quantum computers could break RSA and ECC-style public-key systems.</p>
+            </div>
+<div class="quiz-card" data-answer="A">
+              <p><strong>20. What should an application do when TLS certificate validation fails?</strong></p>
+              <label class="quiz-option"><input type="radio" name="q20" value="A"> A. Reject the connection unless a documented, authorized exception exists</label>
+<label class="quiz-option"><input type="radio" name="q20" value="B"> B. Silently continue</label>
+<label class="quiz-option"><input type="radio" name="q20" value="C"> C. Switch to HTTP</label>
+<label class="quiz-option"><input type="radio" name="q20" value="D"> D. Log success</label>
+              <button class="check-quiz" type="button">Check answer</button>
+              <p class="answer">Answer: A. Validation failure means identity or trust cannot be established.</p>
+            </div>
+            <h3>10 short questions</h3><ol><li>Explain the difference between a public key and a private key.</li><li>Why is a certificate needed if a server already has a public key?</li><li>What does a certificate authority do?</li><li>What is hostname validation and why does it matter?</li><li>Why does TLS use symmetric encryption after the handshake?</li><li>What is the difference between encryption and digital signatures?</li><li>Why is disabling certificate validation dangerous?</li><li>What is a certificate chain?</li><li>What is Certificate Transparency?</li><li>What is one reason organizations automate certificate renewal?</li></ol>
+            <h3>5 long questions</h3><ol><li>Design a TLS deployment plan for a fictional university portal. Include certificate issuance, private-key storage, renewal, monitoring, and emergency rotation.</li><li>Explain the TLS 1.3 handshake at a high level, including where authentication, key establishment, and application-data protection occur.</li><li>Compare digital signatures, MACs, and certificates. Explain what each proves and what each does not prove.</li><li>Evaluate the risk of a developer setting verify=False in a backend service. Include attacker model, impact, detection, and remediation.</li><li>Explain why post-quantum migration is a planning issue even before large cryptographically relevant quantum computers exist.</li></ol>
+            <h3>Scenario-based questions</h3><ol><li><strong>Scenario 1:</strong> A student API client fails because the certificate expired. The developer disables validation to make the demo work. Identify the risk and a safer fix.</li><li><strong>Scenario 2:</strong> A company discovers an unexpected certificate for its domain in a transparency log. What steps should the security team take?</li><li><strong>Scenario 3:</strong> A load balancer terminates TLS, but traffic to backend services is plaintext. What assumptions must be checked before accepting this design?</li><li><strong>Scenario 4:</strong> A private key was accidentally committed to a public Git repository. What immediate and follow-up actions are required?</li><li><strong>Scenario 5:</strong> A mobile app pins one certificate and then fails for all users after certificate renewal. What went wrong and how could the design be improved?</li></ol>
+            <h3>Interview questions</h3><ol><li>Explain TLS to a non-technical manager in two minutes.</li><li>What checks does a browser perform when validating an HTTPS certificate?</li><li>What is the difference between server-authenticated TLS and mutual TLS?</li><li>Why is public-key cryptography slower than symmetric cryptography in many practical systems?</li><li>What is certificate pinning, and what operational risk can it create?</li><li>How would you detect expired or soon-to-expire certificates in an enterprise?</li><li>What is a trust anchor?</li><li>Why should private keys not be stored inside application source code?</li><li>How does Certificate Transparency help defenders?</li><li>What would you review in a TLS configuration assessment?</li></ol>
+            <h3>Critical thinking questions</h3><ol><li>Does HTTPS guarantee that a website is honest? Explain precisely what it does and does not guarantee.</li><li>When is a self-signed certificate reasonable, and when is it a bad idea?</li><li>Is certificate pinning always a good security control? Analyze both benefits and failure modes.</li><li>What organizational process failures can cause cryptographic outages even when algorithms are strong?</li><li>How should a security team balance backward compatibility with removal of old TLS versions?</li></ol>
+            <h3>Research questions</h3><ol><li>What are the deployment barriers for post-quantum TLS in large enterprises?</li><li>How effective is Certificate Transparency monitoring against different classes of CA compromise?</li><li>Can decentralized identity models replace parts of X.509 PKI for IoT systems?</li><li>How can formal verification reduce TLS implementation vulnerabilities?</li><li>What practical certificate-revocation designs provide better privacy, speed, and reliability?</li></ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title: Local PKI and TLS Validation Lab</h3>
+            <p><strong>Safety:</strong> This lab uses only your local machine and harmless demo keys. Do not connect to, scan, intercept, or test third-party systems.</p>
+            <h3>Prerequisites</h3>
+            <ul><li>Linux, macOS, or Windows with OpenSSL or equivalent tools.</li><li>Basic terminal use from Week 0.</li><li>Python 3.10+ recommended for the signature exercise.</li></ul>
+            <h3>Objectives</h3>
+            <ul><li>Create a local private key and self-signed certificate.</li><li>Inspect certificate fields.</li><li>Run a local TLS test server.</li><li>Connect with a local TLS client and observe certificate validation behavior.</li><li>Generate and verify a local digital signature.</li><li>Write a short risk memo about certificate validation bypass.</li></ul>
+            <h3>Steps</h3>
+            <ol>
+              <li>Create a lab folder and generate an EC private key.</li>
+              <li>Create a short-lived self-signed certificate for <code>localhost</code>.</li>
+              <li>Inspect subject, issuer, validity dates, SAN, public key, and SHA-256 fingerprint.</li>
+              <li>Start a local TLS server on <code>127.0.0.1:8443</code>.</li>
+              <li>Connect with <code>openssl s_client</code> and record protocol, cipher suite, certificate subject, and verification result.</li>
+              <li>Run the Python signature example and explain why the tampered message fails verification.</li>
+              <li>Write a one-page memo: what would go wrong if an enterprise backend disabled certificate validation?</li>
+            </ol>
+            <h3>Expected outcomes</h3>
+            <ul><li>You can identify certificate fields and explain their purpose.</li><li>You can explain the difference between self-signed lab trust and public CA trust.</li><li>You can explain why certificate validation failures should not be ignored.</li><li>You can demonstrate signing and verification locally.</li></ul>
+            <h3>Deliverables</h3>
+            <ul><li>Terminal screenshots or copied command output.</li><li>Certificate field notes.</li><li>Signature verification notes.</li><li>One-page risk memo.</li></ul>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li>IETF RFC 8446 — The Transport Layer Security Protocol Version 1.3.</li>
+              <li>IETF RFC 5280 — Internet X.509 Public Key Infrastructure Certificate and CRL Profile.</li>
+              <li>NIST SP 800-52 Rev. 2 — Guidelines for the Selection, Configuration, and Use of TLS Implementations.</li>
+              <li>NIST SP 800-57 — Recommendation for Key Management.</li>
+              <li>CA/Browser Forum Baseline Requirements for publicly trusted TLS server certificates.</li>
+              <li>RFC 8555 — Automatic Certificate Management Environment (ACME).</li>
+              <li>RFC 6962 — Certificate Transparency.</li>
+              <li>OWASP Transport Layer Security Cheat Sheet.</li>
+              <li>Mozilla Server Side TLS guidance.</li>
+              <li>Research topics: post-quantum TLS, certificate transparency monitoring, revocation privacy, formal verification of protocol implementations, PKI governance, and decentralized identity for constrained devices.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="symmetric-encryption-and-authenticated-encryption.html">← Lesson 3.3</a><a class="btn" href="index.html">Week 3 Overview</a><a class="btn btn-primary" href="crypto-misuse-key-management-and-crypto-agility.html">Next: Lesson 3.5 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

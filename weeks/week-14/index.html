@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Week 14: Governance, Risk, Privacy, Law | MS Cybersecurity</title>
+  <meta name="description" content="Week 14 introduces cybersecurity governance, risk management, privacy engineering, legal/regulatory duties, third-party risk, audit evidence, and board-ready reporting.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-14" data-title="Week 14: Governance, Risk, Privacy, Law">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / Week 14</div>
+    <header class="hero"><div class="eyebrow">Week 14 · Governance, Risk, Privacy, Law</div><h1>Governance, Risk, Privacy, Law</h1><p class="lead">Week 14 changes the lens from “Can we secure this system?” to “How does an organization decide, justify, oversee, evidence, and improve security and privacy risk decisions?” The focus is governance discipline: responsibilities, risk appetite, controls, assurance, privacy-by-design, regulatory awareness, third-party accountability, and defensible reporting.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>45–60 minutes for overview; 6–10 hours per full lesson</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–13 recommended</div><div class="meta-item"><strong>Assessment mode</strong>Risk register, policy/control mapping, privacy analysis, reporting matrix, audit evidence plan</div></div></header>
+
+<div class="callout"><strong>Important boundary:</strong> This week is educational and operational. It is not legal advice. Laws, regulatory thresholds, reporting clocks, breach-notification duties, and sector rules depend on jurisdiction, industry, contract language, facts, and current regulator guidance. Treat the course material as a governance learning aid and verify legal obligations with qualified counsel or the responsible compliance function.</div>
+
+<h2>Why Week 14 Exists</h2>
+<p>Technical security work can fail even when the tools are correct. A vulnerability can be known but unfunded. A privacy risk can be ignored because no owner was named. A control can exist but lack evidence. An incident can be handled technically while the organization misses contractual or regulatory reporting duties. Governance is the system that prevents those gaps from becoming unmanaged risk.</p>
+<p>Cybersecurity governance does not replace engineering, SOC operations, incident response, or offensive validation. It connects those practices to business objectives, risk tolerance, legal duties, privacy expectations, accountability, auditability, and continuous improvement.</p>
+
+<h2>Research Basis</h2>
+<p>This overview is grounded in current and widely used governance, risk, privacy, and regulatory references:</p>
+<ul>
+  <li><a href="https://www.nist.gov/cyberframework">NIST Cybersecurity Framework 2.0</a> provides a common language for managing cybersecurity risk and adds Govern as a core function for strategy, policy, oversight, roles, and supply-chain risk management.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/37/r2/final">NIST SP 800-37 Rev. 2</a> describes the Risk Management Framework as a structured process for categorization, control selection, implementation, assessment, authorization, and continuous monitoring.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final">NIST SP 800-53 Rev. 5</a> provides a catalog of security and privacy controls that can be selected, tailored, assessed, and monitored.</li>
+  <li><a href="https://www.nist.gov/privacy-framework">NIST Privacy Framework</a> helps organizations identify, assess, prioritize, and communicate privacy activities as enterprise risk-management outcomes.</li>
+  <li><a href="https://www.cisa.gov/cybersecurity-performance-goals-2-0-cpg-2-0">CISA Cybersecurity Performance Goals 2.0</a> provides voluntary, high-impact baseline practices for critical infrastructure and other organizations.</li>
+  <li><a href="https://commission.europa.eu/law/law-topic/data-protection/legal-framework-eu-data-protection_en">European Commission data-protection guidance</a> and the GDPR illustrate modern personal-data obligations, rights, accountability, and supervisory-authority concepts.</li>
+  <li><a href="https://digital-strategy.ec.europa.eu/en/policies/nis2-directive">EU NIS2 Directive guidance</a> illustrates cybersecurity governance, risk-management, and reporting duties for essential and important entities across critical sectors.</li>
+  <li><a href="https://www.cisa.gov/topics/cyber-threats-and-advisories/information-sharing/cyber-incident-reporting-critical-infrastructure-act-2022-circia">CISA CIRCIA materials</a> illustrate evolving U.S. critical-infrastructure cyber-incident and ransom-payment reporting requirements.</li>
+  <li><a href="https://www.sec.gov/rules-regulations/2023/07/s7-09-22">SEC cybersecurity disclosure rules</a> illustrate governance and material-incident disclosure duties for covered public companies.</li>
+  <li><a href="https://www.eiopa.europa.eu/digital-operational-resilience-act-dora_en">EU Digital Operational Resilience Act guidance</a> illustrates ICT risk-management, resilience, incident reporting, testing, and third-party risk expectations for financial entities.</li>
+</ul>
+
+<h2>Week 14 Learning Objectives</h2>
+<ul>
+  <li>Explain the difference between governance, management, operations, compliance, assurance, and audit.</li>
+  <li>Translate technical findings into risk statements that name asset, threat, weakness, likelihood, impact, owner, treatment, evidence, and residual risk.</li>
+  <li>Map controls to business objectives, threat scenarios, privacy risks, legal duties, and assurance evidence.</li>
+  <li>Distinguish compliance evidence from real control effectiveness.</li>
+  <li>Apply privacy principles such as data minimization, purpose limitation, access control, retention, transparency, and accountability.</li>
+  <li>Recognize when incident reporting, breach notification, securities disclosure, sector regulation, contracts, or cross-border obligations may require escalation.</li>
+  <li>Build board-ready reporting that is accurate, risk-based, time-bound, and honest about uncertainty.</li>
+</ul>
+
+<h2>Week 14 Lesson Map</h2>
+<div class="grid">
+  <section class="mini-card"><h3><a href="cybersecurity-governance-from-first-principles.html">Lesson 14.1 — Cybersecurity Governance from First Principles</a></h3><p>Define governance as accountability, decision rights, risk appetite, policy, oversight, escalation, funding, and evidence—not as a binder of documents.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="risk-management-controls-and-assurance.html">Lesson 14.2 — Risk Management, Controls, and Assurance</a></h3><p>Build risk statements, select and tailor controls, distinguish inherent/current/residual risk, and connect assessment evidence to management decisions.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="privacy-engineering-and-data-protection.html">Lesson 14.3 — Privacy Engineering and Data Protection</a></h3><p>Analyze personal-data processing, privacy harms, data minimization, retention, consent/legal-basis concepts, subject rights, DPIA/PIA thinking, and privacy-by-design.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="cyber-law-regulation-and-incident-reporting.html">Lesson 14.4 — Cyber Law, Regulation, and Incident Reporting</a></h3><p>Study how legal duties, regulator expectations, contractual obligations, materiality, breach notification, and incident reporting shape security decisions.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="third-party-risk-audit-evidence-and-governance-reporting.html">Lesson 14.5 — Third-Party Risk, Audit Evidence, and Governance Reporting</a></h3><p>Connect vendor risk, cloud/shared responsibility, software supply-chain assurance, audit artifacts, evidence quality, executive reporting, risk acceptance, remediation, and continuous monitoring.</p><span class="badge">ready</span></section>
+</div>
+
+<h2>Governance Mental Model</h2>
+<p>Governance is the decision system around security and privacy risk. It answers questions that technical teams cannot answer alone:</p>
+<ul>
+  <li><strong>Who owns the risk?</strong> A system owner, business owner, data owner, or executive risk owner must be accountable.</li>
+  <li><strong>What level of risk is acceptable?</strong> Risk appetite and tolerance guide tradeoffs between cost, speed, resilience, compliance, customer trust, and mission impact.</li>
+  <li><strong>What controls are required?</strong> Policies and control baselines turn risk expectations into measurable requirements.</li>
+  <li><strong>How do we know controls work?</strong> Assurance requires evidence, assessment, testing, monitoring, and independent challenge where appropriate.</li>
+  <li><strong>What happens when controls fail?</strong> Escalation, exceptions, incident response, remediation plans, reporting duties, and recovery governance become part of the decision record.</li>
+</ul>
+
+<h2>Governance Workflow</h2>
+<pre class="mermaid">flowchart TD
+  A[Business objective or regulatory duty] --> B[Risk scenario and affected assets/data]
+  B --> C[Risk owner and data owner identified]
+  C --> D[Control baseline selected and tailored]
+  D --> E[Implementation by engineering, operations, vendors]
+  E --> F[Assessment, monitoring, and evidence collection]
+  F --> G[Risk decision: treat, transfer, accept, avoid]
+  G --> H[Executive reporting and audit trail]
+  H --> I[Continuous improvement after incidents, audits, tests, and changes]
+  I --> B
+</pre>
+
+<h2>Frameworks, Standards, and Laws Do Different Jobs</h2>
+<p>A common mistake is treating every document as a compliance checklist. The useful question is what role each reference plays in a governance system.</p>
+<table>
+<thead><tr><th>Reference type</th><th>Main job</th><th>Example use in a security program</th><th>Failure mode</th></tr></thead>
+<tbody>
+<tr><td>Framework</td><td>Organize outcomes and communication.</td><td>Use CSF functions and categories to describe current and target program outcomes.</td><td>Claiming maturity because a framework was mapped, without evidence of control effectiveness.</td></tr>
+<tr><td>Risk-management process</td><td>Structure risk decisions over a system or organization lifecycle.</td><td>Use RMF-style steps to categorize systems, select controls, assess, authorize, and monitor.</td><td>Treating authorization as a one-time approval instead of continuous risk management.</td></tr>
+<tr><td>Control catalog</td><td>Define selectable safeguards and assessment targets.</td><td>Select access control, audit logging, incident response, contingency, privacy, and supply-chain controls.</td><td>Selecting controls mechanically without tailoring to business context, threat, data sensitivity, or architecture.</td></tr>
+<tr><td>Privacy framework</td><td>Manage privacy risks arising from personal-data processing.</td><td>Map data processing to identify, govern, control, communicate, and protect outcomes.</td><td>Reducing privacy to confidentiality only and ignoring fairness, purpose, transparency, retention, and individual rights.</td></tr>
+<tr><td>Law or regulation</td><td>Impose jurisdictional or sector-specific duties.</td><td>Escalate potential breach notification, material disclosure, resilience, or incident-reporting obligations.</td><td>Assuming one global rule applies everywhere or treating this course as legal advice.</td></tr>
+<tr><td>Contract or customer obligation</td><td>Bind parties through negotiated requirements.</td><td>Track security addenda, data-processing agreements, SLAs, audit rights, notification windows, and subprocessor terms.</td><td>Only checking public law while ignoring stricter contractual obligations.</td></tr>
+</tbody>
+</table>
+
+<h2>Risk Language That Executives Can Use</h2>
+<p>A useful risk statement is not “we have weak security.” It is a structured claim that can be tested, assigned, funded, and revisited:</p>
+<div class="callout"><strong>Pattern:</strong> Because <em>[threat actor or hazard]</em> can exploit <em>[weakness]</em> affecting <em>[asset/process/data]</em>, the organization may experience <em>[business/privacy/legal impact]</em>. Current controls are <em>[control state]</em>; the recommended treatment is <em>[action]</em>; the accountable owner is <em>[role]</em>; residual risk after treatment is expected to be <em>[level/condition]</em>.</div>
+<p>This pattern forces the analyst to separate evidence from uncertainty. It also makes clear whether the next step is technical remediation, management acceptance, contract negotiation, legal review, privacy assessment, risk transfer, or architectural change.</p>
+
+<h2>Privacy Is Not Only Secrecy</h2>
+<p>Security teams often define privacy too narrowly as “protect the data from attackers.” That is necessary but incomplete. Privacy risk can arise from overcollection, unclear purpose, excessive retention, internal misuse, opaque processing, inappropriate sharing, poor consent/notice handling, weak access governance, or inability to honor individual rights. Privacy engineering therefore needs data-flow knowledge, purpose constraints, lifecycle controls, and governance evidence.</p>
+
+<h2>Legal and Regulatory Awareness Map</h2>
+<p>This course cannot determine legal obligations for a real organization. It can teach the questions that trigger escalation:</p>
+<ul>
+  <li><strong>Personal data:</strong> Does the event involve identifiable people, sensitive categories, children, employees, customers, patients, financial data, location data, or cross-border transfers?</li>
+  <li><strong>Materiality and investor impact:</strong> Could a cybersecurity incident be material to investors or require securities disclosure?</li>
+  <li><strong>Critical infrastructure:</strong> Is the organization in a sector subject to mandatory incident reporting or resilience obligations?</li>
+  <li><strong>Financial services:</strong> Are digital operational resilience, third-party technology, incident reporting, or resilience-testing rules applicable?</li>
+  <li><strong>Contracts:</strong> Do customer agreements, cyber-insurance policies, cloud terms, data-processing agreements, or vendor contracts impose shorter notification windows?</li>
+  <li><strong>Law enforcement and regulators:</strong> Is coordination needed before public disclosure, ransom handling, customer notification, or forensic publication?</li>
+</ul>
+
+<h2>Governance Failure Points</h2>
+<ul>
+  <li><strong>Policy theater:</strong> Documents exist, but nobody can show implementation evidence or decision records.</li>
+  <li><strong>Unowned risk:</strong> A technical team is blamed for a business risk it cannot accept, fund, or transfer.</li>
+  <li><strong>Compliance confusion:</strong> Passing an audit is mistaken for being resilient against current threats.</li>
+  <li><strong>Privacy blind spot:</strong> The team protects databases but ignores collection, purpose, retention, sharing, and individual rights.</li>
+  <li><strong>Third-party opacity:</strong> Vendors handle critical systems or data, but contracts, monitoring, exit plans, and audit rights are weak.</li>
+  <li><strong>Late legal escalation:</strong> Legal, privacy, compliance, communications, and executive teams learn about an incident after key reporting clocks or customer obligations may already matter.</li>
+  <li><strong>Metrics without decisions:</strong> Dashboards show activity counts but do not support funding, prioritization, exceptions, or risk treatment.</li>
+</ul>
+
+<h2>Practical Deliverables for Week 14</h2>
+<ul>
+  <li>Governance RACI for security, privacy, legal, IT, engineering, SOC, incident response, vendors, and executives.</li>
+  <li>Risk-register entries with owner, evidence, treatment plan, due date, residual risk, and review cadence.</li>
+  <li>Control mapping across CSF-style outcomes, RMF/control-catalog concepts, and operational evidence.</li>
+  <li>Privacy data-flow worksheet for a fictional system.</li>
+  <li>Regulatory and contractual reporting escalation matrix.</li>
+  <li>Third-party risk review checklist and evidence request list.</li>
+  <li>Board-ready security and privacy risk summary.</li>
+</ul>
+
+<h2>Readiness Checklist</h2>
+<ul>
+  <li>I can explain who has authority to accept a cyber risk.</li>
+  <li>I can distinguish a control from evidence that the control operates effectively.</li>
+  <li>I can write a risk statement that includes asset, threat, weakness, impact, owner, and treatment.</li>
+  <li>I can identify when legal/privacy/compliance escalation is required rather than optional.</li>
+  <li>I can separate legal obligation, contractual obligation, policy requirement, and good-practice recommendation.</li>
+  <li>I can explain why privacy includes collection, use, sharing, retention, transparency, and individual rights—not only confidentiality.</li>
+  <li>I can prepare a concise risk summary for executives without hiding uncertainty.</li>
+</ul>
+
+<h2>Exit Criteria</h2>
+<p>By the end of Week 14, you should be able to convert technical security work into governance artifacts: a risk register, a control and evidence map, a privacy-risk analysis, an incident-reporting escalation matrix, a third-party risk review, and an executive report. You should also know when not to answer alone: legal obligations, regulator communications, customer notification, materiality judgments, and cross-border privacy duties must be escalated to the proper organizational owners.</p>
+
+<h2>Further Reading</h2>
+<ul>
+  <li><a href="https://www.nist.gov/cyberframework">NIST Cybersecurity Framework 2.0.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/37/r2/final">NIST SP 800-37 Rev. 2 — Risk Management Framework.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final">NIST SP 800-53 Rev. 5 — Security and Privacy Controls.</a></li>
+  <li><a href="https://www.nist.gov/privacy-framework">NIST Privacy Framework.</a></li>
+  <li><a href="https://www.cisa.gov/cybersecurity-performance-goals-2-0-cpg-2-0">CISA Cybersecurity Performance Goals 2.0.</a></li>
+  <li><a href="https://commission.europa.eu/law/law-topic/data-protection/legal-framework-eu-data-protection_en">European Commission — Legal framework of EU data protection.</a></li>
+  <li><a href="https://digital-strategy.ec.europa.eu/en/policies/nis2-directive">European Commission — NIS2 Directive.</a></li>
+  <li><a href="https://www.cisa.gov/topics/cyber-threats-and-advisories/information-sharing/cyber-incident-reporting-critical-infrastructure-act-2022-circia">CISA — CIRCIA materials.</a></li>
+  <li><a href="https://www.sec.gov/rules-regulations/2023/07/s7-09-22">SEC — Cybersecurity Risk Management, Strategy, Governance, and Incident Disclosure.</a></li>
+  <li><a href="https://www.eiopa.europa.eu/digital-operational-resilience-act-dora_en">EIOPA — Digital Operational Resilience Act.</a></li>
+  <li><a href="https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act">European Commission — Cyber Resilience Act.</a></li>
+<li><a href="https://csrc.nist.gov/pubs/sp/800/161/r1/upd1/final">NIST SP 800-161 Rev. 1 Update 1 — Cybersecurity Supply Chain Risk Management.</a></li>
+  <li><a href="https://www.nist.gov/publications/nist-cybersecurity-framework-20-quick-start-guide-cybersecurity-supply-chain-risk">NIST SP 1305 — CSF 2.0 Quick-Start Guide for Cybersecurity Supply Chain Risk Management.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/53/a/r5/final">NIST SP 800-53A Rev. 5 — Assessing Security and Privacy Controls.</a></li>
+</ul>
+
+    <div class="prev-next"><a class="btn" href="../week-13/reporting-remediation-retesting-and-purple-team-handoff.html">← Lesson 13.5</a><a class="btn btn-primary" href="cybersecurity-governance-from-first-principles.html">Lesson 14.1 →</a></div>
+    <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+  </div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

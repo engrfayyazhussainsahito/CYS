@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Week 15: Advanced and Emerging Topics | MS Cybersecurity</title>
+  <meta name="description" content="Week 15 surveys advanced and emerging cybersecurity topics: AI/LLM security, post-quantum cryptography, zero trust at scale, OT/IoT/cyber-physical systems, secure by design, and cyber resilience.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-15" data-title="Week 15: Advanced and Emerging Topics">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / Week 15</div>
+    <header class="hero"><div class="eyebrow">Week 15 · Advanced and Emerging Topics</div><h1>Advanced and Emerging Topics</h1><p class="lead">Week 15 does not try to chase every new product, acronym, or headline. It teaches how to evaluate fast-moving security domains without panic, hype, or blind adoption. The focus is AI and LLM security, post-quantum cryptography, zero trust at scale, cyber-physical systems, secure-by-design software, and cyber resilience.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>45–65 minutes for overview; 6–10 hours per full lesson</div><div class="meta-item"><strong>Difficulty level</strong>Advanced MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–14 strongly recommended</div><div class="meta-item"><strong>Assessment mode</strong>Emerging-risk brief, migration plan, architecture critique, resilience roadmap</div></div></header>
+
+<div class="callout"><strong>Important boundary:</strong> This week is about responsible evaluation of advanced cybersecurity topics. It does not provide exploit walkthroughs, model-abuse instructions, offensive automation, unsafe scanning, or unauthorized testing methods. Treat emerging technology claims as hypotheses until verified with evidence, threat modeling, operational testing, and governance review.</div>
+
+<h2>Why Week 15 Exists</h2>
+<p>Security programs fail when they treat emerging topics in one of two bad ways: either every new development becomes an emergency, or every new development is dismissed until it becomes a breach, audit finding, or architectural debt. A mature security professional needs a third path: understand the underlying risk model, separate real engineering changes from marketing language, and convert uncertainty into a controlled roadmap.</p>
+<p>Advanced topics are not isolated from the rest of the course. AI security depends on data protection, software supply chain, application security, logging, and governance. Post-quantum cryptography depends on asset inventory, key management, protocol ownership, and vendor migration. Zero trust depends on identity, devices, data classification, policy enforcement, telemetry, and architecture. OT and IoT security depend on safety, availability, vendor constraints, and physical consequences. Secure-by-design and resilience depend on engineering incentives, architecture, lifecycle accountability, and measurable outcomes.</p>
+
+<h2>Research Basis</h2>
+<p>This overview is grounded in current or authoritative references that are useful for security planning rather than hype:</p>
+<ul>
+  <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework 1.0</a> gives organizations a structured way to govern, map, measure, and manage AI risks.</li>
+  <li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">NIST AI 600-1 Generative AI Profile</a> adapts the AI RMF to generative-AI risks such as information security, data privacy, confabulation, information integrity, and value-chain/component integration.</li>
+  <li><a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">OWASP Top 10 for Large Language Model Applications</a> provides an application-security vocabulary for LLM-specific risks such as prompt injection, insecure output handling, sensitive information disclosure, excessive agency, and supply-chain vulnerabilities.</li>
+  <li><a href="https://csrc.nist.gov/news/2024/postquantum-cryptography-fips-approved">NIST post-quantum cryptography standards announcement</a> identifies FIPS 203, FIPS 204, and FIPS 205 as the first finalized PQC standards for key establishment and digital signatures.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/1800/38/iprd">NIST SP 1800-38</a> supports post-quantum migration planning through cryptographic discovery, inventory, dependencies, and migration readiness.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/207/final">NIST SP 800-207</a> defines zero trust architecture as a shift from static network perimeters toward users, assets, resources, and explicit access decisions.</li>
+  <li><a href="https://www.cisa.gov/zero-trust-maturity-model">CISA Zero Trust Maturity Model 2.0</a> provides maturity guidance across identity, devices, networks/environments, applications/workloads, data, visibility/analytics, automation/orchestration, and governance.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/82/r3/final">NIST SP 800-82 Rev. 3</a> provides guidance for operational technology security where availability, safety, engineering constraints, and physical process impact matter.</li>
+  <li><a href="https://csrc.nist.gov/pubs/ir/8425/final">NIST IR 8425</a> identifies consumer IoT cybersecurity capabilities such as device identification, configuration, data protection, logical access, software updates, and cybersecurity-state awareness.</li>
+  <li><a href="https://www.cisa.gov/securebydesign">CISA Secure by Design</a> emphasizes manufacturer accountability, radical transparency, and ownership of customer security outcomes.</li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/160/v2/r1/final">NIST SP 800-160 Vol. 2 Rev. 1</a> frames cyber resiliency as the ability to anticipate, withstand, recover from, and adapt to adverse cyber conditions.</li>
+</ul>
+
+<h2>Week 15 Learning Objectives</h2>
+<ul>
+  <li>Evaluate emerging-security topics through assets, trust boundaries, data flows, threat actors, business impact, evidence quality, and governance owners.</li>
+  <li>Explain why AI/LLM security is not only model safety; it also includes application security, data governance, identity, supply chain, monitoring, human oversight, and incident response.</li>
+  <li>Describe post-quantum cryptography as a migration and crypto-agility problem, not merely an algorithm swap.</li>
+  <li>Analyze zero trust as an architecture and operating model rather than a single product category.</li>
+  <li>Distinguish IT security assumptions from OT, IoT, and cyber-physical constraints involving safety, availability, real-time operations, vendor lock-in, and physical impact.</li>
+  <li>Connect secure-by-design principles to procurement, engineering incentives, defect reduction, transparency, update mechanisms, and customer security outcomes.</li>
+  <li>Build a future-ready roadmap that separates immediate actions, inventory gaps, experiments, governance decisions, and long-term architectural change.</li>
+</ul>
+
+<h2>Week 15 Lesson Map</h2>
+<div class="grid">
+  <section class="mini-card"><h3><a href="ai-security-llm-risk-and-model-governance.html">Lesson 15.1 — AI Security, LLM Risk, and Model Governance</a></h3><p>Analyze AI systems as software, data pipelines, model components, prompts, integrations, users, policies, vendors, and monitoring loops. Focus on secure AI adoption, LLM application risk, model/data supply chain, human oversight, and incident response.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="post-quantum-cryptography-and-crypto-agility.html">Lesson 15.2 — Post-Quantum Cryptography and Crypto-Agility</a></h3><p>Study PQC migration as discovery, ownership, cryptographic inventory, certificate and signature lifecycle, vendor dependencies, long-lived data risk, hybrid transition, testing, and rollback planning.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="zero-trust-at-scale-sase-and-identity-centric-architecture.html">Lesson 15.3 — Zero Trust at Scale, SASE, and Identity-Centric Architecture</a></h3><p>Move beyond slogans by mapping identity, device posture, policy decision/enforcement points, segmentation, SASE/ZTNA architecture, data protection, telemetry, automation, exceptions, and organizational maturity.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="ot-iot-and-cyber-physical-security.html">Lesson 15.4 — OT, IoT, and Cyber-Physical Security</a></h3><p>Compare enterprise IT assumptions with OT, ICS, IoT, IIoT, medical, building, industrial, and sensor environments where safety, uptime, firmware, physical access, privacy, and vendor support dominate risk decisions.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="secure-by-design-cyber-resilience-and-future-ready-programs.html">Lesson 15.5 — Secure by Design, Cyber Resilience, and Future-Ready Programs</a></h3><p>Convert lessons from the full course into a forward-looking program: secure defaults, SSDF, updateability, transparency, resilience engineering, recovery evidence, procurement pressure, measurable outcomes, threat-informed design, and continuous improvement.</p><span class="badge">ready</span></section>
+</div>
+
+<h2>Emerging Topic Evaluation Model</h2>
+<p>Use the same evaluation pattern for any emerging topic, whether it is AI agents, PQC, edge devices, SASE, confidential computing, identity wallets, autonomous SOC tooling, or a future technology not named in this course.</p>
+<div class="mermaid">
+flowchart TD
+  A[New technology or claim] --> B[Define the asset and business use]
+  B --> C[Map data flows and trust boundaries]
+  C --> D[Identify threat actors and misuse cases]
+  D --> E[Check governance, legal, privacy, and safety constraints]
+  E --> F[Assess current controls and telemetry]
+  F --> G[Design safe pilot or validation plan]
+  G --> H[Decide: reject, monitor, pilot, adopt, or retire]
+  H --> I[Document owner, evidence, residual risk, and review date]
+</div>
+
+<h2>From Hype to Risk Statement</h2>
+<p>Emerging topics become manageable when they are translated into risk statements. Avoid vague language such as “AI is dangerous” or “quantum will break everything.” A useful statement names the system, dependency, data, weakness, threat, impact, control state, owner, and next decision.</p>
+<div class="callout"><strong>Pattern:</strong> Because <em>[emerging capability or environmental change]</em> affects <em>[system/data/process]</em>, existing controls may fail in <em>[specific way]</em>, causing <em>[business/safety/privacy/security impact]</em>. Current evidence is <em>[known/unknown]</em>; the accountable owner is <em>[role]</em>; the next safe action is <em>[inventory, pilot, control update, vendor query, architecture review, or risk acceptance]</em>.</div>
+
+<h2>AI and LLM Security: What Actually Changes</h2>
+<p>AI systems create familiar risks in unfamiliar forms. They still need identity, authorization, secrets handling, secure APIs, logging, data governance, vendor review, monitoring, and incident response. What changes is the risk surface: prompts become inputs, generated output can become executable or trusted content, retrieval systems can leak data, model behavior can be nondeterministic, training and fine-tuning pipelines become supply-chain dependencies, and agentic workflows can take actions across tools.</p>
+<p>Do not reduce AI security to prompt filtering. A serious AI security review asks what data enters the system, what the model is allowed to see, what tools it can call, who approves high-impact actions, how output is validated, how abuse is monitored, how sensitive information is prevented from entering unsafe contexts, and who owns model/vendor risk.</p>
+
+<h2>Post-Quantum Cryptography: Migration Before Panic</h2>
+<p>Post-quantum cryptography is not a one-week patch project. Organizations first need to know where cryptography is used: TLS, VPNs, SSH, code signing, certificates, embedded devices, backups, archives, identity systems, APIs, payment systems, firmware updates, mobile apps, third-party products, and long-lived data protection. Without discovery and ownership, algorithm standards do not become operational security.</p>
+<p>The practical question is not “Are we quantum safe today?” The better question is “Do we have crypto-agility, inventory, vendor plans, test environments, fallback procedures, and a prioritized migration path for data and systems that must remain confidential or verifiable for many years?”</p>
+
+<h2>Zero Trust: Architecture, Not a Sticker</h2>
+<p>Zero trust fails when it is sold as a replacement VPN or a logo on an access product. The core idea is explicit, contextual access to resources based on identity, device state, policy, data sensitivity, telemetry, and continuous evaluation. That requires directory quality, device inventory, policy ownership, application onboarding, data classification, logging, and exception governance.</p>
+<p>A useful zero-trust roadmap starts with a small number of high-value resources and measurable policies. It does not start by trying to re-platform every network at once. The hard parts are usually organizational: app ownership, legacy protocols, unmanaged devices, service accounts, brittle business processes, and unclear data labels.</p>
+
+<h2>OT, IoT, and Cyber-Physical Systems</h2>
+<p>IT security assumptions can be dangerous in cyber-physical environments. Rebooting, patching, scanning, segmenting, or isolating a system can have operational or safety consequences. Many devices have long lifecycles, limited logging, weak update mechanisms, vendor-managed access, proprietary protocols, or regulatory constraints. The security question must include engineering reality: What process is controlled? What happens if it stops? Who is authorized to touch it? What is the safe maintenance window? What manual fallback exists?</p>
+<p>For IoT and embedded systems, security depends heavily on secure defaults, updateability, vulnerability disclosure, identity, configuration, data protection, and lifecycle support. Procurement is a security control: a device with no update path, no vulnerability-reporting process, and no support commitment may create risk before deployment begins.</p>
+
+<h2>Secure by Design and Cyber Resilience</h2>
+<p>Secure-by-design thinking shifts responsibility upstream. Instead of asking customers to compensate for avoidable product weaknesses, manufacturers and engineering organizations should design secure defaults, remove classes of defects, make security settings usable, publish transparent information, and support updates and vulnerability handling.</p>
+<p>Cyber resilience accepts that prevention will never be perfect. The goal is to preserve mission and business outcomes under stress: anticipate attacks, withstand partial compromise, recover safely, and adapt after learning. Resilience is not just backups. It includes segmentation, redundancy, deception, least privilege, graceful degradation, recovery testing, communications, supplier continuity, and decision authority during disruption.</p>
+
+<h2>Advanced Topic Comparison</h2>
+<table>
+<thead><tr><th>Topic</th><th>Core risk question</th><th>Bad approach</th><th>Better approach</th></tr></thead>
+<tbody>
+<tr><td>AI and LLM security</td><td>What data, tools, actions, decisions, and humans are connected to the model?</td><td>Buying an AI gateway and assuming the risk is solved.</td><td>Map the AI system, govern data, constrain actions, validate outputs, monitor abuse, and assign owners.</td></tr>
+<tr><td>Post-quantum cryptography</td><td>Where do public-key cryptography and long-lived confidentiality/signature requirements exist?</td><td>Waiting for vendors or swapping algorithms without inventory.</td><td>Build cryptographic inventory, crypto-agility, dependency maps, pilot plans, and prioritized migration paths.</td></tr>
+<tr><td>Zero trust</td><td>Can access to resources be evaluated explicitly using identity, device, context, data, and policy?</td><td>Treating zero trust as a product or VPN replacement.</td><td>Start with critical apps, strong identity, device posture, policy enforcement, telemetry, and governance.</td></tr>
+<tr><td>OT/IoT/cyber-physical</td><td>What physical, safety, availability, and lifecycle consequences exist?</td><td>Applying IT scanning/patching assumptions directly to operational systems.</td><td>Coordinate with engineering, define safe windows, segment carefully, monitor passively where needed, and document fallback.</td></tr>
+<tr><td>Secure by design and resilience</td><td>Can the system reduce defect classes and continue mission under adverse conditions?</td><td>Adding controls after release and blaming users for unsafe defaults.</td><td>Build secure defaults, update paths, transparency, testing, redundancy, recovery validation, and ownership into lifecycle processes.</td></tr>
+</tbody>
+</table>
+
+<h2>Failure Points in Emerging Security Programs</h2>
+<ul>
+  <li><strong>Vendor-led strategy:</strong> The roadmap mirrors a product pitch instead of the organization’s assets, risks, and architecture.</li>
+  <li><strong>No inventory:</strong> Teams attempt AI, PQC, zero trust, or IoT governance without knowing systems, data, owners, protocols, dependencies, or vendors.</li>
+  <li><strong>Proof-of-concept drift:</strong> Experiments quietly become production without risk review, monitoring, rollback, or support ownership.</li>
+  <li><strong>Control mismatch:</strong> Existing controls are assumed to apply to new workflows even when data flows, autonomy, or trust boundaries changed.</li>
+  <li><strong>Hype metrics:</strong> Reporting tracks adoption volume instead of risk reduction, defect reduction, coverage, resilience, or decision quality.</li>
+  <li><strong>Unsafe validation:</strong> Teams test emerging risks against real systems without authorization, safety constraints, synthetic data, or rollback planning.</li>
+  <li><strong>Governance lag:</strong> Legal, privacy, procurement, architecture, safety, and risk owners are added after design decisions are already locked in.</li>
+</ul>
+
+<h2>Practical Deliverables for Week 15</h2>
+<ul>
+  <li>Emerging-risk evaluation worksheet for one new technology or security architecture.</li>
+  <li>AI/LLM application risk map covering data, prompts, retrieval, tools, output validation, monitoring, and ownership.</li>
+  <li>Post-quantum readiness inventory template covering protocols, certificates, keys, vendors, long-lived data, and migration priority.</li>
+  <li>Zero-trust maturity snapshot for one critical application or business process.</li>
+  <li>OT/IoT cyber-physical safety and availability worksheet.</li>
+  <li>Secure-by-design product or service review checklist.</li>
+  <li>Cyber-resilience improvement roadmap with prevention, detection, response, recovery, adaptation, and governance actions.</li>
+</ul>
+
+<h2>Readiness Checklist</h2>
+<ul>
+  <li>I can evaluate a new security topic without relying on vendor claims alone.</li>
+  <li>I can explain why AI security includes application security, data governance, model governance, monitoring, and human oversight.</li>
+  <li>I can describe why PQC migration begins with cryptographic discovery and crypto-agility.</li>
+  <li>I can identify the difference between zero-trust architecture and a single access product.</li>
+  <li>I can explain why OT/IoT security must account for safety, uptime, firmware, vendor access, and physical effects.</li>
+  <li>I can connect secure-by-design principles to fewer defects, safer defaults, updateability, transparency, and customer security outcomes.</li>
+  <li>I can create a roadmap that separates urgent action, investigation, pilot work, long-term architecture, and risk acceptance.</li>
+</ul>
+
+<h2>Exit Criteria</h2>
+<p>By the end of Week 15, you should be able to assess an emerging cybersecurity topic with discipline: define the asset, map dependencies, identify changed trust assumptions, determine affected controls, select safe validation methods, assign owners, and produce a roadmap. You should also be able to challenge exaggerated claims on both sides: “this changes everything” and “this changes nothing” are both usually incomplete.</p>
+
+<h2>Further Reading</h2>
+<ul>
+  <li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework.</a></li>
+  <li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf">NIST AI 600-1 — Generative AI Profile.</a></li>
+  <li><a href="https://owasp.org/www-project-top-10-for-large-language-model-applications/">OWASP Top 10 for Large Language Model Applications.</a></li>
+  <li><a href="https://www.cisa.gov/ai">CISA Artificial Intelligence resources.</a></li>
+  <li><a href="https://csrc.nist.gov/news/2024/postquantum-cryptography-fips-approved">NIST — Post-Quantum Cryptography FIPS Approved.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/1800/38/iprd">NIST SP 1800-38 — Migration to Post-Quantum Cryptography.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/207/final">NIST SP 800-207 — Zero Trust Architecture.</a></li>
+  <li><a href="https://www.cisa.gov/zero-trust-maturity-model">CISA Zero Trust Maturity Model 2.0.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/82/r3/final">NIST SP 800-82 Rev. 3 — Guide to Operational Technology Security.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/ir/8425/final">NIST IR 8425 — Profile of the IoT Core Baseline for Consumer IoT Products.</a></li>
+  <li><a href="https://www.cisa.gov/securebydesign">CISA Secure by Design.</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/160/v2/r1/final">NIST SP 800-160 Vol. 2 Rev. 1 — Developing Cyber-Resilient Systems.</a></li>
+</ul>
+
+    <div class="prev-next"><a class="btn" href="../week-14/third-party-risk-audit-evidence-and-governance-reporting.html">← Lesson 14.5</a><a class="btn btn-primary" href="ai-security-llm-risk-and-model-governance.html">Lesson 15.1 →</a></div>
+    <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+  </div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

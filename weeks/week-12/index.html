@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Week 12: Incident Response &amp; Forensics | MS Cybersecurity</title>
+  <meta name="description" content="Week 12 introduces incident response and digital forensics: declaration, severity, evidence preservation, containment, recovery, communication, tabletop exercises, and post-incident improvement.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-12" data-title="Week 12: Incident Response &amp; Forensics">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / Week 12</div>
+    <header class="hero"><div class="eyebrow">Week 12 · Incident Response &amp; Forensics</div><h1>Incident Response &amp; Forensics</h1><p class="lead">Week 12 turns security operations findings into disciplined response. Students learn how to declare incidents, preserve evidence, scope impact, coordinate containment, support recovery, and communicate lessons without confusing fast operational response with formal legal forensics.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>45–60 minutes for overview; 6–10 hours per full lesson</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–11 recommended</div><div class="meta-item"><strong>Deliverable</strong>Incident response workflow, evidence checklist, and recovery decision map</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+<div class="content-grid"><article class="lesson-content card article">
+<h2>Overview</h2>
+<p><strong>Incident response</strong> is the coordinated process of managing a cybersecurity event that may harm confidentiality, integrity, availability, safety, legal obligations, business operations, or public trust. <strong>Digital forensics</strong> is the disciplined handling and analysis of digital evidence so conclusions can be traced back to preserved facts rather than guesses.</p>
+<p>Week 11 focused on detection, triage, investigation, and SOC improvement. Week 12 begins when an event needs formal response: ownership, severity, communications, containment, evidence preservation, recovery, and learning. The important shift is accountability. An analyst can explore an alert alone; an incident requires roles, authority, documentation, legal awareness, business context, and controlled action.</p>
+<p>The content in this week is defensive and educational. It uses fictional data and local analysis only. It does not teach unauthorized access, evasion, destructive activity, or real-world exploitation. The goal is to help students understand how defenders preserve evidence, reduce harm, restore systems, and improve controls.</p>
+
+<h2>Research Basis for This Week</h2>
+<p>This week is grounded in current and widely used defensive guidance rather than a single vendor workflow.</p>
+<ul>
+  <li><strong>NIST SP 800-61 Rev. 3</strong> is the current NIST incident response publication. It was published in April 2025, supersedes Rev. 2, and frames incident response across the NIST Cybersecurity Framework 2.0 risk-management functions.</li>
+  <li><strong>NIST CSF 2.0</strong> organizes cybersecurity outcomes around Govern, Identify, Protect, Detect, Respond, and Recover. Week 12 uses those functions to avoid treating incident response as only a narrow technical cleanup task.</li>
+  <li><strong>CISA Cybersecurity Incident and Vulnerability Response Playbooks</strong> provide standardized response procedure language for identifying, coordinating, remediating, recovering, and tracking mitigations.</li>
+  <li><strong>NIST SP 800-86</strong> remains a useful foundation for integrating computer and network forensic techniques into incident response. It is intentionally IT-oriented and should not be treated as legal advice or a full law-enforcement forensic manual.</li>
+  <li><strong>NIST SP 800-184</strong> supports the recovery side: recovery playbooks, recovery planning, testing, improvement, and resilience after cybersecurity events.</li>
+  <li><strong>NIST SP 800-84</strong> supports the exercise side: designing, conducting, and evaluating test, training, and exercise events so teams are not learning their roles for the first time during a crisis.</li>
+</ul>
+<div class="callout"><strong>Research note:</strong> Older courses often teach incident response as only “preparation, detection and analysis, containment, eradication, and recovery.” That model is still useful as a mental shortcut, but this course uses the newer CSF 2.0 framing so governance, risk ownership, communication, recovery, and continuous improvement are not treated as afterthoughts.</div>
+
+<h2>Week 12 Mental Model</h2>
+<p>A good incident response process repeatedly asks five questions:</p>
+<ol>
+  <li><strong>What is the incident?</strong> State the suspected event, affected assets, business impact, severity, and uncertainty.</li>
+  <li><strong>What evidence supports that view?</strong> Preserve logs, images, snapshots, memory where appropriate, analyst notes, hashes, timestamps, and chain-of-custody records.</li>
+  <li><strong>What decision is required now?</strong> Decide whether to monitor, contain, isolate, revoke access, preserve state, recover, notify, or escalate.</li>
+  <li><strong>What action is authorized and proportionate?</strong> Response actions must reduce harm without destroying evidence, exceeding authority, or causing unnecessary operational damage.</li>
+  <li><strong>What must improve afterward?</strong> Convert root causes and response lessons into control, monitoring, training, architecture, recovery, and governance changes.</li>
+</ol>
+<p>The core tension is speed versus evidence. Respond too slowly and harm spreads. Respond too aggressively and evidence may be destroyed, systems may be unnecessarily disrupted, and the organization may lose the ability to explain what happened.</p>
+
+<h2>What Counts as an Incident?</h2>
+<p>Not every alert is an incident. An event becomes an incident when the organization has enough reason to believe that a cybersecurity condition requires coordinated management. Examples include confirmed account compromise, malware execution, unauthorized data access, destructive activity, significant cloud misconfiguration exposure, compromise of a privileged identity, ransomware indicators, confirmed exploitation, or loss of integrity in critical systems.</p>
+<table>
+<thead><tr><th>Category</th><th>Example</th><th>Why response differs from triage</th></tr></thead>
+<tbody>
+<tr><td>Security event</td><td>Single failed login burst</td><td>May require monitoring or tuning, but not necessarily coordinated response.</td></tr>
+<tr><td>Alert</td><td>EDR flags suspicious PowerShell</td><td>Requires analyst validation and evidence gathering.</td></tr>
+<tr><td>Case</td><td>Suspicious endpoint behavior plus unusual authentication</td><td>Requires timeline, scope, and documented hypothesis testing.</td></tr>
+<tr><td>Incident</td><td>Confirmed compromised account used to access sensitive data</td><td>Requires roles, severity, containment, evidence preservation, communication, and recovery.</td></tr>
+<tr><td>Crisis</td><td>Ransomware affects production operations</td><td>Requires executive coordination, business continuity, legal/privacy input, external communication, and recovery governance.</td></tr>
+</tbody>
+</table>
+
+<h2>Incident Response Lifecycle</h2>
+<p>This lifecycle combines operational reality with the CSF 2.0 view used by modern NIST guidance. Preparation is broader than the response team: identity controls, backups, logging, asset inventory, legal contacts, vendor contacts, and business impact analysis all influence whether response will work.</p>
+<div class="diagram-wrap"><pre class="mermaid">flowchart LR
+  A[Govern: roles, authority, legal, risk appetite] --> B[Identify: assets, owners, critical services]
+  B --> C[Protect: backups, access controls, hardening]
+  C --> D[Detect: alerts, reports, anomaly evidence]
+  D --> E[Declare and classify incident]
+  E --> F[Preserve evidence and scope impact]
+  F --> G[Respond: contain, communicate, coordinate]
+  G --> H[Recover: restore, validate, monitor]
+  H --> I[Improve: lessons, controls, playbooks]
+  I --> A
+  I --> D
+</pre></div>
+<p>The loop matters. A response program that only closes tickets will keep repeating the same failures. A mature program feeds lessons back into architecture, identity governance, detection engineering, backup strategy, tabletop exercises, and executive risk decisions.</p>
+
+<h2>Forensics in an Incident Response Context</h2>
+<p>Forensics is not magic and it is not the same as “checking logs.” In an incident, forensics means using a repeatable method to identify, collect, preserve, examine, analyze, and report evidence. The depth of analysis depends on the goal. An IT responder may need enough evidence to contain a compromised host. A legal matter may require stricter procedures, tool validation, chain-of-custody documentation, and counsel direction.</p>
+<table>
+<thead><tr><th>Forensic activity</th><th>Incident response value</th><th>Common mistake</th></tr></thead>
+<tbody>
+<tr><td>Preservation</td><td>Protects logs, disk state, volatile state, snapshots, and analyst notes from accidental loss.</td><td>Rebooting, wiping, or rebuilding systems before collecting minimum evidence.</td></tr>
+<tr><td>Acquisition</td><td>Creates defensible copies or exports for analysis.</td><td>Analyzing the only copy of evidence or failing to record how evidence was collected.</td></tr>
+<tr><td>Examination</td><td>Extracts relevant artifacts such as processes, files, authentication events, network metadata, cloud audit events, and registry/service changes.</td><td>Collecting everything without a question, causing delay and confusion.</td></tr>
+<tr><td>Analysis</td><td>Connects artifacts into a timeline, scope, root cause, impact statement, and confidence level.</td><td>Confusing correlation with proof or ignoring exculpatory evidence.</td></tr>
+<tr><td>Reporting</td><td>Documents facts, assumptions, uncertainty, actions, decisions, and recommendations.</td><td>Writing conclusions without evidence references or timestamps.</td></tr>
+</tbody>
+</table>
+
+<h2>Evidence Priorities</h2>
+<p>Evidence is fragile. Some evidence disappears quickly, some is overwritten by retention limits, and some is changed by response actions. Week 12 teaches students to think in terms of evidence volatility, business criticality, and legal sensitivity.</p>
+<ul>
+  <li><strong>Volatile evidence:</strong> memory, running processes, active network connections, logged-in users, temporary files, cloud session tokens, and ephemeral container state.</li>
+  <li><strong>System evidence:</strong> disk images, filesystem metadata, registry or configuration state, service definitions, scheduled tasks, installed packages, and persistence mechanisms.</li>
+  <li><strong>Log evidence:</strong> endpoint, identity, network, DNS, firewall, VPN, proxy, application, SaaS, cloud audit, CI/CD, and EDR telemetry.</li>
+  <li><strong>Business evidence:</strong> data sensitivity, affected service owners, customer impact, contractual obligations, recovery priorities, and operational dependencies.</li>
+  <li><strong>Decision evidence:</strong> who approved containment, what was isolated, when recovery began, what was restored, and what validation proved the system was safe enough to return.</li>
+</ul>
+<div class="callout warning"><strong>Important:</strong> In a real organization, evidence handling should follow internal policy and legal guidance. This course teaches operational concepts, not legal advice.</div>
+
+<h2>Week 12 Lesson Map</h2>
+<div class="lesson-list">
+  <section class="mini-card"><h3>Lesson 12.1 — Incident Response from First Principles</h3><p>Define incidents, roles, severity, declaration criteria, communications, authority, and the response lifecycle using CSF 2.0-aligned thinking.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="evidence-preservation-and-digital-forensics-fundamentals.html">Lesson 12.2 — Evidence Preservation and Digital Forensics Fundamentals</a></h3><p>Build a practical evidence-handling model: chain of custody, hashing, write protection concepts, forensic images, logs, screenshots, snapshots, notes, and reporting boundaries.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="host-memory-network-and-cloud-evidence.html">Lesson 12.3 — Host, Memory, Network, and Cloud Evidence</a></h3><p>Compare the evidence value and limitations of endpoint artifacts, memory captures, network metadata, SaaS logs, cloud audit trails, containers, and identity records.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="containment-eradication-and-recovery-runbooks.html">Lesson 12.4 — Containment, Eradication, and Recovery Runbooks</a></h3><p>Practice evidence-aware containment, eradication, recovery validation, decision records, approval paths, and rollback thinking for account compromise, malware, cloud exposure, and ransomware precursor scenarios.</p><span class="badge">ready</span></section>
+  <section class="mini-card"><h3><a href="reporting-lessons-learned-and-tabletop-exercises.html">Lesson 12.5 — Reporting, Lessons Learned, and Tabletop Exercises</a></h3><p>Turn incidents into executive summaries, technical timelines, corrective actions, after-action reports, tabletop scenarios, control improvements, and recovery validation evidence.</p><span class="badge">ready</span></section>
+</div>
+
+<h2>How Week 12 Connects to Earlier Weeks</h2>
+<table>
+<thead><tr><th>Earlier week</th><th>Week 12 use</th></tr></thead>
+<tbody>
+<tr><td>Week 0: Linux, networking, Python, evidence handling</td><td>Use basic command-line, logs, notes, and safe scripts to inspect fictional response data.</td></tr>
+<tr><td>Week 2: OS, identity, access control</td><td>Scope account compromise, privilege abuse, service changes, and authorization failures.</td></tr>
+<tr><td>Week 7: Network security</td><td>Interpret network evidence, segmentation effects, VPN activity, DNS, and firewall logs during response.</td></tr>
+<tr><td>Week 9: Endpoint security and recovery</td><td>Reason about EDR alerts, malware concepts, isolation, patching, ransomware readiness, and image-based recovery.</td></tr>
+<tr><td>Week 10: Cloud and DevSecOps</td><td>Respond to cloud IAM abuse, public exposure, container/runtime issues, pipeline compromise, and audit-log evidence.</td></tr>
+<tr><td>Week 11: SOC operations</td><td>Convert alerts, investigations, hunts, and metrics into formal incident response and improvement work.</td></tr>
+</tbody>
+</table>
+
+<h2>Response Roles</h2>
+<p>Incident response fails when every decision is left to the most technical person in the room. A serious incident usually requires several roles:</p>
+<ul>
+  <li><strong>Incident commander:</strong> coordinates the response, tracks decisions, removes blockers, and maintains operational tempo.</li>
+  <li><strong>Technical lead:</strong> directs investigation, scoping, containment, eradication, and recovery validation.</li>
+  <li><strong>Evidence custodian:</strong> tracks collected artifacts, collection methods, hashes, access, storage, and chain-of-custody notes.</li>
+  <li><strong>Communications lead:</strong> coordinates internal updates, executive summaries, customer-facing language, and external coordination.</li>
+  <li><strong>Legal/privacy advisor:</strong> advises on privilege, notification obligations, regulatory exposure, data sensitivity, and evidence handling.</li>
+  <li><strong>Business owner:</strong> explains service impact, acceptable downtime, recovery priorities, and operational constraints.</li>
+</ul>
+<p>Small organizations may combine roles, but they still need the responsibilities. “We are too small for roles” often means “we will discover authority conflicts during the incident.”</p>
+
+<h2>Severity and Priority</h2>
+<p>Severity should not be based only on technical novelty. A boring compromised payroll account can be more severe than an interesting malware sample on a lab machine. Useful severity combines technical confidence, asset criticality, data sensitivity, blast radius, active harm, persistence, legal or contractual exposure, and recovery difficulty.</p>
+<table>
+<thead><tr><th>Dimension</th><th>Low signal</th><th>High signal</th></tr></thead>
+<tbody>
+<tr><td>Confidence</td><td>Unverified single alert</td><td>Multiple independent evidence sources</td></tr>
+<tr><td>Asset criticality</td><td>Disposable test host</td><td>Production identity, finance, healthcare, safety, or customer data system</td></tr>
+<tr><td>Scope</td><td>One isolated endpoint</td><td>Multiple identities, networks, tenants, or business units</td></tr>
+<tr><td>Activity</td><td>Historical indicator only</td><td>Active exfiltration, encryption, privilege abuse, or lateral movement</td></tr>
+<tr><td>Recovery difficulty</td><td>Clean rebuild with tested backup</td><td>Unknown integrity, untested backups, or destructive activity</td></tr>
+</tbody>
+</table>
+
+<h2>Containment Tradeoffs</h2>
+<p>Containment is not always “pull the plug.” A response team may isolate a host, disable an account, revoke tokens, block a destination, quarantine an email, rotate credentials, suspend a cloud key, snapshot a workload, preserve storage, or monitor quietly while scoping. Each choice has tradeoffs.</p>
+<ul>
+  <li><strong>Fast isolation</strong> can stop harm but may destroy volatile evidence or alert an adversary.</li>
+  <li><strong>Credential revocation</strong> can end unauthorized access but may break production workflows if service accounts are involved.</li>
+  <li><strong>Network blocking</strong> can stop known communications but may miss alternate paths.</li>
+  <li><strong>System rebuild</strong> can restore service but may erase root-cause evidence if preservation did not happen first.</li>
+  <li><strong>Monitoring before containment</strong> may improve scope but can be unsafe if harm is active or regulated data is at risk.</li>
+</ul>
+<div class="callout"><strong>Key idea:</strong> Good containment is authorized, documented, proportionate, reversible where possible, and coordinated with evidence preservation and business impact.</div>
+
+<h2>Recovery Is Not Just “Turn It Back On”</h2>
+<p>Recovery requires validation. Restoring an affected service without checking identity paths, persistence, vulnerable entry points, data integrity, backup health, and monitoring coverage can reintroduce the same incident. Recovery work should define the recovery target, the trusted source of restoration, validation tests, monitoring period, rollback plan, and acceptance criteria.</p>
+<p>Recovery also has a business dimension. Technical teams may prefer a perfect rebuild, while business owners may need a staged restoration. The response process must make those tradeoffs visible and documented.</p>
+
+<h2>Common Failure Points</h2>
+<ul>
+  <li><strong>No declaration threshold:</strong> teams debate whether something is an incident while the event spreads.</li>
+  <li><strong>Unclear authority:</strong> analysts know what should be contained but do not know who can approve the action.</li>
+  <li><strong>Evidence destroyed by cleanup:</strong> hosts are rebooted, rebuilt, or wiped before essential data is preserved.</li>
+  <li><strong>Poor timestamp discipline:</strong> timelines mix local time, UTC, ingestion time, event time, and analyst note time without labeling them.</li>
+  <li><strong>Weak communications:</strong> executives receive vague updates, while technical teams drown them in artifacts.</li>
+  <li><strong>Root cause oversimplification:</strong> “user clicked link” hides missing MFA, weak email controls, poor least privilege, and inadequate monitoring.</li>
+  <li><strong>Recovery without validation:</strong> systems return to service before integrity and persistence checks are done.</li>
+  <li><strong>Lessons learned ignored:</strong> the same incident class returns because corrective actions lack owners and deadlines.</li>
+</ul>
+
+<h2>Practical Deliverables for Week 12</h2>
+<p>By the end of Week 12, students should produce:</p>
+<ul>
+  <li>An incident declaration checklist with severity and escalation criteria.</li>
+  <li>An evidence preservation checklist covering logs, host artifacts, cloud records, screenshots, hashes, and analyst notes.</li>
+  <li>A response role matrix for a small organization and a larger organization.</li>
+  <li>A containment decision tree that includes authorization, evidence impact, business impact, and rollback.</li>
+  <li>A recovery validation checklist with backup, integrity, identity, vulnerability, and monitoring checks.</li>
+  <li>A post-incident report template with executive summary, timeline, scope, root cause, impact, actions, lessons, and owners.</li>
+</ul>
+
+<h2>Safety, Ethics, and Legal Boundaries</h2>
+<p>Incident response and forensics can touch sensitive data, employee activity, customer records, privileged communications, and regulated environments. Students should learn the technical concepts, but real investigations require authorization, scope, privacy safeguards, and legal or management guidance. Do not collect data from systems you do not own or administer. Do not analyze other people’s devices, accounts, logs, messages, or cloud resources without explicit permission.</p>
+
+<h2>Readiness Checklist</h2>
+<ol>
+  <li>You can explain the difference between an alert, a case, an incident, and a crisis.</li>
+  <li>You can identify why evidence preservation may conflict with rapid containment.</li>
+  <li>You can name at least five evidence sources useful in incident response.</li>
+  <li>You can describe why severity must include business impact, not just technical severity.</li>
+  <li>You can explain why recovery requires validation and monitoring.</li>
+  <li>You can write incident notes that separate facts, assumptions, uncertainty, and decisions.</li>
+</ol>
+
+<h2>Source References</h2>
+<ul>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/61/r3/final">NIST SP 800-61 Rev. 3 — Incident Response Recommendations and Considerations for Cybersecurity Risk Management</a></li>
+  <li><a href="https://www.nist.gov/news-events/news/2024/02/nist-releases-version-20-landmark-cybersecurity-framework">NIST Cybersecurity Framework 2.0 release overview</a></li>
+  <li><a href="https://www.cisa.gov/resources-tools/resources/federal-government-cybersecurity-incident-and-vulnerability-response-playbooks">CISA Cybersecurity Incident and Vulnerability Response Playbooks</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/86/final">NIST SP 800-86 — Guide to Integrating Forensic Techniques into Incident Response</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/184/final">NIST SP 800-184 — Guide for Cybersecurity Event Recovery</a></li>
+  <li><a href="https://csrc.nist.gov/pubs/sp/800/84/final">NIST SP 800-84 — Guide to Test, Training, and Exercise Programs for IT Plans and Capabilities</a></li>
+</ul>
+
+<h2>Exit Criteria for Week 12</h2>
+<p>By the end of Week 12, a student should be able to take a fictional incident scenario and produce a defensible response package: incident declaration, severity rationale, evidence checklist, timeline, containment decision, recovery validation plan, communication summary, post-incident report, tabletop exercise plan, and tracked improvement list.</p>
+</article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div>
+    <div class="prev-next"><a class="btn" href="../week-11/metrics-automation-and-soc-maturity.html">← Lesson 11.5</a><a class="btn btn-primary" href="incident-response-from-first-principles.html">Lesson 12.1 →</a></div>
+    </div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

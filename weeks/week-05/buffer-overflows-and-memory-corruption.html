@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 5.3: Buffer Overflows and Memory Corruption | MS Cybersecurity</title>
+  <meta name="description" content="Buffer overflows, out-of-bounds reads and writes, memory corruption, defensive coding, sanitizers, fuzzing, and safe root-cause analysis from first principles.">
+  <meta name="keywords" content="buffer overflow, memory corruption, out-of-bounds write, out-of-bounds read, AddressSanitizer, secure coding, C security, memory safety">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-05-03" data-title="Lesson 5.3: Buffer Overflows and Memory Corruption">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 5</a> / Lesson 5.3</div>
+    <header class="hero"><div class="eyebrow">Week 5 · Memory Safety and Binary Foundations</div><h1>Lesson 5.3: Buffer Overflows and Memory Corruption</h1><p class="lead">This lesson explains buffer overflows and memory corruption from first principles, focusing on safe root-cause analysis, defensive coding, sanitizer evidence, and mitigation rather than real-world exploitation.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>320–450 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Lessons 5.1–5.2 recommended; no exploit background required</div><div class="meta-item"><strong>Practice time</strong>5–8 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="Buffer overflow learning path illustration"><svg viewBox="0 0 860 430" role="img" aria-labelledby="svg-title-53 svg-desc-53"><title id="svg-title-53">Buffer boundary and defense path</title><desc id="svg-desc-53">A visual path from untrusted input through bounds validation to safe handling, with a blocked memory corruption path.</desc><defs><linearGradient id="bufGrad53" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#8f7cff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient><marker id="arrow53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#41d6b3"/></marker><marker id="bad53" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ff5c7a"/></marker></defs><rect x="28" y="34" width="804" height="356" rx="30" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><rect x="72" y="85" width="158" height="66" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><text x="151" y="112" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Untrusted input</text><text x="151" y="132" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">length · bytes · format</text><rect x="332" y="85" width="178" height="66" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><text x="421" y="112" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Bounds check</text><text x="421" y="132" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">capacity before copy</text><rect x="612" y="85" width="178" height="66" rx="18" fill="var(--bg)" stroke="var(--border)" stroke-width="3"/><text x="701" y="112" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Safe handling</text><text x="701" y="132" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">copy · reject · log</text><g stroke="#41d6b3" stroke-width="4" marker-end="url(#arrow53)"><line x1="235" y1="118" x2="327" y2="118"/><line x1="516" y1="118" x2="607" y2="118"/></g><rect x="145" y="235" width="365" height="72" rx="22" fill="url(#bufGrad53)" opacity="0.22"/><text x="328" y="264" text-anchor="middle" font-family="Arial" font-size="18" fill="var(--text)">Buffer capacity: valid indexes only</text><text x="328" y="289" text-anchor="middle" font-family="Arial" font-size="14" fill="var(--muted)">0 through size - 1, plus string terminator rules</text><path d="M 421 154 C 430 195, 560 200, 620 250" fill="none" stroke="#ff5c7a" stroke-width="4" stroke-dasharray="8 8" marker-end="url(#bad53)"/><rect x="620" y="222" width="160" height="72" rx="18" fill="var(--bg)" stroke="#ff5c7a" stroke-width="3"/><text x="700" y="251" text-anchor="middle" font-family="Arial" font-size="16" fill="var(--text)">Missing check</text><text x="700" y="273" text-anchor="middle" font-family="Arial" font-size="13" fill="var(--muted)">corruption / crash</text></svg></div></section>
+    <div class="content-grid"><article class="lesson-content card">
+      <section id="introduction"><h2>1. Introduction</h2>
+<p>A <strong>buffer</strong> is a region of memory used to hold data. A program may use a buffer for a username, a packet, a file chunk, an image header, a log line, or a network message. A <strong>buffer overflow</strong> happens when a program writes more data into a buffer than that buffer can safely hold. <strong>Memory corruption</strong> is the broader result: program memory is changed in a way the program did not intend.</p>
+<p>This lesson teaches buffer overflows and memory corruption from a defensive, root-cause perspective. You will learn how out-of-bounds reads and writes happen, why they can crash programs or expose data, how developers prevent them, and how defenders detect and triage them. The goal is not to weaponize memory bugs. The goal is to understand enough to build safer software and respond professionally to vulnerability reports.</p>
+<h3>Why the topic exists</h3><p>Languages such as C and C++ give programmers direct control over memory. That control enables fast operating systems, databases, browsers, media libraries, embedded systems, and cryptographic libraries. The trade-off is that the language often trusts the programmer to respect buffer boundaries and object lifetimes.</p>
+<h3>Why it matters</h3><ul><li>Memory corruption is a recurring root cause of serious vulnerabilities in browsers, operating systems, media parsers, network services, and embedded devices.</li><li>Even a simple off-by-one error can produce crashes, data exposure, privilege-boundary failures, or denial of service.</li><li>Defenders need to read advisories, sanitizer reports, crash logs, core dumps, and patch notes without confusing root cause, exploitability, and risk.</li></ul>
+<h3>Where it is used</h3><p>This topic appears in secure coding, vulnerability management, compiler hardening, fuzz testing, incident response, malware analysis, patch prioritization, and security research.</p>
+<h3>Who uses it</h3><ul><li><strong>Developers</strong> use it to avoid unsafe APIs and design safer parsers.</li><li><strong>Security engineers</strong> use it to triage crash reports and advisories.</li><li><strong>Vulnerability managers</strong> use it to prioritize memory-corruption CVEs in exposed components.</li><li><strong>Researchers</strong> use it to design better sanitizers, safe languages, memory allocators, and hardware protections.</li></ul>
+<div class="callout warning"><strong>Safety boundary:</strong> this lesson contains only toy local examples for learning root cause and mitigation. Do not test, fuzz, crash, exploit, or probe any real system without explicit written authorization.</div>
+</section><section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Define buffer, boundary, bounds check, out-of-bounds read, out-of-bounds write, buffer overflow, buffer over-read, stack-based overflow, heap-based overflow, off-by-one, integer overflow, null terminator, memory corruption, crash, and exploitability.</li>
+<li>Explain how unsafe copying, indexing, parsing, and length calculations can corrupt memory.</li>
+<li>Distinguish a crash from confirmed exploitability and a vulnerability from organizational risk.</li>
+<li>Identify common root causes in small C examples without creating exploit instructions.</li>
+<li>Use compiler warnings and AddressSanitizer to detect local toy memory errors.</li>
+<li>Explain defensive design patterns: length-aware APIs, bounds checks, safer abstractions, fuzzing, sanitizers, and memory-safe languages.</li>
+<li>Map memory-corruption bugs to common security consequences such as denial of service, information disclosure, and integrity failure.</li>
+<li>Write a professional memory-corruption triage note that includes evidence, root cause, impact, affected component, and remediation.</li>
+</ul></section><section id="prerequisites"><h2>3. Prerequisites</h2>
+<details open><summary>Buffer</summary><p>A buffer is a fixed or dynamically allocated memory area used to hold data. Example: <code>char name[16]</code> reserves space for 16 bytes.</p></details>
+<details open><summary>Array index</summary><p>An array index selects an element by position. If an array has 16 elements, valid indexes are usually <code>0</code> through <code>15</code>. Index <code>16</code> is outside the array.</p></details>
+<details open><summary>Pointer</summary><p>A pointer stores an address. In C, pointer arithmetic can move through memory. This is powerful but dangerous if the program moves past the intended object.</p></details>
+<details open><summary>Stack and heap</summary><p>The stack commonly stores function-local data. The heap commonly stores dynamically allocated data. Both can suffer out-of-bounds access if the program fails to respect object boundaries.</p></details>
+<details open><summary>Null-terminated string</summary><p>A C string ends with a zero byte, written as <code>\\0</code>. A buffer holding the text <code>cat</code> needs four bytes: <code>c</code>, <code>a</code>, <code>t</code>, and <code>\\0</code>.</p></details>
+</section><section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 Boundary</h3><p>A <strong>boundary</strong> is the limit of a valid memory region. If a buffer is 8 bytes long, byte positions 0 through 7 are inside the boundary. Position 8 is outside the boundary.</p>
+<h3>4.2 Bounds check</h3><p>A <strong>bounds check</strong> verifies that an index, length, or pointer range stays inside the intended object. A good check asks: “Will this operation read or write only the memory that belongs to this object?”</p>
+<h3>4.3 Out-of-bounds write</h3><p>An <strong>out-of-bounds write</strong> writes outside the intended memory object. It can corrupt neighboring data, allocator metadata, stack data, or control data. MITRE tracks this weakness family under entries such as CWE-787.</p>
+<h3>4.4 Out-of-bounds read</h3><p>An <strong>out-of-bounds read</strong> reads outside the intended object. It may crash the program or leak sensitive data from nearby memory. Heartbleed is a well-known example of memory over-read risk.</p>
+<h3>4.5 Buffer overflow</h3><p>A <strong>buffer overflow</strong> is commonly a write beyond the buffer’s capacity. The term is sometimes used loosely, so professional reports should say whether the bug is an out-of-bounds write, out-of-bounds read, stack-based overflow, heap-based overflow, or length-calculation error.</p>
+<h3>4.6 Stack-based buffer overflow</h3><p>A <strong>stack-based buffer overflow</strong> happens when a stack-allocated buffer is overwritten. Example root causes include copying too many bytes into a local array or using an unchecked index for local storage.</p>
+<h3>4.7 Heap-based buffer overflow</h3><p>A <strong>heap-based buffer overflow</strong> happens when a heap-allocated buffer is overwritten. The affected memory is managed by the allocator and may be near other heap objects or allocator metadata.</p>
+<h3>4.8 Off-by-one error</h3><p>An <strong>off-by-one</strong> error happens when a loop or length check is one step wrong. Example: allowing <code>i &lt;= size</code> instead of <code>i &lt; size</code> for an array with indexes <code>0</code> through <code>size - 1</code>.</p>
+<h3>4.9 Integer overflow and length calculation</h3><p>An <strong>integer overflow</strong> happens when arithmetic exceeds the range of the integer type. If a program calculates buffer size incorrectly, it may allocate too little memory and then copy more data than fits.</p>
+<h3>4.10 Null terminator mistakes</h3><p>A C string requires a terminating <code>\\0</code>. Forgetting to reserve space for it can produce an off-by-one write or cause string functions to read beyond the buffer while searching for the terminator.</p>
+<h3>4.11 Memory corruption</h3><p><strong>Memory corruption</strong> means program memory no longer matches the program’s intended state. The visible symptom may be a crash, incorrect output, strange logs, or silent data corruption.</p>
+<h3>4.12 Crash vs exploitability</h3><p>A crash proves instability. It does not automatically prove remote code execution. Exploitability depends on many variables: memory layout, affected data, attacker control, mitigations, sandboxing, privilege level, and whether information leaks exist. A defender should avoid both extremes: dismissing memory bugs as “just crashes” and claiming all crashes are exploitable.</p>
+<h3>4.13 Spatial vs temporal memory safety</h3><ul><li><strong>Spatial safety:</strong> memory accesses stay inside the correct object boundaries.</li><li><strong>Temporal safety:</strong> memory is used only while the object is alive.</li></ul><p>Buffer overflows are usually spatial-safety failures. Use-after-free is a temporal-safety failure.</p>
+<h3>4.14 Unsafe APIs</h3><p>Some APIs make it easy to ignore buffer size. Examples include legacy functions that copy until a terminator without knowing destination capacity. Safer APIs still require correct length logic; no function name alone guarantees security.</p>
+<h3>4.15 Parser risk</h3><p>Parsers convert untrusted bytes into structured data. Media files, fonts, compression formats, network packets, and protocol messages are common memory-corruption attack surfaces because they contain nested lengths, counts, offsets, and optional fields.</p>
+<h3>4.16 Defensive controls</h3><table><thead><tr><th>Control</th><th>What it helps with</th><th>Limitation</th></tr></thead><tbody><tr><td>Bounds checks</td><td>Prevents reads/writes beyond object boundaries</td><td>Checks must be complete and correct</td></tr><tr><td>Length-aware APIs</td><td>Reduces accidental unbounded copying</td><td>Wrong size arguments can still be unsafe</td></tr><tr><td>Compiler warnings</td><td>Finds suspicious code early</td><td>Cannot prove all runtime paths safe</td></tr><tr><td>AddressSanitizer</td><td>Detects many out-of-bounds and use-after-free bugs in tests</td><td>Usually not used in production builds because of overhead</td></tr><tr><td>Fuzzing</td><td>Finds unexpected crashes from generated inputs</td><td>Coverage and harness quality matter</td></tr><tr><td>ASLR/NX/canaries</td><td>Reduces exploitation reliability or detects corruption</td><td>Does not remove the underlying bug</td></tr><tr><td>Memory-safe languages</td><td>Eliminates many memory-safety bug classes by design</td><td>Migration and unsafe interop still need care</td></tr></tbody></table>
+</section><section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>Buffer boundary model</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  A[Input data] --&gt; B{Length &lt;= buffer capacity?}
+  B -- yes --&gt; C[Copy or parse safely]
+  B -- no --&gt; D[Reject, truncate safely, or allocate safely]
+  D --&gt; E[Log safe error without secrets]
+  B -. missing check .-&gt; F[Out-of-bounds write]
+  F --&gt; G[Memory corruption / crash / potential security impact]
+</pre></div>
+<h3>Out-of-bounds write illustration</h3><pre><code class="language-text">Buffer of 8 bytes:
+index:  0 1 2 3 4 5 6 7 | 8 9 10
+       +---------------+ | +---------+
+inside | A B C D E F G H | | outside |
+       +---------------+ | +---------+
+
+Writing to index 8 is outside the buffer.
+The program may corrupt another variable, metadata, or unmapped memory.</code></pre>
+<h3>Stack overflow root-cause path</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant User as Local test input
+  participant Parser as Toy parser
+  participant Stack as Stack buffer
+  participant Runtime as Runtime/OS
+  User-&gt;&gt;Parser: supplies longer-than-expected string
+  Parser-&gt;&gt;Stack: copies without complete bounds check
+  Stack--&gt;&gt;Parser: nearby stack memory overwritten
+  Parser-&gt;&gt;Runtime: sanitizer or OS detects invalid access
+  Runtime--&gt;&gt;Parser: crash report / ASan finding
+</pre></div>
+<h3>Memory-corruption triage timeline</h3><div class="diagram"><pre class="mermaid">timeline
+  title Defensive triage lifecycle
+  Crash observed : collect input, logs, binary version
+  Reproduce safely : use isolated local lab
+  Instrument : compiler warnings, sanitizers
+  Root cause : identify bad length or index logic
+  Fix : validate bounds and redesign API
+  Verify : regression test and fuzz harness
+  Release : patch, advisory, monitoring
+</pre></div>
+<h3>Decision tree: how to describe a memory bug</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  Start[Memory error found] --&gt; ReadWrite{Read or write?}
+  ReadWrite --&gt;|Read| OOBR[Out-of-bounds read / over-read]
+  ReadWrite --&gt;|Write| OOBW[Out-of-bounds write / overflow]
+  OOBW --&gt; Region{Where is the object?}
+  Region --&gt; Stack[Stack-based]
+  Region --&gt; Heap[Heap-based]
+  Region --&gt; Global[Global/static]
+  OOBR --&gt; Leak{Sensitive data exposed?}
+  Leak --&gt;|yes| Info[Information disclosure risk]
+  Leak --&gt;|no or unknown| Crash[Crash/undefined behavior risk]
+  Stack --&gt; Cause[Root cause: length/index/copy logic]
+  Heap --&gt; Cause
+  Global --&gt; Cause
+  Cause --&gt; Fix[Fix with bounds validation and safer design]
+</pre></div></section><section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Buffer Overflows and Memory Corruption))
+    Buffer basics
+      capacity
+      index
+      boundary
+      null terminator
+    Bug classes
+      out of bounds write
+      out of bounds read
+      stack overflow
+      heap overflow
+      off by one
+      integer overflow
+    Consequences
+      crash
+      denial of service
+      information disclosure
+      data corruption
+      possible code execution
+    Detection
+      warnings
+      sanitizers
+      fuzzing
+      code review
+      crash triage
+    Defense
+      bounds checks
+      length aware APIs
+      safe abstractions
+      memory safe languages
+      ASLR NX canaries
+    Professional response
+      reproduce safely
+      root cause
+      impact
+      patch
+      regression test
+      advisory
+</pre></div></section><section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Valid array indexes</h3><p>If an array has <code>N</code> elements, valid indexes are:</p><p><code>0 ≤ i &lt; N</code></p><p><strong>Worked example:</strong> for <code>char buf[8]</code>, valid indexes are <code>0</code> through <code>7</code>. Index <code>8</code> is invalid.</p>
+<h3>7.2 Copy length check</h3><p>For a destination buffer of capacity <code>C</code> and a source length <code>L</code>, a safe byte copy must satisfy:</p><p><code>L ≤ C</code></p><p>For a C string that needs a null terminator, the text length must satisfy:</p><p><code>text_length + 1 ≤ C</code></p><p><strong>Worked example:</strong> the text <code>student</code> has 7 characters. It needs 8 bytes including <code>\\0</code>. It fits in <code>char name[8]</code> but not in <code>char name[7]</code>.</p>
+<h3>7.3 Off-by-one error</h3><p>A loop over <code>N</code> elements should often use:</p><p><code>for i = 0; i &lt; N; i++</code></p><p>Using <code>i &lt;= N</code> performs <code>N + 1</code> iterations and touches one element too many.</p>
+<h3>7.4 Integer overflow in allocation</h3><p>When allocating <code>count × size</code> bytes, the product must fit in the integer type and memory allocator expectation:</p><p><code>count ≤ MAX / size</code></p><p><strong>Worked example:</strong> if a toy 8-bit unsigned integer can hold only 0 through 255, then <code>20 × 20 = 400</code> wraps in an 8-bit value. Real systems use larger types, but the logic problem is the same.</p>
+<h3>7.5 Risk scoring caution</h3><p>Technical severity is not the same as organizational risk. A memory-corruption bug in a local-only toy tool differs from a memory-corruption bug in an internet-exposed service running with high privilege.</p>
+</section><section id="practical-examples"><h2>8. Practical Examples</h2>
+<h3>Linux examples</h3><pre><code class="language-bash"># Compile a toy program with strong warnings.
+gcc -Wall -Wextra -Wpedantic -O0 toy.c -o toy
+
+# Compile with AddressSanitizer for local testing.
+gcc -fsanitize=address -g -O1 toy.c -o toy_asan
+
+# Run only your local toy program.
+./toy_asan
+
+# Check whether a recent crash was logged on systemd-based Linux.
+journalctl -p err -n 20</code></pre>
+<h3>Windows examples</h3><pre><code class="language-powershell"># PowerShell: view recent application errors from Windows Event Log.
+Get-WinEvent -LogName Application -MaxEvents 20 |
+  Select-Object TimeCreated, ProviderName, Id, LevelDisplayName, Message
+
+# Developer Command Prompt example for MSVC AddressSanitizer builds may use /fsanitize=address
+# depending on compiler version and project configuration.</code></pre>
+<h3>Python examples</h3><p>Python normally checks list indexes and raises an exception instead of silently corrupting memory.</p><pre><code class="language-python">items = ["red", "green", "blue"]
+
+try:
+    print(items[3])  # invalid index; valid indexes are 0, 1, 2
+except IndexError as error:
+    print("Caught safe bounds error:", error)
+
+# Lesson: memory-safe runtimes can turn many boundary mistakes into managed errors.</code></pre>
+<h3>Network example</h3><p>A packet parser might read a length field from a packet and then copy that many bytes into a fixed buffer. If the length field is trusted without checking, the parser may read or write outside the buffer.</p>
+<h3>Web example</h3><p>A web application written in a memory-safe language can still call native image, compression, database, or TLS libraries. A malicious file upload may reach a native parser if the application processes images or documents.</p>
+<h3>Cloud example</h3><p>Cloud teams treat repeated crashes in a container as both reliability and security signals. A crash loop after unusual input may trigger collection of sanitized logs, version details, and input metadata in a controlled incident workflow.</p>
+</section><section id="code-examples"><h2>9. Code Examples</h2>
+<h3>9.1 Unsafe toy example: missing length check</h3><p>This example is intentionally unsafe for local learning. It shows the root cause: copying into a fixed buffer without checking destination capacity.</p><pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void copy_name_bad(const char *input) {
+    char name[8];
+
+    // UNSAFE: strcpy copies until it finds a null terminator.
+    // It does not know the size of the destination buffer.
+    strcpy(name, input);
+
+    printf("Name: %s\n", name);
+}
+
+int main(void) {
+    copy_name_bad("student");     // Fits: 7 letters + null terminator = 8 bytes.
+    copy_name_bad("cyberstudent"); // Too long for name[8]. Local lab only.
+    return 0;
+}
+</code></pre>
+<h4>Line-by-line explanation</h4><ul><li><code>char name[8];</code> creates an 8-byte stack buffer.</li><li><code>strcpy(name, input);</code> copies bytes until <code>\\0</code>, without knowing that <code>name</code> has only 8 bytes.</li><li>The first call fits exactly.</li><li>The second call is too long and can corrupt memory.</li></ul>
+<h3>9.2 Safer toy example: explicit capacity check</h3><pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdbool.h&gt;
+
+bool copy_name_checked(char *dest, size_t dest_capacity, const char *input) {
+    size_t input_length = strlen(input);
+
+    // Need one extra byte for the null terminator.
+    if (input_length + 1 &gt; dest_capacity) {
+        return false;
+    }
+
+    // memcpy is safe here because we already checked the length.
+    memcpy(dest, input, input_length + 1);
+    return true;
+}
+
+int main(void) {
+    char name[8];
+
+    if (copy_name_checked(name, sizeof(name), "student")) {
+        printf("Name: %s\n", name);
+    } else {
+        puts("Input rejected: name is too long.");
+    }
+
+    if (copy_name_checked(name, sizeof(name), "cyberstudent")) {
+        printf("Name: %s\n", name);
+    } else {
+        puts("Input rejected: name is too long.");
+    }
+
+    return 0;
+}
+</code></pre>
+<h4>Why this is better</h4><ul><li>The function receives the destination capacity instead of guessing.</li><li>The code explicitly accounts for the null terminator.</li><li>The function returns failure instead of truncating silently or corrupting memory.</li><li>The copy happens only after validation.</li></ul>
+<h3>9.3 Off-by-one toy example</h3><pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main(void) {
+    int values[3] = {10, 20, 30};
+
+    // BUG: i &lt;= 3 performs four iterations: 0, 1, 2, 3.
+    // The valid indexes are only 0, 1, and 2.
+    for (int i = 0; i &lt;= 3; i++) {
+        printf("values[%d] = %d\n", i, values[i]);
+    }
+
+    return 0;
+}
+</code></pre>
+<h4>Fix</h4><pre><code class="language-c">for (int i = 0; i &lt; 3; i++) {
+    printf("values[%d] = %d\n", i, values[i]);
+}
+</code></pre>
+<h3>9.4 Safe Python parser pattern</h3><pre><code class="language-python">def parse_record(data: bytes) -&gt; bytes:
+    """Parse a toy record: first byte is payload length."""
+    if len(data) &lt; 1:
+        raise ValueError("missing length byte")
+
+    payload_len = data[0]
+    available = len(data) - 1
+
+    if payload_len &gt; available:
+        raise ValueError("declared length exceeds available data")
+
+    return data[1:1 + payload_len]
+
+print(parse_record(bytes([3]) + b"cat"))
+</code></pre>
+<h3>Common mistakes</h3><ul><li>Checking the source length but forgetting the destination capacity.</li><li>Forgetting space for the null terminator.</li><li>Using signed integers for sizes and not checking negative values.</li><li>Assuming truncation is always safe.</li><li>Assuming compiler warnings catch all memory bugs.</li><li>Fixing the crash symptom without fixing the parsing design.</li></ul>
+</section><section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li><strong>Denial of service:</strong> malformed input crashes a service.</li><li><strong>Information disclosure:</strong> an over-read exposes nearby memory.</li><li><strong>Integrity failure:</strong> an out-of-bounds write changes data that should not be changed.</li><li><strong>Control-flow compromise:</strong> in some conditions, memory corruption may influence what code executes. This lesson does not provide exploit construction.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li>Unbounded copy into fixed buffer.</li><li>Incorrect loop condition.</li><li>Wrong allocation size.</li><li>Integer overflow before allocation.</li><li>Missing null terminator.</li><li>Trusting untrusted length fields.</li><li>Assuming input format is honest.</li></ul>
+<h3>Defensive strategies</h3><ul><li>Prefer memory-safe languages for new components where feasible.</li><li>Use safe abstractions instead of raw buffers where possible.</li><li>Validate length, count, and offset fields before use.</li><li>Keep parser code small, tested, and isolated.</li><li>Compile with warnings and treat important warnings as build failures.</li><li>Use sanitizers and fuzzing in CI for high-risk parsers.</li><li>Run exposed services with least privilege and sandboxing.</li></ul>
+<h3>Detection methods</h3><ul><li>Crash telemetry and core-dump analysis.</li><li>AddressSanitizer and UndefinedBehaviorSanitizer in test builds.</li><li>Fuzzing harnesses for file, packet, and protocol parsers.</li><li>Static analysis for unsafe functions and suspicious indexes.</li><li>Runtime monitoring for repeated crashes after unusual input.</li></ul>
+<h3>Mitigation</h3><ul><li>Patch the root cause, not only the crash path.</li><li>Add regression tests for the failing input shape.</li><li>Review adjacent parser paths for similar mistakes.</li><li>Enable compiler and OS mitigations such as stack canaries, ASLR, and NX.</li><li>Reduce blast radius using privilege separation, sandboxing, and process isolation.</li></ul>
+<h3>Best practices</h3><p>For professional reporting, describe the exact bug class, affected component, reachable input path, safe reproduction conditions, likely impact, evidence, fix, and verification. Do not include unnecessary exploit details in broad reports.</p>
+</section><section id="industry-perspective"><h2>11. Industry Perspective</h2><ul>
+<li><strong>Banks:</strong> focus on payment systems, authentication services, transaction integrity, fraud platforms, and third-party libraries.</li>
+<li><strong>Governments:</strong> prioritize patching exposed services, legacy systems, critical services, and public-facing portals.</li>
+<li><strong>Cloud providers:</strong> invest in sandboxing, hardened hypervisors, container isolation, fuzzing, safe-language migration, and crash telemetry.</li>
+<li><strong>Healthcare:</strong> must protect medical devices, imaging systems, patient portals, and legacy software where patching can be operationally difficult.</li>
+<li><strong>Defense:</strong> evaluates memory corruption in embedded systems, firmware, command systems, and long-lived platforms.</li>
+<li><strong>Universities:</strong> teach the concept in systems, secure coding, and software assurance courses while enforcing strict lab boundaries.</li>
+<li><strong>Large enterprises:</strong> use vulnerability scanners, asset inventories, crash telemetry, secure SDLC gates, and vendor risk processes to manage memory-corruption risk.</li>
+</ul></section><section id="research-perspective"><h2>12. Research Perspective</h2>
+<p>Memory corruption remains an active research area because the software ecosystem still contains large C and C++ codebases that cannot be replaced quickly.</p>
+<h3>Current research directions</h3><ul><li><strong>Memory-safe migration:</strong> replacing high-risk components with Rust, Go, Swift, Java, C#, or other safer languages where appropriate.</li><li><strong>Hardware-assisted safety:</strong> memory tagging, bounds enforcement, pointer authentication, and capability architectures such as CHERI.</li><li><strong>Fuzzing at scale:</strong> better harness generation, coverage guidance, corpus minimization, and crash deduplication.</li><li><strong>Static analysis:</strong> finding dangerous length, lifetime, and ownership patterns before runtime.</li><li><strong>Allocator hardening:</strong> making heap corruption easier to detect and harder to abuse.</li><li><strong>Formal methods:</strong> proving critical parsers and low-level components respect memory invariants.</li></ul>
+<h3>Open problems</h3><ul><li>How can organizations migrate legacy systems without breaking compatibility?</li><li>How can tools reduce false positives while still finding deep parser bugs?</li><li>How should teams measure memory-safety risk reduction over time?</li><li>How can safe-language components interoperate with legacy C libraries without reintroducing unsafe behavior?</li></ul>
+<h3>Notable paper directions</h3><p>Students should look for research on AddressSanitizer, AFL-style fuzzing, CHERI capabilities, memory tagging, control-flow integrity, and large-scale vulnerability detection. Read abstracts and methodology first; do not attempt to reproduce offensive exploit details outside authorized labs.</p>
+</section><section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Case Study 1: Heartbleed</h3><p><strong>What happened:</strong> a vulnerable OpenSSL heartbeat implementation allowed memory over-read. Public explanations reported that affected systems could expose sensitive memory.</p><p><strong>Root cause:</strong> a length value was trusted without sufficient validation against actual payload size.</p><p><strong>Impact:</strong> potential exposure of keys, credentials, and user data from vulnerable systems.</p><p><strong>Lessons learned:</strong> validate length fields, test boundary cases, treat parser code as high risk, and rotate secrets when memory disclosure may have exposed them.</p>
+<h3>Case Study 2: SQL Slammer</h3><p><strong>What happened:</strong> SQL Slammer spread rapidly by abusing a buffer overflow in Microsoft SQL Server/MSDE components.</p><p><strong>Root cause:</strong> memory-unsafe network service code and widespread unpatched exposure.</p><p><strong>Impact:</strong> broad internet disruption and denial of service.</p><p><strong>Lessons learned:</strong> patch management, network exposure reduction, UDP service hardening, and asset inventory matter.</p>
+<h3>Case Study 3: Stagefright</h3><p><strong>What happened:</strong> Android media-processing vulnerabilities in native code affected how media messages or files could be parsed.</p><p><strong>Root cause:</strong> memory-safety issues in complex media parsing paths.</p><p><strong>Impact:</strong> risk to mobile devices and increased urgency around mobile patch delivery.</p><p><strong>Lessons learned:</strong> complex parsers need fuzzing, sandboxing, and rapid update channels.</p>
+<h3>Case Study 4: Morris worm fingerd overflow</h3><p><strong>What happened:</strong> the 1988 Morris worm used several propagation techniques, including a buffer-overflow weakness in a network service.</p><p><strong>Root cause:</strong> unsafe handling of network input in a privileged service environment.</p><p><strong>Impact:</strong> widespread disruption across early internet-connected systems.</p><p><strong>Lessons learned:</strong> input validation, least privilege, and cautious network-service design have been security lessons for decades.</p>
+</section><section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ol>
+<li><strong>“Only old software has buffer overflows.”</strong> Incorrect. New native code can still contain memory-safety bugs.</li>
+<li><strong>“A crash always means code execution.”</strong> Incorrect. A crash is evidence of a fault, not proof of exploitability.</li>
+<li><strong>“ASLR fixes buffer overflows.”</strong> Incorrect. ASLR makes some attacks harder; it does not remove the bug.</li>
+<li><strong>“Using strncpy automatically makes code safe.”</strong> Incorrect. Truncation, missing terminators, and wrong size arguments can still cause bugs.</li>
+<li><strong>“Memory-safe languages remove all security bugs.”</strong> Incorrect. They reduce memory-safety bugs but not authorization, logic, crypto, or configuration flaws.</li>
+<li><strong>“Internal parsers are low risk.”</strong> Often wrong. Internal parsers may process files or data that originated outside the trust boundary.</li>
+<li><strong>“The biggest buffer is always safest.”</strong> Incorrect. Correct bounds logic matters more than guessing a large size.</li>
+<li><strong>“Warnings are optional.”</strong> Weak practice. Important compiler warnings are early evidence of risk.</li>
+<li><strong>“If fuzzing finds no crashes, the code is safe.”</strong> Incorrect. Fuzzing increases confidence but cannot prove complete safety.</li>
+<li><strong>“Exploitability should be discussed publicly before a patch exists.”</strong> Usually irresponsible. Disclosure must follow authorization and coordinated handling.</li>
+</ol></section><section id="summary"><h2>15. Summary</h2><p>Buffer overflows and memory corruption happen when programs read or write outside intended memory boundaries or compute lengths incorrectly. These bugs are common in low-level code because C and C++ give programmers direct memory control. The most important defensive skill is root-cause reasoning: identify the object, its capacity, the input-controlled length or index, the missing validation, the observed failure, and the correct fix.</p><p>Modern defenses include safer APIs, compiler warnings, sanitizers, fuzzing, sandboxing, least privilege, ASLR, NX, stack canaries, allocator hardening, and memory-safe languages. None of these remove the need for careful design and testing. Professional handling requires safe reproduction, evidence discipline, clear impact statements, and responsible disclosure.</p></section><section id="glossary"><h2>16. Glossary</h2><div class="glossary-list"><p><strong>Buffer:</strong> A memory region used to hold data.</p><p><strong>Bounds Check:</strong> A validation step that ensures an index, pointer, or length stays inside an intended memory object.</p><p><strong>Buffer Overflow:</strong> A condition where a program writes more data into a buffer than it can hold.</p><p><strong>Buffer Over-read:</strong> A condition where a program reads beyond the intended buffer boundary.</p><p><strong>Out-of-bounds Write:</strong> A write operation outside the intended memory object.</p><p><strong>Out-of-bounds Read:</strong> A read operation outside the intended memory object.</p><p><strong>Stack-based Buffer Overflow:</strong> A buffer overflow involving a stack-allocated buffer.</p><p><strong>Heap-based Buffer Overflow:</strong> A buffer overflow involving a heap-allocated buffer.</p><p><strong>Off-by-one Error:</strong> A boundary mistake where code performs one too many or one too few operations.</p><p><strong>Integer Overflow:</strong> Arithmetic result exceeds the range of the integer type and wraps or otherwise becomes incorrect.</p><p><strong>Null Terminator:</strong> The zero byte used to mark the end of a C string.</p><p><strong>Memory Corruption:</strong> Unintended modification of program memory.</p><p><strong>Exploitability:</strong> The degree to which a vulnerability can be used to achieve a security impact under real conditions.</p><p><strong>Crash Triage:</strong> The process of reproducing, classifying, and analyzing a crash to determine root cause and security impact.</p><p><strong>Sanitizer:</strong> A compiler/runtime instrumentation tool that detects certain bug classes during testing.</p><p><strong>Fuzzing:</strong> Automated testing that generates many inputs to discover crashes or unexpected behavior.</p><p><strong>Stack Canary:</strong> A guard value placed near stack control data to detect some stack corruption.</p><p><strong>ASLR:</strong> Address Space Layout Randomization; randomizes memory locations to reduce predictability.</p><p><strong>NX/DEP:</strong> A protection that marks data memory as non-executable.</p><p><strong>Memory-safe Language:</strong> A language/runtime design that prevents many invalid memory accesses by default.</p></div></section><section id="self-assessment"><h2>17. Self-Assessment</h2>
+<h3>20 MCQs</h3><ol class="quiz-list"><li><p>What is a buffer?</p><ol type="A"><li>A memory region used to hold data</li><li>A password hash</li><li>A network cable</li><li>A CPU manufacturer</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>For an array of 8 bytes, which index is outside the valid range?</p><ol type="A"><li>0</li><li>7</li><li>8</li><li>3</li></ol><details><summary>Answer</summary><p>C</p></details></li><li><p>What is an out-of-bounds write?</p><ol type="A"><li>Writing outside the intended memory object</li><li>Encrypting a buffer</li><li>Reading a log file</li><li>Changing file permissions</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Why do C strings need extra capacity for text?</p><ol type="A"><li>They need space for a null terminator</li><li>They require encryption</li><li>They must be even length</li><li>They always use Unicode</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What does AddressSanitizer help detect?</p><ol type="A"><li>Many memory errors in instrumented test builds</li><li>Weak passwords in databases</li><li>DNS cache poisoning</li><li>Broken certificate chains</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Which is the safest statement about a crash?</p><ol type="A"><li>It proves instability but not automatically exploitability</li><li>It always proves remote code execution</li><li>It is never security relevant</li><li>It means the firewall failed</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is an off-by-one error?</p><ol type="A"><li>A boundary mistake of one step</li><li>A password typo</li><li>A TLS certificate error</li><li>A missing router</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is a heap-based buffer overflow?</p><ol type="A"><li>An overflow involving heap-allocated memory</li><li>A full disk</li><li>A failed login</li><li>A DNS query loop</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is an out-of-bounds read likely to cause?</p><ol type="A"><li>Crash or information disclosure</li><li>Guaranteed patch success</li><li>Password expiration</li><li>Subnet splitting</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Which control removes many memory-safety bug classes by design?</p><ol type="A"><li>Memory-safe language</li><li>Longer variable names</li><li>More comments only</li><li>Bigger monitor</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What does ASLR do?</p><ol type="A"><li>Randomizes memory layout</li><li>Hashes passwords</li><li>Blocks phishing emails</li><li>Compresses files</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What does NX/DEP help prevent?</p><ol type="A"><li>Executing code from data regions</li><li>Running backups</li><li>Opening logs</li><li>Using MFA</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Why are parsers high risk?</p><ol type="A"><li>They process structured input with lengths, offsets, and counts</li><li>They are always encrypted</li><li>They avoid input</li><li>They run only in browsers</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is the best first response to a sanitizer finding?</p><ol type="A"><li>Reproduce safely and identify root cause</li><li>Publish exploit details immediately</li><li>Ignore it if it is local</li><li>Disable the sanitizer</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Which is a root-cause fix?</p><ol type="A"><li>Validate lengths before copying</li><li>Hide crash logs</li><li>Rename the function</li><li>Increase font size</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is a stack canary?</p><ol type="A"><li>A guard value used to detect some stack corruption</li><li>A cloud role</li><li>A DNS record</li><li>A password manager</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>Which statement about strncpy is correct?</p><ol type="A"><li>It can still be misused</li><li>It makes all C code safe</li><li>It encrypts strings</li><li>It prevents all parsing bugs</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What does fuzzing do?</p><ol type="A"><li>Generates inputs to discover crashes and unexpected behavior</li><li>Rotates TLS keys</li><li>Configures VLANs</li><li>Signs releases</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What should professional reports avoid?</p><ol type="A"><li>Unnecessary exploit details in broad distribution</li><li>Root cause details</li><li>Affected version details</li><li>Remediation advice</li></ol><details><summary>Answer</summary><p>A</p></details></li><li><p>What is the safest lab target?</p><ol type="A"><li>A toy local program you own</li><li>A random public server</li><li>A classmate’s laptop</li><li>A production database</li></ol><details><summary>Answer</summary><p>A</p></details></li></ol>
+<h3>10 Short Questions</h3><ol>
+<li>Explain the difference between a buffer overflow and a buffer over-read.</li>
+<li>Why does <code>char name[8]</code> fit <code>student</code> but not <code>students</code> as a C string?</li>
+<li>What is the difference between a crash and exploitability?</li>
+<li>Why are untrusted length fields dangerous?</li>
+<li>What information should be included in a crash-triage note?</li>
+<li>How can integer overflow lead to buffer overflow?</li>
+<li>What is the role of sanitizers in secure development?</li>
+<li>Why should parser code be fuzzed?</li>
+<li>Why does least privilege still matter if ASLR and NX are enabled?</li>
+<li>What makes memory-safe language migration difficult in large organizations?</li></ol>
+<h3>5 Long Questions</h3><ol>
+<li>Compare stack-based and heap-based buffer overflows in terms of memory location, lifetime, common root causes, and defensive controls.</li>
+<li>Design a secure parsing checklist for a file format that contains length fields, offsets, and nested records.</li>
+<li>Explain how compiler warnings, sanitizers, fuzzing, and code review complement each other.</li>
+<li>Discuss how an organization should prioritize a memory-corruption CVE in an internet-facing service.</li>
+<li>Explain why memory-safe languages reduce risk but do not eliminate the need for secure design.</li></ol>
+<h3>Scenario-Based Questions</h3><ol>
+<li>A local test crashes when a filename is 300 characters long. What evidence should you collect before changing code?</li>
+<li>A network parser trusts a packet length field. What checks should be added?</li>
+<li>A sanitizer reports a heap-buffer-overflow in image parsing. What containment and remediation steps are appropriate?</li>
+<li>A vendor says a bug is “only a crash.” What questions would you ask before accepting that risk assessment?</li>
+<li>A C library is used by many cloud services. What release-integrity and regression-testing steps are needed after a fix?</li></ol>
+<h3>Interview Questions</h3><ol><li>Explain buffer overflow to a beginner.</li><li>What is an off-by-one bug?</li><li>How would you prevent out-of-bounds writes in C?</li><li>What does AddressSanitizer do?</li><li>How do ASLR and NX help?</li></ol>
+<h3>Critical Thinking Questions</h3><ol><li>When should a team rewrite code instead of patching one memory bug at a time?</li><li>How can public disclosure help defenders while also increasing risk?</li><li>Why might a low-privilege crash still be security relevant?</li><li>What metrics would show progress in reducing memory-corruption risk?</li><li>How should teams handle crash samples that may contain sensitive data?</li></ol>
+<h3>Research Questions</h3><ol><li>How effective is memory tagging against heap use-after-free?</li><li>Can AI-assisted code review reliably detect length-check bugs?</li><li>How can fuzzing harnesses be generated automatically for legacy parsers?</li><li>What is the adoption path for CHERI-like capability systems?</li><li>How can SBOMs and CBOMs help identify components with memory-safety exposure?</li></ol>
+</section><section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Title</h3><p><strong>Safe Local Buffer Boundary Lab</strong></p>
+<h3>Prerequisites</h3><ul><li>Local Linux VM, macOS terminal, or Windows with WSL.</li><li>GCC or Clang installed.</li><li>No external targets, no network scanning, no exploit payloads.</li></ul>
+<h3>Objectives</h3><ul><li>Observe an intentional local buffer-boundary bug.</li><li>Use AddressSanitizer to identify the failing line.</li><li>Patch the root cause using explicit length checks.</li><li>Write a short defensive triage report.</li></ul>
+<h3>Step 1: Create a lab folder</h3><pre><code class="language-bash">mkdir -p buffer-boundary-lab
+cd buffer-boundary-lab</code></pre>
+<h3>Step 2: Create the intentionally unsafe toy program</h3><pre><code class="language-bash">cat &gt; unsafe_name.c &lt;&lt;'C'
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void save_name(const char *input) {
+    char name[8];
+    strcpy(name, input); // intentionally unsafe for this local lab
+    printf("saved name: %s\n", name);
+}
+
+int main(void) {
+    save_name("student");
+    save_name("cyberstudent");
+    return 0;
+}
+C</code></pre>
+<h3>Step 3: Compile with sanitizer</h3><pre><code class="language-bash">gcc -fsanitize=address -g -O1 -Wall -Wextra -Wpedantic unsafe_name.c -o unsafe_name
+./unsafe_name</code></pre>
+<p>Expected result: the sanitizer should report a stack-buffer-overflow or related memory error for the long input. Your exact output depends on compiler and platform.</p>
+<h3>Step 4: Patch the program</h3><pre><code class="language-bash">cat &gt; safe_name.c &lt;&lt;'C'
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdbool.h&gt;
+
+bool save_name(const char *input) {
+    char name[8];
+    size_t input_length = strlen(input);
+
+    if (input_length + 1 &gt; sizeof(name)) {
+        puts("name rejected: too long");
+        return false;
+    }
+
+    memcpy(name, input, input_length + 1);
+    printf("saved name: %s\n", name);
+    return true;
+}
+
+int main(void) {
+    save_name("student");
+    save_name("cyberstudent");
+    return 0;
+}
+C
+
+gcc -fsanitize=address -g -O1 -Wall -Wextra -Wpedantic safe_name.c -o safe_name
+./safe_name</code></pre>
+<h3>Step 5: Write the report</h3><ul><li>Bug class.</li><li>Affected function.</li><li>Unsafe assumption.</li><li>Sanitizer evidence summary.</li><li>Root cause.</li><li>Patch explanation.</li><li>Regression test idea.</li><li>Safety statement confirming only local toy code was tested.</li></ul>
+<h3>Expected outcomes</h3><ul><li>You can identify the bad copy operation.</li><li>You can explain why <code>student</code> fits and <code>cyberstudent</code> does not.</li><li>You can use sanitizer evidence without treating it as an exploit.</li><li>You can patch the root cause with capacity-aware validation.</li></ul>
+</section><section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li>MITRE CWE-120: Buffer Copy without Checking Size of Input.</li>
+<li>MITRE CWE-121: Stack-based Buffer Overflow.</li>
+<li>MITRE CWE-122: Heap-based Buffer Overflow.</li>
+<li>MITRE CWE-125: Out-of-bounds Read.</li>
+<li>MITRE CWE-787: Out-of-bounds Write.</li>
+<li>Clang AddressSanitizer documentation.</li>
+<li>CISA and NSA guidance on memory-safe languages and memory-safe migration roadmaps.</li>
+<li>OWASP resources on secure coding, input validation, and fuzzing.</li>
+<li>Research topics: CHERI capabilities, memory tagging, allocator hardening, control-flow integrity, fuzzing, and automated vulnerability detection.</li>
+</ul></section>
+      <div class="prev-next"><a class="btn" href="stack-heap-and-process-memory.html">← Lesson 5.2</a><a class="btn" href="index.html">Week 5 Overview</a><a class="btn btn-primary" href="sanitizers-fuzzing-and-bug-triage.html">Next: Lesson 5.4 →</a></div>
+    </article><aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside></div>
+  </div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

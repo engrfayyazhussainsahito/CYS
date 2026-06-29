@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0.5: Git, Documentation, and Evidence Handling | MS Cybersecurity</title>
+  <meta name="description" content="Beginner-to-MS bridge lesson teaching Git, technical documentation, evidence notes, hashing, provenance, chain of custody, and safe cybersecurity lab reporting.">
+  <meta property="og:title" content="Lesson 0.5: Git, Documentation, and Evidence Handling">
+  <meta property="og:description" content="Learn Git and evidence-aware documentation from zero knowledge for cybersecurity labs, incident response, and reproducible research.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Git, Documentation, and Evidence Handling","educationalLevel":"Graduate","learningResourceType":"Lesson","teaches":["Git","Version control","Technical documentation","Evidence handling","Chain of custody","Hashing","Provenance","Audit trails","Reproducible labs","Security reporting"]}</script>
+</head>
+<body data-root="../../" data-page-id="week-00/lesson-00-05" data-title="Lesson 0.5: Git, Documentation, and Evidence Handling">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 0</a> / Lesson 0.5</div>
+      <header class="hero">
+        <div class="eyebrow">Week 0 · Bridge Module</div>
+        <h1>Lesson 0.5: Git, Documentation, and Evidence Handling</h1>
+        <p class="lead">Cybersecurity work is only useful when another competent person can understand what you did, reproduce your result, and trust that evidence was not casually changed. This lesson teaches Git, documentation, hashing, evidence notes, and chain-of-custody thinking from zero knowledge.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>120–180 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → Intermediate bridge</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 0.1–0.4 recommended</div>
+          <div class="meta-item"><strong>Practice time</strong>5–8 hours</div>
+        </div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview-box" class="card">
+            <h2>Week 0 Context</h2>
+            <p><strong>Overview:</strong> Week 0 prepares students for safe, reproducible cybersecurity learning. This lesson adds version control and evidence-aware documentation so future labs are organized, auditable, and explainable.</p>
+            <p><strong>Learning objectives:</strong> after this lesson you should be able to create a Git repository, track file changes, write useful commit messages, document lab evidence, compute hashes, understand chain of custody, and explain why Git helps reproducibility but does not replace forensic evidence storage.</p>
+            <p><strong>Required background:</strong> no Git or forensics background is required. Linux, networking, and Python lessons make the commands and scripts easier.</p>
+            <p><strong>Estimated reading time:</strong> 120–180 minutes. <strong>Difficulty:</strong> starts beginner, ends with intermediate evidence and reproducibility concepts.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p><strong>Plain-English idea:</strong> Git records the history of changes in project files. Documentation explains what happened. Evidence handling preserves and describes information so conclusions can be checked.</p>
+            <p>These topics exist because security work is easy to misunderstand. A student may run a command and forget what it meant. An analyst may collect logs but fail to record where they came from. A developer may fix a bug but leave no explanation. A researcher may publish a result that nobody can reproduce. Git and disciplined documentation reduce these problems.</p>
+            <p>This matters because cybersecurity decisions can affect money, privacy, safety, employment, legal processes, and public trust. A weak screenshot, unclear note, or modified evidence file may not support a serious conclusion. In technical work, the quality of the record often determines whether the finding is usable.</p>
+            <p>Git is used by software engineers, cloud engineers, security researchers, DevSecOps teams, malware analysts, detection engineers, digital forensic analysts, students, universities, banks, defense teams, healthcare organizations, and governments. Evidence handling is used by incident responders, forensic investigators, auditors, compliance teams, security operations centers, researchers, and legal teams.</p>
+            <details class="callout warning"><summary>Important boundary</summary><p>Git is useful for lab notes, source code, detection rules, reports, and reproducible research. Git alone is not a complete forensic evidence vault. Real investigations may require write blockers, forensic imaging, chain-of-custody forms, access-controlled storage, legal review, and organization-specific procedures.</p></details>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <ul>
+              <li>Define version control, repository, working tree, staging area, commit, branch, merge, diff, tag, remote, clone, README, issue, pull request, hash, checksum, provenance, metadata, chain of custody, and audit trail.</li>
+              <li>Install or verify Git on Linux and Windows.</li>
+              <li>Create a local Git repository for cybersecurity labs.</li>
+              <li>Track, stage, commit, inspect, and compare file changes.</li>
+              <li>Write useful commit messages and security lab notes.</li>
+              <li>Use <code>.gitignore</code> to avoid committing generated files or sensitive local data.</li>
+              <li>Compute SHA-256 hashes on Linux, Windows, and Python.</li>
+              <li>Explain how hashes support integrity checking and what they do not prove.</li>
+              <li>Build a simple evidence log with timestamps, source, collector, action, hash, and limitations.</li>
+              <li>Explain chain of custody in plain English.</li>
+              <li>Describe common documentation failures in incident response and research.</li>
+              <li>Use Git and documentation safely in a lab without exposing secrets or real personal data.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <h3>Files and folders</h3>
+            <p>A <strong>file</strong> stores data. A <strong>folder</strong>, also called a directory, organizes files. Git watches selected files inside a project folder and records changes over time.</p>
+            <h3>Terminal basics</h3>
+            <p>You need to run commands such as <code>git status</code> and <code>git commit</code>. If terminal commands feel unfamiliar, review Lesson 0.2 first.</p>
+            <h3>Text editing</h3>
+            <p>Git works best with text files because text changes are easy to compare. Source code, Markdown notes, configuration files, and JSON logs are text-friendly. Binary files such as screenshots and disk images can be stored, but Git cannot show their internal changes as clearly.</p>
+            <h3>Time and identity</h3>
+            <p>Evidence records depend on who did something and when. Computer timestamps can be wrong, time zones can be confusing, and account names may not prove the real human actor. Always record limitations.</p>
+            <h3>Authorization</h3>
+            <p>Only document and handle data you are allowed to access. Do not put real passwords, private keys, student records, patient data, or employer data into a public GitHub repository.</p>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 What is version control?</h3>
+            <p><strong>Definition:</strong> version control is a system for recording changes to files over time so earlier versions can be reviewed or restored.</p>
+            <p><strong>Intuition:</strong> imagine a notebook where every important edit is saved with the author, time, and reason. Git is a powerful version of that notebook for files.</p>
+            <p><strong>Security example:</strong> when you write a detection rule, Git can show when the rule was created, who changed it, what changed, and why the change was made.</p>
+            <h3>4.2 What is Git?</h3>
+            <p><strong>Git</strong> is a distributed version control system. <strong>Distributed</strong> means each copy of a repository can contain the project history, not only the latest files. This makes Git useful for offline work, collaboration, and review.</p>
+            <p>Git is not the same as GitHub. Git is the tool. GitHub is a hosting and collaboration platform that can store Git repositories online. You can use Git locally without creating a GitHub account.</p>
+            <h3>4.3 Repository</h3>
+            <p>A <strong>repository</strong>, often called a repo, is a project folder tracked by Git. The hidden <code>.git</code> directory stores Git metadata and history.</p>
+            <pre><code class="language-bash">git init
+ls -la</code></pre>
+            <p>After <code>git init</code>, Git creates the internal tracking structure. Do not manually edit the <code>.git</code> folder as a beginner.</p>
+            <h3>4.4 Working tree, staging area, and commit history</h3>
+            <p>The <strong>working tree</strong> is the files you see and edit. The <strong>staging area</strong> is the set of changes selected for the next saved snapshot. The <strong>commit history</strong> is the record of saved snapshots.</p>
+            <p><strong>Analogy:</strong> working tree = your messy desk, staging area = documents you placed in an outgoing folder, commit = the official archived packet.</p>
+            <pre><code class="language-bash">git status
+git add README.md
+git commit -m &quot;Add lab README&quot;</code></pre>
+            <h3>4.5 Commit</h3>
+            <p>A <strong>commit</strong> is a saved record of selected changes. It includes metadata such as author, timestamp, parent commit, and a message.</p>
+            <p>A good commit message explains the reason for the change, not only the file name. Weak: <code>update</code>. Better: <code>Add SHA-256 evidence verification notes</code>.</p>
+            <h3>4.6 Diff</h3>
+            <p>A <strong>diff</strong> shows what changed. Added lines are often marked with <code>+</code>; removed lines are often marked with <code>-</code>.</p>
+            <pre><code class="language-bash">git diff
+git diff --staged</code></pre>
+            <p>Security teams use diffs during code review, detection-rule review, infrastructure-as-code review, and incident-report review.</p>
+            <h3>4.7 Branch</h3>
+            <p>A <strong>branch</strong> is an independent line of work. You can experiment without changing the main line immediately.</p>
+            <pre><code class="language-bash">git branch experiment-notes
+git switch experiment-notes
+# edit files safely
+git switch main</code></pre>
+            <p>Branches are useful for capstone projects, research experiments, draft reports, and proposed fixes.</p>
+            <h3>4.8 Merge</h3>
+            <p>A <strong>merge</strong> combines changes from one branch into another. If two branches changed the same lines, Git may ask you to resolve a conflict.</p>
+            <p><strong>Security intuition:</strong> merge conflicts force humans to inspect competing changes. That is useful when the file is a policy, firewall rule, detection query, or incident timeline.</p>
+            <h3>4.9 Tag</h3>
+            <p>A <strong>tag</strong> marks a specific commit with a name. In this course, a tag can mark a submitted lab version.</p>
+            <pre><code class="language-bash">git tag week0-lab-submission
+git log --oneline --decorate</code></pre>
+            <h3>4.10 Remote and clone</h3>
+            <p>A <strong>remote</strong> is another copy of the repository, usually hosted on a service such as GitHub, GitLab, or a private enterprise server. <strong>Clone</strong> means copy a repository from a remote to your machine.</p>
+            <p>Do not push sensitive lab evidence or secrets to public repositories. Use private repositories or local-only repositories when data is sensitive.</p>
+            <h3>4.11 README and documentation</h3>
+            <p>A <strong>README</strong> is the front page of a project. It should answer: What is this? Who is it for? How do I run it? What is in scope? What are the limitations?</p>
+            <p>Cybersecurity documentation should separate observation from interpretation. Observation: “Log line shows five failed logins.” Interpretation: “This may indicate password guessing.” Conclusion: “More evidence is required before claiming compromise.”</p>
+            <h3>4.12 Markdown</h3>
+            <p><strong>Markdown</strong> is a lightweight text format for headings, lists, links, tables, and code blocks. It is widely used for Git project documentation.</p>
+            <pre><code class="language-markdown"># Lab Notes
+
+## Objective
+Analyze sample logs.
+
+## Evidence
+- File: sample-auth.log
+- SHA-256: replace-with-hash
+
+## Limitation
+Sample data only; not proof of real compromise.</code></pre>
+            <h3>4.13 Evidence</h3>
+            <p><strong>Evidence</strong> is information used to support a conclusion. In cybersecurity, evidence may include logs, packet captures, screenshots, disk images, memory captures, command output, configuration files, source code, cloud audit records, and witness notes.</p>
+            <p>Evidence is not automatically reliable. You must ask: Where did it come from? Who handled it? Could it have changed? Is the time correct? Is it complete? Does it support the conclusion?</p>
+            <h3>4.14 Chain of custody</h3>
+            <p><strong>Chain of custody</strong> is a record of evidence handling. It documents who collected evidence, where it came from, when it was handled, what was done, where it was stored, and who received it next.</p>
+            <p><strong>Analogy:</strong> a package delivery record shows each handoff. Chain of custody does the same for evidence.</p>
+            <h3>4.15 Provenance</h3>
+            <p><strong>Provenance</strong> means origin and history. For a log file, provenance includes the system that created it, collection method, export time, transfer path, and processing steps.</p>
+            <p>Weak provenance: “I found this file.” Stronger provenance: “Exported <code>auth.log</code> from training VM <code>lab-ubuntu-01</code> at 2026-06-28 10:00 UTC using read-only copy; SHA-256 recorded before analysis.”</p>
+            <h3>4.16 Hashes and integrity</h3>
+            <p>A <strong>cryptographic hash</strong> is a fixed-length fingerprint of data. If a file changes, its hash should change unpredictably. SHA-256 is a common hash algorithm used for integrity checks.</p>
+            <p>A hash helps answer: “Is this file byte-for-byte the same as when I computed the hash?” It does not prove the file is true, legal, malware-free, or collected correctly.</p>
+            <h3>4.17 Metadata</h3>
+            <p><strong>Metadata</strong> is data about data: filename, size, timestamps, owner, permissions, camera model, source path, or log source. Metadata can be useful but fragile. Copying, exporting, or editing files can change metadata.</p>
+            <h3>4.18 Audit trail</h3>
+            <p>An <strong>audit trail</strong> is a chronological record of activities. Git history is one form of audit trail for project files, but security-grade audit trails may require stronger controls such as append-only logging, access control, signed events, and monitored storage.</p>
+            <h3>4.19 Reproducibility</h3>
+            <p><strong>Reproducibility</strong> means another person can follow your steps and get the same result from the same input. Reproducibility is essential in labs, research, incident reports, and professional security assessments.</p>
+            <p>A reproducible note includes environment, commands, input files, tool versions, timestamps, assumptions, outputs, and limitations.</p>
+            <h3>4.20 Secrets and public repositories</h3>
+            <p>A <strong>secret</strong> is sensitive authentication material such as a password, API token, SSH private key, cloud credential, or database connection string. Never commit secrets to Git. If a secret is committed and pushed, deleting the visible line is not enough because the secret may remain in history.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>Git mental model</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Working tree: files you edit] --> B[Staging area: selected changes]
+  B --> C[Commit: saved snapshot]
+  C --> D[History: chain of commits]
+  D --> E[Tag: named important point]
+</pre></div>
+            <h3>Documentation pipeline</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart TD
+  A[Observe event or file] --> B[Record source and time]
+  B --> C[Copy or export safely]
+  C --> D[Compute hash]
+  D --> E[Analyze copy]
+  E --> F[Write findings]
+  F --> G[Separate facts from interpretation]
+  G --> H[Review and commit lab notes]
+</pre></div>
+            <h3>Chain-of-custody sequence</h3>
+            <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant Collector
+  participant Storage as Evidence Storage
+  participant Analyst
+  participant Reviewer
+  Collector->>Storage: Store original file and record hash
+  Collector->>Analyst: Provide verified working copy
+  Analyst->>Analyst: Analyze copy and record steps
+  Analyst->>Reviewer: Submit report with hash and limitations
+  Reviewer->>Storage: Verify original remains unchanged
+</pre></div>
+            <h3>Git branch and merge view</h3>
+            <div class="diagram"><pre class="mermaid">
+gitGraph
+  commit id: "init notes"
+  commit id: "add evidence log"
+  branch draft-report
+  checkout draft-report
+  commit id: "draft findings"
+  commit id: "add limitations"
+  checkout main
+  commit id: "add hash script"
+  merge draft-report
+</pre></div>
+            <h3>Decision tree: should this file go into Git?</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart TD
+  A[Do you want to commit a file?] --> B{Does it contain secrets or personal data?}
+  B -- Yes --> C[Do not commit; remove and protect data]
+  B -- No --> D{Is it a large binary evidence file?}
+  D -- Yes --> E[Store in approved evidence storage; commit only metadata notes]
+  D -- No --> F{Is it generated output that can be recreated?}
+  F -- Yes --> G[Usually ignore; document how to regenerate]
+  F -- No --> H[Commit with clear message]
+</pre></div>
+            <h3>State diagram: evidence handling maturity</h3>
+            <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+  [*] --> Unrecorded
+  Unrecorded --> Collected: source and time recorded
+  Collected --> Hashed: integrity fingerprint made
+  Hashed --> Stored: original preserved
+  Stored --> WorkingCopy: analysis copy created
+  WorkingCopy --> Reported: findings documented
+  Reported --> Reviewed: peer or instructor review
+</pre></div>
+          </section>
+
+          <section id="mind-map">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">
+mindmap
+  root((Git, Documentation, Evidence))
+    Git
+      Repository
+      Working tree
+      Staging area
+      Commit
+      Branch
+      Diff
+      Tag
+      Remote
+    Documentation
+      README
+      Lab notes
+      Commands
+      Tool versions
+      Limitations
+      Clear conclusions
+    Evidence Handling
+      Source
+      Timestamp
+      Collector
+      Hash
+      Storage
+      Chain of custody
+    Security
+      Secret leakage
+      History rewriting
+      Access control
+      Integrity checks
+      Audit trails
+    Research
+      Reproducibility
+      Provenance
+      Artifact evaluation
+      Tamper-evident logs
+</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>7.1 Hash function intuition</h3>
+            <p>A hash function maps input data of any length to a fixed-length output.</p>
+            <p><strong>H(data) = digest</strong></p>
+            <p>For SHA-256, the digest is 256 bits. It is commonly displayed as 64 hexadecimal characters because each hexadecimal character represents 4 bits, and <strong>64 × 4 = 256</strong>.</p>
+            <h3>7.2 Integrity check formula</h3>
+            <p>To check whether a file changed:</p>
+            <ol><li>Compute original hash: <strong>h1 = H(file at collection)</strong></li><li>Compute later hash: <strong>h2 = H(file later)</strong></li><li>If <strong>h1 = h2</strong>, the file is probably unchanged byte-for-byte.</li><li>If <strong>h1 ≠ h2</strong>, the file changed or a different file was hashed.</li></ol>
+            <p>The word “probably” matters because cryptography discusses collision probability, but for normal SHA-256 lab integrity checking, accidental matching after a real change is not a practical concern.</p>
+            <h3>7.3 Birthday-bound intuition</h3>
+            <p>For an ideal n-bit hash, collision resistance is roughly around <strong>2^(n/2)</strong> work because of the birthday effect. For SHA-256, this rough bound is <strong>2^128</strong>, which is far beyond normal lab capability.</p>
+            <p>Beginner takeaway: use modern standard hashes such as SHA-256, not weak legacy hashes for integrity-sensitive work.</p>
+            <h3>7.4 Set difference and diffs</h3>
+            <p>A Git diff compares two versions. At a simple conceptual level: <strong>added lines = lines in new version but not old version</strong>; <strong>removed lines = lines in old version but not new version</strong>. Real diff algorithms preserve ordering and context, but the intuition is change comparison.</p>
+            <h3>7.5 Timeline ordering</h3>
+            <p>Incident notes rely on time ordering. If events have timestamps <code>t1, t2, t3</code>, a timeline sorts them from earliest to latest. Problems occur when systems use different time zones, clocks are wrong, or logs are delayed.</p>
+            <p>Worked example: 10:00 UTC, 15:00 Asia/Karachi, and 05:00 New York time may describe different local times. Convert to one reference, usually UTC, before comparing incident events.</p>
+            <h3>7.6 Risk scoring for documentation gaps</h3>
+            <p>A simple teaching formula is: <strong>documentation risk = likelihood of misunderstanding × impact of wrong conclusion</strong>. Example: if likelihood is 4 out of 5 and impact is 5 out of 5, the score is <strong>4 × 5 = 20</strong>. This is not a universal formula; it is a learning tool for prioritizing documentation quality.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>Linux example: create a Git lab</h3>
+            <pre><code class="language-bash">mkdir -p ~/ms-cybersecurity-labs/week-00/git-evidence
+cd ~/ms-cybersecurity-labs/week-00/git-evidence
+git init
+git config user.name &quot;Student Analyst&quot;
+git config user.email &quot;student@example.invalid&quot;</code></pre>
+            <p>This creates a local lab directory, initializes Git, and sets local identity for commits inside this repository.</p>
+            <h3>Windows example: create a Git lab</h3>
+            <pre><code class="language-powershell">New-Item -ItemType Directory -Force -Path &quot;$HOME\ms-cybersecurity-labs\week-00\git-evidence&quot;
+Set-Location &quot;$HOME\ms-cybersecurity-labs\week-00\git-evidence&quot;
+git init
+git config user.name &quot;Student Analyst&quot;
+git config user.email &quot;student@example.invalid&quot;</code></pre>
+            <p>This performs the same task in PowerShell. Use Git Bash if your Windows terminal does not recognize Git commands.</p>
+            <h3>Python example: hash a lab file</h3>
+            <pre><code class="language-python"># hash_file.py
+# Purpose: compute a SHA-256 hash for a local lab file.
+# Safety: use this only on files you own or are authorized to handle.
+
+from hashlib import sha256
+from pathlib import Path
+
+# Choose a lab file. Path() represents a filesystem path.
+file_path = Path(&quot;sample-evidence.txt&quot;)
+
+# Create a hash object. It starts empty.
+digest = sha256()
+
+# Open the file in binary mode so bytes are read exactly.
+with file_path.open(&quot;rb&quot;) as file:
+    # Read in chunks so the script can handle larger files.
+    while True:
+        chunk = file.read(8192)
+        if not chunk:
+            break
+        digest.update(chunk)
+
+# Print the final hexadecimal hash string.
+print(digest.hexdigest())</code></pre>
+            <p>This script reads a local file in binary chunks and prints its SHA-256 digest.</p>
+            <h3>Network example: document a localhost-only result</h3>
+            <pre><code class="language-python"># localhost_note_server.py
+# Purpose: serve only the current lab folder on your own machine.
+# It binds to 127.0.0.1 so it is not meant for public network exposure.
+
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+
+server_address = (&quot;127.0.0.1&quot;, 8000)
+httpd = ThreadingHTTPServer(server_address, SimpleHTTPRequestHandler)
+print(&quot;Serving local lab files at http://127.0.0.1:8000&quot;)
+httpd.serve_forever()</code></pre>
+            <p>Run this only in your lab folder. It serves local files on <code>127.0.0.1</code> for a safe documentation exercise. It does not scan or attack any network.</p>
+            <h3>Web example: document a local HTTP observation</h3>
+            <pre><code class="language-bash">curl -I http://127.0.0.1:8000
+# Record status code, date header, server header, and command used.
+# Do not use this against public websites for course labs unless assigned.</code></pre>
+            <p>The point is not to attack the server. The point is to record the exact command and result so another student can reproduce the local observation.</p>
+            <h3>Cloud example: structured cloud observation note</h3>
+            <pre><code class="language-yaml"># cloud-evidence-note.yaml
+# This is not a real cloud configuration.
+# It is a structured note showing how to document a cloud observation safely.
+observation_id: LAB-CLOUD-001
+source: sample_cloudtrail_event.json
+account: training-account-only
+time_observed_utc: &quot;2026-06-28T10:00:00Z&quot;
+action_reviewed: &quot;CreateUser&quot;
+finding: &quot;Administrative action requires review in real environments&quot;
+evidence_hash_sha256: &quot;replace-with-your-computed-hash&quot;
+limitations:
+  - &quot;Sample data only&quot;
+  - &quot;No real cloud account was accessed&quot;</code></pre>
+            <p>This is a safe simulated note. Real cloud evidence may contain account identifiers, user names, IP addresses, and sensitive business context, so it must be protected according to policy.</p>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Create and commit a README</h3>
+            <pre><code class="language-bash">cat &gt; README.md &lt;&lt;&#x27;EOF&#x27;
+# Week 0 Git Evidence Lab
+
+This repository stores lab notes, scripts, and sample evidence metadata.
+
+## Scope
+Local training files only. No real personal, employer, university, or third-party data.
+
+## Safety
+Do not commit secrets, real evidence, private keys, passwords, or tokens.
+EOF
+
+git status
+git add README.md
+git commit -m &quot;Add lab README and safety scope&quot;</code></pre>
+            <p><strong>Line explanation:</strong> <code>cat &gt; README.md</code> writes text into a file; the lines between <code>EOF</code> markers become the file content; <code>git status</code> checks the repository state; <code>git add</code> stages the file; <code>git commit</code> records the staged change with a message.</p>
+            <h3>9.2 Create an evidence log</h3>
+            <pre><code class="language-bash">cat &gt; evidence-log.md &lt;&lt;&#x27;EOF&#x27;
+# Evidence Log
+
+| ID | Time UTC | Source | Collector | Action | SHA-256 | Notes |
+|---|---|---|---|---|---|---|
+| E001 | 2026-06-28T10:00:00Z | sample-evidence.txt | Student Analyst | Created sample lab file | pending | Training data only |
+EOF
+
+git add evidence-log.md
+git commit -m &quot;Add evidence log template&quot;</code></pre>
+            <p>This creates a table for evidence notes. In real work, use your organization’s required format.</p>
+            <h3>9.3 Compute file hash with Linux</h3>
+            <pre><code class="language-bash">echo &quot;Sample training evidence&quot; &gt; sample-evidence.txt
+sha256sum sample-evidence.txt</code></pre>
+            <p><code>echo</code> creates a sample file. <code>sha256sum</code> prints the SHA-256 hash and filename. This is safe because it uses local training data.</p>
+            <h3>9.4 Compute file hash with Windows PowerShell</h3>
+            <pre><code class="language-powershell">Set-Content -Encoding UTF8 sample-evidence.txt &quot;Sample training evidence&quot;
+Get-FileHash .\sample-evidence.txt -Algorithm SHA256</code></pre>
+            <p><code>Set-Content</code> writes the sample file. <code>Get-FileHash</code> computes the SHA-256 digest.</p>
+            <h3>9.5 Use .gitignore</h3>
+            <pre><code class="language-bash">cat &gt; .gitignore &lt;&lt;&#x27;EOF&#x27;
+# Generated files
+*.tmp
+*.log
+
+# Local secrets - never commit
+.env
+*.key
+*.pem
+
+# Large local evidence copies
+evidence-originals/
+EOF
+
+git add .gitignore
+git commit -m &quot;Add gitignore for generated files and secrets&quot;</code></pre>
+            <p><code>.gitignore</code> helps prevent accidental tracking. It is not a security boundary. A file already committed remains in history unless special cleanup is performed.</p>
+            <h3>9.6 Common mistakes</h3>
+            <ul><li><strong>Mistake:</strong> committing passwords or API tokens. <strong>Fix:</strong> use environment variables, local ignored files, or secret managers.</li><li><strong>Mistake:</strong> editing original evidence. <strong>Fix:</strong> preserve originals and analyze verified copies.</li><li><strong>Mistake:</strong> writing vague commit messages. <strong>Fix:</strong> explain why the change was made.</li><li><strong>Mistake:</strong> relying only on screenshots. <strong>Fix:</strong> record commands, outputs, hashes, and limitations.</li><li><strong>Mistake:</strong> rewriting Git history after submission. <strong>Fix:</strong> treat submitted tags and commits as stable records.</li></ul>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common attacks and abuses</h3>
+            <ul><li><strong>Secret leakage:</strong> passwords, tokens, SSH keys, cloud keys, or database URLs accidentally committed.</li><li><strong>History manipulation:</strong> commits rewritten to hide changes or remove context.</li><li><strong>Evidence tampering:</strong> files modified after collection without recording the change.</li><li><strong>Misleading documentation:</strong> conclusions written stronger than the evidence supports.</li><li><strong>Supply-chain compromise:</strong> malicious changes inserted into code, dependencies, build scripts, or configuration.</li></ul>
+            <h3>Common vulnerabilities</h3>
+            <ul><li>Public repositories containing secrets or private data.</li><li>No review process for security-sensitive changes.</li><li>No signed releases or tag verification.</li><li>No retention policy for investigation notes.</li><li>No access control over evidence storage.</li></ul>
+            <h3>Defensive strategies</h3>
+            <ul><li>Use private repositories for sensitive course work or professional work.</li><li>Use <code>.gitignore</code>, secret scanning, and code review.</li><li>Keep real evidence in approved evidence storage; commit metadata and analysis notes where appropriate.</li><li>Hash evidence before and after transfer.</li><li>Use clear commit messages, tags, and release notes.</li><li>Separate facts, assumptions, interpretation, and recommendations.</li></ul>
+            <h3>Detection methods</h3>
+            <ul><li>Scan repositories for committed secrets.</li><li>Review unusual force-pushes, deleted branches, or rewritten history.</li><li>Monitor changes to security-sensitive files such as CI/CD workflows, access policies, infrastructure templates, and detection rules.</li><li>Compare evidence hashes against recorded values.</li><li>Review audit logs for unauthorized repository access.</li></ul>
+            <h3>Mitigation and best practices</h3>
+            <ul><li>Rotate exposed secrets immediately; do not only delete the visible file.</li><li>Use least privilege for repository access.</li><li>Protect important branches and require review for security-critical changes.</li><li>Use signed commits or signed tags where the organization requires stronger provenance.</li><li>Back up repositories and evidence records according to retention policy.</li></ul>
+          </section>
+
+          <section id="industry-perspective"><h2>11. Industry Perspective</h2><table><thead><tr><th>Sector</th><th>How this topic is used</th></tr></thead><tbody><tr><td>Banks</td><td>Track secure code changes, audit access-control modifications, document fraud investigations, and preserve evidence for regulatory review.</td></tr><tr><td>Governments</td><td>Maintain policy-controlled repositories, preserve incident records, document investigations, and support accountability in public systems.</td></tr><tr><td>Cloud providers</td><td>Use version control for infrastructure, security automation, detection rules, documentation, and controlled deployment pipelines.</td></tr><tr><td>Healthcare</td><td>Document system changes while protecting patient privacy and maintaining incident evidence under strict access controls.</td></tr><tr><td>Defense</td><td>Require rigorous provenance, configuration control, change approval, evidence preservation, and tamper-aware audit practices.</td></tr><tr><td>Universities</td><td>Teach reproducible labs, track research artifacts, manage student projects, and document ethical security experiments.</td></tr><tr><td>Large enterprises</td><td>Coordinate many teams through pull requests, branch protections, CI/CD logs, internal documentation, and incident report repositories.</td></tr></tbody></table></section>
+
+          <section id="research-perspective"><h2>12. Research Perspective</h2><p>Research depends on reproducibility and provenance. A security paper may propose a detection method, measurement study, exploit mitigation, privacy technique, or forensic process. Readers need to know what data was used, how it was processed, which code version ran, and what limitations apply.</p><h3>Current research directions</h3><ul><li><strong>Reproducible security research:</strong> packaging code, data, scripts, and environments so results can be checked.</li><li><strong>Artifact evaluation:</strong> assessing whether research artifacts are available, functional, reusable, and documented.</li><li><strong>Software supply-chain security:</strong> improving provenance, build integrity, dependency tracking, and tamper detection.</li><li><strong>Tamper-evident logging:</strong> designing logs where unauthorized changes are detectable.</li><li><strong>Secure collaborative development:</strong> protecting code review, CI/CD workflows, and repository access.</li><li><strong>Digital evidence integrity:</strong> improving methods for collection, storage, verification, and court/organizational admissibility.</li></ul><h3>Open problems</h3><ul><li>How can small teams achieve strong provenance without expensive infrastructure?</li><li>How can public research share enough artifacts for reproducibility without exposing sensitive data?</li><li>How can AI-generated code and reports be documented transparently and reviewed safely?</li><li>How can incident responders preserve volatile cloud evidence before it disappears?</li><li>How can organizations make audit trails trustworthy without making systems unusable?</li></ul><p>Notable research areas to explore later include transparency logs, secure build systems, reproducible builds, software bills of materials, signed artifacts, supply-chain attacks, provenance graphs, forensic timelines, and privacy-preserving evidence sharing.</p></section>
+
+          <section id="case-studies"><h2>13. Case Studies</h2><h3>Case Study 1: Secret exposure in source repositories</h3><p><strong>What happened:</strong> many organizations have suffered incidents because developers accidentally committed credentials or tokens into repositories. Once pushed to a shared or public repository, a secret may be copied by bots, humans, logs, mirrors, or backups.</p><p><strong>Root cause:</strong> weak secret-handling process, missing secret scanning, poor training, and misunderstanding that deleting a line removes it from all history.</p><p><strong>Impact:</strong> exposed credentials can allow unauthorized access to cloud accounts, databases, source code, or internal services.</p><p><strong>Lessons learned:</strong> never commit secrets; scan repositories; rotate exposed credentials; restrict permissions; protect history; use secret managers.</p><h3>Case Study 2: Supply-chain compromise and build trust</h3><p><strong>What happened:</strong> major software supply-chain incidents have shown that attackers may target build systems, update mechanisms, repositories, or dependencies instead of attacking every victim directly.</p><p><strong>Root cause:</strong> insufficient control over the path from source code to build artifact, weak monitoring of trusted systems, or inadequate provenance checks.</p><p><strong>Impact:</strong> many downstream organizations can be affected because they trust the compromised software or update channel.</p><p><strong>Lessons learned:</strong> protect repositories and CI/CD systems, review changes, monitor build pipelines, sign releases, verify dependencies, and document provenance.</p><h3>Case Study 3: Incident notes that cannot support conclusions</h3><p><strong>What happened:</strong> in many investigations, responders find useful clues but fail to record commands, timestamps, tool versions, source systems, or hashes. Later, reviewers cannot distinguish facts from assumptions.</p><p><strong>Root cause:</strong> pressure during incidents, lack of templates, no evidence-handling process, and overreliance on memory or screenshots.</p><p><strong>Impact:</strong> conclusions may be challenged, response may be delayed, and lessons learned may be weak.</p><p><strong>Lessons learned:</strong> use evidence logs, standardized timelines, controlled storage, hash verification, peer review, and clear uncertainty statements.</p></section>
+
+          <section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul><li><strong>“GitHub and Git are the same.”</strong> Incorrect. Git is the version control tool; GitHub is one hosting platform.</li><li><strong>“Git is a backup system.”</strong> Weak assumption. Git records project history, but it does not replace tested backups or evidence storage.</li><li><strong>“If I delete a secret from the latest file, it is gone.”</strong> Incorrect. It may remain in Git history, forks, logs, caches, or clones.</li><li><strong>“A screenshot is enough evidence.”</strong> Often weak. Screenshots lack full provenance and are harder to verify than structured logs and hashes.</li><li><strong>“A matching hash proves the evidence is true.”</strong> Incorrect. It proves integrity relative to a previous hash, not truth or correct collection.</li><li><strong>“Commit messages do not matter.”</strong> Incorrect. They are part of the audit trail and help reviewers understand intent.</li><li><strong>“Rewriting history is always bad.”</strong> Too absolute. It can be useful before publishing, but it is dangerous after collaboration, submission, or evidence recording.</li><li><strong>“More documentation is always better.”</strong> Incorrect. Documentation should be complete, accurate, searchable, and relevant, not bloated.</li><li><strong>“Metadata is always reliable.”</strong> Incorrect. Metadata can be changed by copying, exporting, editing, or clock errors.</li><li><strong>“Public repositories are safe if nobody knows the URL.”</strong> Incorrect. Public data should be treated as discoverable.</li></ul></section>
+
+          <section id="summary"><h2>15. Summary</h2><p>Git helps track changes, compare versions, collaborate, and preserve a project-level history. Documentation makes technical work understandable and reviewable. Evidence handling protects the reliability of observations used in cybersecurity conclusions.</p><p>The most important distinction is this: Git is excellent for lab notes, scripts, reports, and reproducible work, but real evidence may need specialized storage and process controls. A good cybersecurity learner records source, time, commands, tool versions, hashes, assumptions, limitations, and conclusions separately.</p></section>
+
+          <section id="glossary"><h2>16. Glossary</h2><dl><dt>Audit trail</dt><dd>A chronological record of actions or changes.</dd><dt>Branch</dt><dd>An independent line of Git development.</dd><dt>Chain of custody</dt><dd>A record of who handled evidence, when, why, where, and how.</dd><dt>Checksum</dt><dd>A value computed from data to help detect changes; cryptographic hashes are stronger forms for security use.</dd><dt>Clone</dt><dd>A copy of a Git repository.</dd><dt>Commit</dt><dd>A saved snapshot of staged changes and metadata in Git.</dd><dt>Diff</dt><dd>A comparison showing what changed between versions.</dd><dt>Evidence</dt><dd>Information used to support a conclusion.</dd><dt>Forensic image</dt><dd>A careful copy of storage media or data made for analysis and preservation.</dd><dt>Git</dt><dd>A distributed version control system.</dd><dt>Hash</dt><dd>A fixed-length fingerprint computed from data.</dd><dt>Integrity</dt><dd>The property that data has not been changed without authorization or detection.</dd><dt>Metadata</dt><dd>Data about data, such as timestamps, size, owner, or source.</dd><dt>Provenance</dt><dd>The origin and history of data or an artifact.</dd><dt>README</dt><dd>A project’s introductory documentation file.</dd><dt>Remote</dt><dd>Another copy of a repository, often hosted on a server.</dd><dt>Repository</dt><dd>A Git-tracked project and its history.</dd><dt>SHA-256</dt><dd>A cryptographic hash algorithm that produces a 256-bit digest.</dd><dt>Staging area</dt><dd>The selected set of changes prepared for the next commit.</dd><dt>Tag</dt><dd>A name attached to a specific commit.</dd><dt>Version control</dt><dd>A system for recording changes to files over time.</dd><dt>Working tree</dt><dd>The visible project files you edit.</dd></dl></section>
+
+          <section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><div class="quiz-card" data-answer="A"><p><strong>1. What is the main purpose of Git?</strong></p><div class="quiz-options"><label><input type="radio" name="q1" value="A"> A. To track file history and support collaboration</label><label><input type="radio" name="q1" value="B"> B. To encrypt all files automatically</label><label><input type="radio" name="q1" value="C"> C. To replace operating system backups</label><label><input type="radio" name="q1" value="D"> D. To scan networks</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>2. What is a repository?</strong></p><div class="quiz-options"><label><input type="radio" name="q2" value="A"> A. A database of malware signatures</label><label><input type="radio" name="q2" value="B"> B. A project folder tracked by Git history</label><label><input type="radio" name="q2" value="C"> C. A firewall rule set</label><label><input type="radio" name="q2" value="D"> D. A cloud-only storage bucket</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>3. What does git status show?</strong></p><div class="quiz-options"><label><input type="radio" name="q3" value="A"> A. Only deleted files</label><label><input type="radio" name="q3" value="B"> B. The working tree and staging state</label><label><input type="radio" name="q3" value="C"> C. The contents of every file</label><label><input type="radio" name="q3" value="D"> D. The user password</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>4. What is the staging area?</strong></p><div class="quiz-options"><label><input type="radio" name="q4" value="A"> A. A temporary selection of changes prepared for the next commit</label><label><input type="radio" name="q4" value="B"> B. A public website</label><label><input type="radio" name="q4" value="C"> C. A forensic image</label><label><input type="radio" name="q4" value="D"> D. A network subnet</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>5. What is a commit?</strong></p><div class="quiz-options"><label><input type="radio" name="q5" value="A"> A. A saved snapshot of tracked changes with metadata</label><label><input type="radio" name="q5" value="B"> B. A password hash</label><label><input type="radio" name="q5" value="C"> C. A running process</label><label><input type="radio" name="q5" value="D"> D. A web request</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>6. Why should commit messages be clear?</strong></p><div class="quiz-options"><label><input type="radio" name="q6" value="A"> A. They replace all documentation</label><label><input type="radio" name="q6" value="B"> B. They explain why a change happened and help later review</label><label><input type="radio" name="q6" value="C"> C. They hide mistakes</label><label><input type="radio" name="q6" value="D"> D. They make Git faster</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>7. What is a diff?</strong></p><div class="quiz-options"><label><input type="radio" name="q7" value="A"> A. A comparison showing changes between versions</label><label><input type="radio" name="q7" value="B"> B. A type of ransomware</label><label><input type="radio" name="q7" value="C"> C. A DNS record</label><label><input type="radio" name="q7" value="D"> D. A Linux user</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>8. Why is Git not a complete forensic evidence vault by itself?</strong></p><div class="quiz-options"><label><input type="radio" name="q8" value="A"> A. Git cannot store text</label><label><input type="radio" name="q8" value="B"> B. Git history can be rewritten and working files can change</label><label><input type="radio" name="q8" value="C"> C. Git works only on Windows</label><label><input type="radio" name="q8" value="D"> D. Git has no commands</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>9. What is chain of custody?</strong></p><div class="quiz-options"><label><input type="radio" name="q9" value="A"> A. A record of who handled evidence, when, why, and how</label><label><input type="radio" name="q9" value="B"> B. A list of open ports</label><label><input type="radio" name="q9" value="C"> C. A password policy</label><label><input type="radio" name="q9" value="D"> D. A web cookie</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>10. What does a cryptographic hash help verify?</strong></p><div class="quiz-options"><label><input type="radio" name="q10" value="A"> A. That file content has not changed since the hash was computed</label><label><input type="radio" name="q10" value="B"> B. That the file is legally admissible everywhere</label><label><input type="radio" name="q10" value="C"> C. That the file is malware-free</label><label><input type="radio" name="q10" value="D"> D. That the author is always honest</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>11. Which command initializes a new Git repository?</strong></p><div class="quiz-options"><label><input type="radio" name="q11" value="A"> A. git start</label><label><input type="radio" name="q11" value="B"> B. git init</label><label><input type="radio" name="q11" value="C"> C. git make</label><label><input type="radio" name="q11" value="D"> D. git track</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>12. Which command records staged changes in history?</strong></p><div class="quiz-options"><label><input type="radio" name="q12" value="A"> A. git commit</label><label><input type="radio" name="q12" value="B"> B. git push</label><label><input type="radio" name="q12" value="C"> C. git erase</label><label><input type="radio" name="q12" value="D"> D. git grep</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>13. What is a branch?</strong></p><div class="quiz-options"><label><input type="radio" name="q13" value="A"> A. An independent line of development</label><label><input type="radio" name="q13" value="B"> B. A hard drive partition</label><label><input type="radio" name="q13" value="C"> C. A user account</label><label><input type="radio" name="q13" value="D"> D. A log parser</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>14. Which file is commonly used to exclude generated or sensitive local files from Git tracking?</strong></p><div class="quiz-options"><label><input type="radio" name="q14" value="A"> A. .gitignore</label><label><input type="radio" name="q14" value="B"> B. README.exe</label><label><input type="radio" name="q14" value="C"> C. index.lock</label><label><input type="radio" name="q14" value="D"> D. evidence.bin</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>15. What is provenance?</strong></p><div class="quiz-options"><label><input type="radio" name="q15" value="A"> A. The origin and history of data or an artifact</label><label><input type="radio" name="q15" value="B"> B. The speed of a network link</label><label><input type="radio" name="q15" value="C"> C. The size of RAM</label><label><input type="radio" name="q15" value="D"> D. The color of a UI theme</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>16. Which practice is safer for real evidence files?</strong></p><div class="quiz-options"><label><input type="radio" name="q16" value="A"> A. Work on verified copies and preserve originals</label><label><input type="radio" name="q16" value="B"> B. Edit originals immediately</label><label><input type="radio" name="q16" value="C"> C. Rename files randomly</label><label><input type="radio" name="q16" value="D"> D. Delete metadata to simplify notes</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>17. What does git log help you inspect?</strong></p><div class="quiz-options"><label><input type="radio" name="q17" value="A"> A. Commit history</label><label><input type="radio" name="q17" value="B"> B. Open network sockets</label><label><input type="radio" name="q17" value="C"> C. Memory pages</label><label><input type="radio" name="q17" value="D"> D. Firewall packets</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>18. What is a tag useful for?</strong></p><div class="quiz-options"><label><input type="radio" name="q18" value="A"> A. Marking an important version such as a lab submission</label><label><input type="radio" name="q18" value="B"> B. Encrypting a file</label><label><input type="radio" name="q18" value="C"> C. Blocking DNS</label><label><input type="radio" name="q18" value="D"> D. Running Python</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>19. What is one risk of committing secrets?</strong></p><div class="quiz-options"><label><input type="radio" name="q19" value="A"> A. Passwords or tokens can remain in repository history</label><label><input type="radio" name="q19" value="B"> B. Git refuses all secrets automatically</label><label><input type="radio" name="q19" value="C"> C. Only local files are affected forever</label><label><input type="radio" name="q19" value="D"> D. The repository becomes smaller</label></div><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>20. What should a good evidence note include?</strong></p><div class="quiz-options"><label><input type="radio" name="q20" value="A"> A. Date/time, collector, source, action, hash if relevant, and limitations</label><label><input type="radio" name="q20" value="B"> B. Only a screenshot</label><label><input type="radio" name="q20" value="C"> C. Only final conclusion</label><label><input type="radio" name="q20" value="D"> D. Only tool name</label></div><button class="check-quiz">Check answer</button></div><h3>10 short questions</h3><ol><li>Explain Git in one paragraph for a beginner.</li><li>What is the difference between Git and GitHub?</li><li>Why does <code>git status</code> matter before committing?</li><li>What should a good commit message contain?</li><li>Why is <code>.gitignore</code> useful but not a complete security control?</li><li>What does a SHA-256 hash help verify?</li><li>Why should original evidence be preserved separately from working copies?</li><li>What fields should an evidence log include?</li><li>Why can metadata be unreliable?</li><li>Give one example of a documentation limitation statement.</li></ol><h3>5 long questions</h3><ol><li>Design a documentation standard for all labs in this course. Include file naming, README structure, evidence logs, command recording, hash recording, and limitations.</li><li>Explain how Git supports reproducible cybersecurity research. Also explain where Git is insufficient.</li><li>Compare screenshots, logs, command transcripts, hashes, and written notes as evidence sources.</li><li>Describe how a secret committed to a public repository can become a security incident and how an organization should respond.</li><li>Write a complete evidence-handling plan for a simulated incident involving a compromised training VM.</li></ol><h3>Scenario-based questions</h3><ol><li>You find a password in a lab repository before pushing to GitHub. What should you do?</li><li>Your hash value for a file no longer matches the recorded hash. List possible explanations.</li><li>A teammate force-pushed and removed several commits after a report was submitted. What risk does this create?</li><li>You have a screenshot of an error but no command, timestamp, or tool version. How strong is this evidence?</li><li>You need to share a malware-analysis note with classmates. What should be excluded or sanitized?</li></ol><h3>Interview questions</h3><ol><li>What is Git, and why do security teams use it?</li><li>Explain staging versus committing.</li><li>How would you prevent secrets from entering a repository?</li><li>How do you verify that an evidence file has not changed?</li><li>What is chain of custody?</li><li>What makes a security report reproducible?</li></ol><h3>Critical thinking questions</h3><ol><li>When can too much documentation harm security work?</li><li>Should every security finding require cryptographic evidence? Why or why not?</li><li>Can a Git commit prove who made a change? What assumptions are involved?</li><li>What is the difference between evidence integrity and evidence interpretation?</li><li>How should a student document uncertainty without sounding unprofessional?</li></ol><h3>Research questions</h3><ol><li>How do reproducible builds improve software supply-chain trust?</li><li>What are transparency logs, and how do they relate to tamper evidence?</li><li>How can cloud incident evidence disappear, and what collection methods help?</li><li>What are the privacy risks of publishing security research datasets?</li><li>How can signed commits, signed tags, and artifact signing support provenance?</li></ol></section>
+
+          <section id="practice-lab"><h2>18. Practice Lab</h2><h3>Lab title</h3><p><strong>Evidence-Aware Git Repository for Cybersecurity Labs</strong></p><h3>Safety scope</h3><ul><li>Use only files you create in this lab.</li><li>Do not use real passwords, private keys, tokens, student data, employer data, patient data, or third-party evidence.</li><li>Do not push to a public repository unless every file is safe and intentionally public.</li><li>Do not modify real system logs for this lab.</li></ul><h3>Prerequisites</h3><ul><li>Git installed.</li><li>Terminal or PowerShell access.</li><li>Python 3 available for optional hash script.</li><li>Lessons 0.1–0.4 completed or reviewed.</li></ul><h3>Objectives</h3><ul><li>Create a Git repository.</li><li>Create a README with scope and safety notes.</li><li>Create a sample evidence file.</li><li>Compute and record its SHA-256 hash.</li><li>Create an evidence log.</li><li>Commit changes with meaningful messages.</li><li>Use a branch for a draft report.</li><li>Tag the final lab version.</li></ul><h3>Step 1: Create the repository</h3><pre><code class="language-bash">mkdir -p ~/ms-cybersecurity-labs/week-00/git-evidence
+cd ~/ms-cybersecurity-labs/week-00/git-evidence
+git init
+git config user.name &quot;Student Analyst&quot;
+git config user.email &quot;student@example.invalid&quot;</code></pre><p>Windows users may use the PowerShell setup shown earlier.</p><h3>Step 2: Create safe lab files</h3><pre><code class="language-bash">cat &gt; sample-evidence.txt &lt;&lt;&#x27;EOF&#x27;
+This is a fake evidence file for a cybersecurity documentation lab.
+It contains no real personal data, no secrets, and no external system data.
+EOF
+
+cat &gt; README.md &lt;&lt;&#x27;EOF&#x27;
+# Evidence-Aware Git Lab
+
+## Purpose
+Practice Git, documentation, hashes, and chain-of-custody thinking.
+
+## Scope
+Training files created locally by the student.
+
+## Safety
+No real credentials, private keys, personal data, employer data, or third-party evidence.
+EOF</code></pre><h3>Step 3: Compute the hash</h3><pre><code class="language-bash">sha256sum sample-evidence.txt</code></pre><p>Windows alternative:</p><pre><code class="language-powershell">Get-FileHash .\sample-evidence.txt -Algorithm SHA256</code></pre><h3>Step 4: Record evidence metadata</h3><pre><code class="language-bash">cat &gt; evidence-log.md &lt;&lt;&#x27;EOF&#x27;
+# Evidence Log
+
+| ID | Time UTC | Source | Collector | Action | SHA-256 | Limitations |
+|---|---|---|---|---|---|---|
+| E001 | replace-time | sample-evidence.txt | replace-name | Created fake training evidence file | replace-hash | Training data only |
+EOF</code></pre><p>Replace <code>replace-time</code>, <code>replace-name</code>, and <code>replace-hash</code> with your actual lab values.</p><h3>Step 5: Commit the first version</h3><pre><code class="language-bash">git status
+git add README.md evidence-log.md sample-evidence.txt
+git commit -m &quot;Add safe training evidence and documentation&quot;
+git log --oneline</code></pre><h3>Step 6: Create a draft report branch</h3><pre><code class="language-bash">git switch -c draft-report
+cat &gt; report.md &lt;&lt;&#x27;EOF&#x27;
+# Draft Report
+
+## Finding
+The sample evidence file was created and hashed successfully.
+
+## Evidence
+See evidence-log.md.
+
+## Limitations
+This is training data only. It does not prove any real incident.
+EOF
+
+git add report.md
+git commit -m &quot;Draft lab report with limitations&quot;</code></pre><h3>Step 7: Merge and tag</h3><pre><code class="language-bash">git switch main
+git merge draft-report
+git tag week0-lesson05-complete
+git log --oneline --decorate --graph --all</code></pre><h3>Expected outcomes</h3><ul><li>You can initialize and inspect a Git repository.</li><li>You can create clear documentation for a security lab.</li><li>You can compute a hash and record it as evidence metadata.</li><li>You can use commits, branches, merges, and tags.</li><li>You can explain what Git proves and what it does not prove.</li></ul><h3>Lab report checklist</h3><ul><li>Operating system and Git version.</li><li>Repository path.</li><li>Hash command used.</li><li>SHA-256 value.</li><li>Screenshot or copied text of <code>git log --oneline --decorate --graph --all</code>.</li><li>Explanation of chain of custody in your own words.</li><li>Statement confirming no real secrets or third-party data were used.</li><li>One paragraph explaining why Git is helpful but not a complete forensic evidence system.</li></ul></section>
+
+          <section id="further-reading"><h2>19. Further Reading</h2><ul><li><a href="https://git-scm.com/book/en/v2">Pro Git book</a> for official Git concepts and usage.</li><li><a href="https://git-scm.com/docs/git">Git documentation</a> for command reference.</li><li><a href="https://docs.github.com/en/get-started/using-git/about-git">GitHub Docs: About Git</a> for beginner version-control concepts.</li><li><a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">GitHub Pages documentation</a> for static-site publishing.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/86/final">NIST SP 800-86</a> for integrating forensic techniques into incident response.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/61/r3/final">NIST SP 800-61 Rev. 3</a> for incident response recommendations and cyber risk management.</li><li><a href="https://www.cisa.gov/resources-tools/resources/secure-software-development-attestation-form">CISA secure software development resources</a> for software supply-chain governance context.</li><li><a href="https://slsa.dev/">SLSA</a> for software supply-chain integrity concepts.</li><li><a href="https://www.sigstore.dev/">Sigstore</a> for signing and provenance ideas.</li><li>Textbook direction: Software Engineering at Google for engineering practices and code review culture.</li><li>Textbook direction: Digital Forensics and Incident Response texts for evidence handling and investigation workflow.</li><li>Research directions: reproducible builds, tamper-evident logs, provenance graphs, artifact evaluation, secret scanning, repository mining, and privacy-preserving evidence sharing.</li></ul></section>
+
+          <div class="prev-next"><a class="btn" href="python-for-security-learners.html">← Lesson 0.4</a><a class="btn" href="index.html">Week 0 Overview</a><a class="btn btn-primary" href="../week-01/what-cybersecurity-protects.html">Next: Lesson 1.1 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+      <footer class="footer">This lesson teaches Git and evidence-aware documentation for authorized learning, defensive work, and reproducible research.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</body>
+</html>

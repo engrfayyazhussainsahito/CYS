@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 11.2: SIEM, Log Sources, and Telemetry Pipelines | MS Cybersecurity</title>
+  <meta name="description" content="Learn SIEM fundamentals, log source planning, parsing, normalization, enrichment, retention, telemetry quality, and safe local pipeline practice.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-11/siem-log-sources-and-telemetry-pipelines" data-title="Lesson 11.2: SIEM, Log Sources, and Telemetry Pipelines">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 11</a> / Lesson 11.2</div>
+      <header class="hero">
+        <div class="eyebrow">Week 11 · Lesson 11.2 · SIEM and Telemetry Pipelines</div>
+        <h1>SIEM, Log Sources, and Telemetry Pipelines</h1>
+        <p class="lead">A SIEM is only useful when the organization knows what evidence it needs, where that evidence comes from, how it is parsed, how long it is retained, and what decisions it supports.</p>
+        <div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>65 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Lesson 11.1 and Weeks 0–10</div><div class="meta-item"><strong>Practice time</strong>75–120 minutes</div></div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>Lesson 11.1 introduced security operations as an evidence-processing workflow. Lesson 11.2 focuses on the evidence system itself: log sources, telemetry pipelines, and SIEM platforms. The main lesson is simple but often missed: a SIEM does not create useful evidence by magic. It receives records from other systems, parses them, enriches them, stores them, and allows analysts or detection logic to query them.</p>
+<p>A weak SIEM deployment usually fails before an analyst opens a dashboard. Important sources are missing. Field names are inconsistent. Timestamps disagree. Hostnames do not map to asset owners. Usernames appear in different formats. Retention is too short. High-volume low-value logs consume budget while high-value audit trails are absent. Detection engineering becomes guesswork because the data cannot answer basic questions.</p>
+<p>This lesson teaches how to design a telemetry pipeline from first principles. The focus is not a specific product such as Splunk, Microsoft Sentinel, Elastic, Chronicle, QRadar, or a cloud-native logging service. The focus is the durable architecture behind all of them: source selection, collection, parsing, normalization, enrichment, storage, query, alerting, retention, access control, and quality measurement.</p></section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2>
+<ul><li>Define SIEM, log source, event, telemetry pipeline, parser, normalization, enrichment, retention, and index.</li><li>Classify log sources by security value, volume, sensitivity, and operational owner.</li><li>Explain how raw logs become searchable fields and why schema design matters.</li><li>Describe timestamp, identity, asset, network, and cloud-context problems in telemetry pipelines.</li><li>Build a small local fictional pipeline that parses JSONL events, normalizes fields, enriches context, and produces a summary.</li><li>Write a telemetry inventory and a log onboarding checklist for a new source.</li><li>Identify common SIEM failure modes: missing sources, excessive noise, broken parsing, bad retention, duplicate events, and weak access controls.</li></ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2>
+<p>You should already understand the difference between an event, alert, case, and incident. You should also be comfortable reading simple JSON, CSV, and Python. The lab does not connect to any real cloud, endpoint, directory, or network source. It uses fictional local files only.</p>
+<div class="warning"><strong>Authorization boundary:</strong> Do not export company logs, user activity records, packet captures, endpoint telemetry, email logs, cloud audit records, or SIEM data for practice unless you have explicit written approval and a defined privacy handling process.</div></section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>SIEM</h3><p>A Security Information and Event Management system collects, stores, searches, correlates, and alerts on security-relevant events from many sources. A SIEM is a data platform for security decisions, not a substitute for log strategy or analyst judgment.</p>
+<h3>Log source</h3><p>A log source is any system that emits records useful for security or operations. Examples include identity providers, operating systems, EDR tools, firewalls, DNS resolvers, VPN gateways, web servers, cloud audit services, Kubernetes control planes, SaaS applications, vulnerability scanners, and CI/CD platforms.</p>
+<h3>Event</h3><p>An event is a record that something happened. It usually includes a timestamp, actor, action, target, result, source, and additional attributes. Not every event is security-relevant, and not every security-relevant event becomes an alert.</p>
+<h3>Telemetry pipeline</h3><p>A telemetry pipeline is the path from source system to searchable, usable evidence. It includes collection, transport, parsing, normalization, enrichment, deduplication, storage, retention, and access control.</p>
+<h3>Parsing</h3><p>Parsing converts raw text or structured data into fields. For example, a raw authentication message becomes fields such as <code>timestamp</code>, <code>user</code>, <code>source_ip</code>, <code>action</code>, and <code>result</code>.</p>
+<h3>Normalization</h3><p>Normalization maps different source-specific fields into a consistent schema. For example, <code>src_ip</code>, <code>client_ip</code>, and <code>ipAddress</code> may all become <code>source.ip</code>.</p>
+<h3>Enrichment</h3><p>Enrichment adds context that was not present in the original event: asset owner, business criticality, identity department, geolocation, vulnerability status, threat intelligence labels, or known maintenance windows.</p>
+<h3>Retention</h3><p>Retention defines how long logs are kept, where they are stored, how searchable they remain, and when they are archived or deleted. Retention should reflect investigation needs, legal requirements, privacy obligations, cost, and risk.</p></section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2>
+<p>The pipeline below is intentionally generic. The same logic appears whether logs land in a cloud logging service, a SIEM, a data lake, or a managed detection platform.</p>
+<pre class="mermaid"><code>flowchart LR
+  A[Source systems] --> B[Collection agent or API]
+  B --> C[Transport queue]
+  C --> D[Parser]
+  D --> E[Normalized schema]
+  E --> F[Enrichment]
+  F --> G[Index or data lake]
+  G --> H[Search and dashboards]
+  G --> I[Detection rules]
+  I --> J[Alerts and cases]
+  H --> K[Analyst investigation]
+  J --> K
+  K --> L[Feedback: tune, add source, fix parser]
+  L --> D
+  L --> I</code></pre>
+<p>The most important hidden stage is feedback. A pipeline should improve after investigations reveal missing fields, broken parsing, high noise, or sources that do not support decisions.</p></section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2>
+<pre class="mermaid"><code>mindmap
+  root((Telemetry Pipeline))
+    Sources
+      Identity provider
+      Endpoint and EDR
+      Network firewall
+      DNS resolver
+      Cloud audit logs
+      SaaS admin logs
+      Application logs
+      CI/CD logs
+    Processing
+      Collect
+      Transport
+      Parse
+      Normalize
+      Deduplicate
+      Enrich
+      Store
+    Quality
+      Completeness
+      Timestamp accuracy
+      Field consistency
+      Retention
+      Cost control
+      Privacy controls
+    Consumers
+      Analyst search
+      Dashboards
+      Detection rules
+      Threat hunting
+      Incident response
+      Compliance reporting</code></pre></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<p>SIEM design uses simple capacity and quality calculations. These calculations do not prove security, but they expose hidden constraints.</p>
+<ul><li><strong>Events per second:</strong> the rate at which a source or pipeline produces events.</li><li><strong>Daily ingest:</strong> average event size multiplied by event count per day.</li><li><strong>Retention cost:</strong> storage and indexing cost over the retention period.</li><li><strong>Coverage:</strong> percentage of critical assets, identities, or behaviors that produce usable logs.</li><li><strong>Parse success rate:</strong> records successfully mapped into required fields divided by total records.</li><li><strong>Detection dependency coverage:</strong> percentage of detection rules whose required log sources are available and healthy.</li></ul>
+<pre><code>Example capacity estimate:
+Average event size: 900 bytes
+Events per second: 250
+Seconds per day: 86,400
+Daily raw volume = 900 × 250 × 86,400 = 19,440,000,000 bytes
+Approximate daily volume = 19.44 GB before compression, indexing overhead, and replicas</code></pre>
+<p>Budget pressure can distort security. Keeping every noisy debug log for one year may be less useful than keeping high-value identity, endpoint, DNS, cloud audit, and administrative logs for the period needed to reconstruct an incident.</p></section>
+
+<section id="source-taxonomy"><h2>8. Log Source Taxonomy</h2>
+<p>A useful telemetry inventory classifies sources by the security questions they answer. The same source may support multiple investigations, but every source should have a reason for being collected.</p>
+<table><thead><tr><th>Source category</th><th>Questions it helps answer</th><th>Common fields</th></tr></thead><tbody>
+<tr><td>Identity provider</td><td>Who authenticated, from where, with what result, and using what factor?</td><td>user, source IP, result, MFA status, application, session ID</td></tr>
+<tr><td>Endpoint / EDR</td><td>What process, file, command, registry, or network action occurred on a host?</td><td>hostname, process name, command line, parent process, hash, user</td></tr>
+<tr><td>Network firewall</td><td>Which connection was allowed or denied between zones?</td><td>source IP, destination IP, port, protocol, action, rule ID</td></tr>
+<tr><td>DNS resolver</td><td>Which names were queried and by which client?</td><td>query name, client IP, response, record type, resolver</td></tr>
+<tr><td>Cloud audit</td><td>Which API call changed or accessed cloud resources?</td><td>principal, API action, resource, region, source IP, result</td></tr>
+<tr><td>Application</td><td>What business action occurred inside a service?</td><td>user ID, request path, object ID, action, status, transaction ID</td></tr>
+<tr><td>SaaS admin logs</td><td>Who changed sharing, permissions, users, mail rules, or admin settings?</td><td>actor, target, operation, old value, new value, tenant</td></tr>
+<tr><td>CI/CD pipeline</td><td>Who changed build, deployment, secrets, runners, or artifacts?</td><td>commit, actor, runner, job, artifact, environment, result</td></tr>
+</tbody></table></section>
+
+<section id="pipeline-design"><h2>9. Pipeline Design</h2>
+<p>A telemetry pipeline should be designed backwards from decisions. Start with the incident or investigation questions, then identify the minimum evidence needed to answer them.</p>
+<ol><li><strong>Define the question.</strong> Example: Can we identify suspicious administrative cloud API activity?</li><li><strong>Identify required fields.</strong> Principal, action, target resource, result, timestamp, source IP, region, user agent, and request ID.</li><li><strong>Choose source systems.</strong> Cloud audit logs, identity logs, privileged access management logs, and change management records.</li><li><strong>Define collection method.</strong> Agent, API pull, streaming export, webhook, syslog, object storage export, or message queue.</li><li><strong>Build parsing and schema mapping.</strong> Map source-specific names to consistent fields.</li><li><strong>Add enrichment.</strong> Link principal to department, role, risk tier, asset owner, and approved maintenance windows.</li><li><strong>Set retention and access controls.</strong> Decide hot, warm, archive, deletion, and permissions.</li><li><strong>Test with known events.</strong> Generate or locate authorized benign events to prove fields arrive correctly.</li><li><strong>Document operational ownership.</strong> Record who owns the source, parser, pipeline, detection, and escalation path.</li></ol></section>
+
+<section id="schema-normalization"><h2>10. Schema and Normalization</h2>
+<p>Normalization is what lets analysts ask one question across many sources. Without normalization, every investigation becomes a translation exercise. This does not mean all original fields are discarded. Good pipelines preserve raw events while also extracting normalized fields for search and detection.</p>
+<table><thead><tr><th>Concept</th><th>Bad field drift</th><th>Normalized example</th></tr></thead><tbody>
+<tr><td>Source IP</td><td><code>src</code>, <code>src_ip</code>, <code>clientIp</code>, <code>ipAddress</code></td><td><code>source.ip</code></td></tr>
+<tr><td>Actor</td><td><code>user</code>, <code>username</code>, <code>principal</code>, <code>actorEmail</code></td><td><code>actor.name</code> or <code>actor.email</code></td></tr>
+<tr><td>Action</td><td><code>eventName</code>, <code>operation</code>, <code>activity</code>, <code>verb</code></td><td><code>event.action</code></td></tr>
+<tr><td>Result</td><td><code>status</code>, <code>outcome</code>, <code>resultCode</code>, <code>success</code></td><td><code>event.outcome</code></td></tr>
+<tr><td>Target</td><td><code>object</code>, <code>resource</code>, <code>destination</code>, <code>targetId</code></td><td><code>target.resource</code></td></tr>
+</tbody></table>
+<p>Schema debates can become theoretical. The practical test is whether an analyst can answer common questions quickly: who acted, what did they do, where did it happen, what was affected, did it succeed, and what context changes severity?</p></section>
+
+<section id="timestamps-and-timezones"><h2>11. Timestamps, Ordering, and Time Zones</h2>
+<p>Timeline building is fragile when timestamps are inconsistent. Logs may use local time, UTC, epoch time, different precision, or delayed delivery. Some sources record event time; others record ingest time. Analysts must know which timestamp they are using.</p>
+<ul><li><strong>Event time:</strong> when the activity happened at the source.</li><li><strong>Ingest time:</strong> when the pipeline received the record.</li><li><strong>Processing time:</strong> when parsing, enrichment, or detection ran.</li><li><strong>Clock skew:</strong> disagreement between system clocks.</li><li><strong>Latency:</strong> delay between event occurrence and searchable availability.</li></ul>
+<div class="callout"><strong>Operational rule:</strong> Prefer UTC for storage and correlation, preserve the original timestamp field, and document known source latency. During incident response, always state which timestamp you are using.</div></section>
+
+<section id="enrichment-and-context"><h2>12. Enrichment and Context</h2>
+<p>Enrichment changes the value of telemetry. A failed login from a new country may be low priority for a test account and high priority for a privileged administrator. A denied firewall connection may be routine internet noise or a critical sign when it targets a crown-jewel service from a compromised host.</p>
+<p>Common enrichment sources include:</p>
+<ul><li>Asset inventory: owner, environment, criticality, internet exposure, data classification.</li><li>Identity inventory: department, role, privilege level, MFA requirement, account type.</li><li>Network inventory: subnet, zone, business application, expected traffic patterns.</li><li>Vulnerability data: known exposed weaknesses and patch status.</li><li>Change calendar: deployments, maintenance windows, approved administrative work.</li><li>Threat intelligence: known malicious infrastructure, malware family indicators, abuse history.</li></ul>
+<p>Enrichment should be explainable. If a system automatically labels an asset as critical, analysts should know the source and freshness of that label.</p></section>
+
+<section id="retention-access-privacy"><h2>13. Retention, Access Control, and Privacy</h2>
+<p>Logs often contain sensitive data: usernames, IP addresses, URLs, email subjects, filenames, hostnames, customer IDs, administrator actions, and sometimes secrets accidentally written by applications. SIEM access should be role-based and audited. Analysts should see what they need for authorized work, not unlimited personal or business data by default.</p>
+<p>Retention has three practical layers:</p>
+<ul><li><strong>Hot searchable data:</strong> fast query access for recent investigations and detections.</li><li><strong>Warm or reduced-index data:</strong> slower access for longer lookback and incident reconstruction.</li><li><strong>Archive:</strong> low-cost evidence preservation with stricter retrieval process.</li></ul>
+<p>Deleting logs too soon can make investigations impossible. Keeping all logs forever can create cost, privacy, and legal exposure. A mature retention plan balances security value, regulatory requirements, business risk, cost, and data minimization.</p></section>
+
+<section id="query-thinking"><h2>14. Query Thinking Before Query Syntax</h2>
+<p>SIEM products use different query languages, but the mental process is similar. A query should express an investigation question, not just search random strings.</p>
+<pre><code>Question: Did the same identity fail many logins and then succeed from a new IP?
+Required fields: actor, source_ip, event.action, event.outcome, timestamp
+Logic:
+  1. Find failed login events grouped by actor and source_ip.
+  2. Count failures in a short time window.
+  3. Look for a successful login by the same actor soon after.
+  4. Enrich with MFA status, device trust, geography, and account privilege.
+  5. Decide whether this is password guessing, normal user error, or another pattern.</code></pre>
+<p>Beginners often start with tool syntax too early. First define the behavior, fields, time window, grouping, thresholds, false positives, and response action. Syntax comes after logic.</p></section>
+
+<section id="practical-examples"><h2>15. Practical Examples</h2>
+<h3>Example 1: Missing identity logs</h3><p>A SOC receives endpoint alerts for suspicious commands but cannot see whether the user recently authenticated from a new location. The endpoint data is useful, but the investigation is incomplete because identity logs are missing or not joined to the case.</p>
+<h3>Example 2: Broken parser</h3><p>A firewall format changes after an appliance upgrade. The SIEM still ingests raw records, but <code>event.action</code> and <code>destination.port</code> become empty. Detection rules silently stop matching. Ingest volume looks healthy, but detection coverage is degraded.</p>
+<h3>Example 3: No asset enrichment</h3><p>A cloud storage access event appears low severity because it is only a read operation. After enrichment, analysts learn the storage bucket contains regulated data and belongs to a production payment workflow. Context changes priority.</p>
+<h3>Example 4: Retention too short</h3><p>A suspected compromise is discovered on day 45, but authentication logs are retained for only 14 days. The team cannot reconstruct initial access. The cost saved on retention becomes a major investigation gap.</p></section>
+
+<section id="tools-and-roles"><h2>16. Tools, Roles, and Ownership</h2>
+<p>Telemetry work is shared across teams. Security analysts know investigation needs. Detection engineers know rule dependencies. Platform engineers know pipelines and storage. System owners know source behavior. Privacy, legal, and compliance teams define handling constraints. Without explicit ownership, pipelines degrade quietly.</p>
+<table><thead><tr><th>Role</th><th>Typical responsibility</th></tr></thead><tbody>
+<tr><td>Source owner</td><td>Ensures the source emits required events and communicates format changes.</td></tr>
+<tr><td>Pipeline owner</td><td>Maintains collection, transport, parsing, indexing, and pipeline health.</td></tr>
+<tr><td>Detection engineer</td><td>Defines data requirements for rules and validates detection logic against available fields.</td></tr>
+<tr><td>SOC analyst</td><td>Uses telemetry for triage and reports gaps that block investigations.</td></tr>
+<tr><td>Incident responder</td><td>Defines evidence needed for containment, eradication, recovery, and reporting.</td></tr>
+<tr><td>Privacy/security governance</td><td>Defines acceptable access, retention, masking, and audit requirements.</td></tr>
+</tbody></table></section>
+
+<section id="research-perspective"><h2>17. Research Perspective</h2>
+<p>Research in SIEM and telemetry pipelines examines log quality, alert overload, automated correlation, streaming analytics, privacy-preserving monitoring, anomaly detection, schema design, and the economics of security data. A recurring theme is that more data does not automatically mean better detection. Useful telemetry is evidence that supports a decision.</p>
+<p>Modern research also studies how summarization and machine learning can help analysts navigate large cases. The risk is that automation may produce confident narratives unsupported by evidence. In security operations, generated summaries must point back to source events, timestamps, and fields.</p></section>
+
+<section id="common-misconceptions"><h2>18. Common Misconceptions</h2>
+<ul><li><strong>Misconception:</strong> If logs are ingested, visibility is solved. <strong>Correction:</strong> Ingest does not guarantee parsing, normalization, retention, access, or detection coverage.</li><li><strong>Misconception:</strong> Raw volume is the best measure of SIEM value. <strong>Correction:</strong> Value depends on whether logs answer security questions.</li><li><strong>Misconception:</strong> A dashboard is the same as detection. <strong>Correction:</strong> Dashboards visualize data; detection logic defines suspicious behavior and produces reviewable alerts.</li><li><strong>Misconception:</strong> Cloud logs are automatically complete. <strong>Correction:</strong> Some cloud logs require explicit enabling, routing, retention, permissions, or paid tiers.</li><li><strong>Misconception:</strong> Normalization means losing raw logs. <strong>Correction:</strong> Mature pipelines preserve raw records and add normalized fields.</li><li><strong>Misconception:</strong> Privacy is separate from SIEM design. <strong>Correction:</strong> Telemetry design determines who can see sensitive user, customer, and business activity.</li></ul></section>
+
+<section id="summary"><h2>19. Summary</h2>
+<p>A SIEM is a security evidence platform. It becomes useful only when log sources are selected intentionally, parsed correctly, normalized consistently, enriched with context, retained long enough, protected appropriately, and connected to detection and investigation workflows.</p>
+<p>The central skill in this lesson is pipeline reasoning. Before writing rules or dashboards, define the security question, the required fields, the source of truth, the expected latency, the enrichment needed for severity, the retention requirement, and the owner responsible for keeping the source healthy.</p></section>
+
+<section id="glossary"><h2>20. Glossary</h2>
+<ul><li><strong>SIEM:</strong> A platform for collecting, storing, searching, correlating, and alerting on security-relevant events.</li><li><strong>Log source:</strong> A system that emits records used for security, operations, compliance, or investigation.</li><li><strong>Telemetry pipeline:</strong> The path that turns source events into searchable, normalized, enriched evidence.</li><li><strong>Parser:</strong> Logic that extracts structured fields from raw records.</li><li><strong>Normalization:</strong> Mapping source-specific fields into a consistent schema.</li><li><strong>Enrichment:</strong> Adding external context such as asset owner, identity role, geolocation, or criticality.</li><li><strong>Index:</strong> A storage structure optimized for search and retrieval.</li><li><strong>Retention:</strong> The policy for how long logs are kept and how accessible they remain.</li><li><strong>Ingest latency:</strong> The delay between event occurrence and availability in the logging platform.</li><li><strong>Parse failure:</strong> A record that is collected but not correctly converted into useful fields.</li></ul></section>
+
+<section id="self-assessment"><h2>21. Self-Assessment</h2>
+<div class="quiz-card" data-answer="B"><p><strong>1.</strong> What is the best description of a SIEM?</p><label><input type="radio" name="q1" value="A"> A tool that automatically proves every incident</label><label><input type="radio" name="q1" value="B"> A platform for storing, searching, correlating, and alerting on security events</label><label><input type="radio" name="q1" value="C"> A replacement for endpoint, network, and cloud logs</label><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="C"><p><strong>2.</strong> Why is normalization important?</p><label><input type="radio" name="q2" value="A"> It deletes raw logs to save storage</label><label><input type="radio" name="q2" value="B"> It prevents analysts from searching logs</label><label><input type="radio" name="q2" value="C"> It maps different source fields into a consistent schema</label><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="A"><p><strong>3.</strong> Which condition can silently break detections even when ingest volume looks normal?</p><label><input type="radio" name="q3" value="A"> Parser failure after a source format change</label><label><input type="radio" name="q3" value="B"> Having clear field names</label><label><input type="radio" name="q3" value="C"> Documenting source ownership</label><button class="check-quiz">Check answer</button></div>
+<div class="quiz-card" data-answer="B"><p><strong>4.</strong> Which timestamp is best for reconstructing when activity happened?</p><label><input type="radio" name="q4" value="A"> Only the dashboard refresh time</label><label><input type="radio" name="q4" value="B"> Event time, while preserving ingest and processing times when available</label><label><input type="radio" name="q4" value="C"> The time the analyst opened the case</label><button class="check-quiz">Check answer</button></div>
+<h3>Reflection prompts</h3><ol><li>Choose one log source. What security questions does it answer?</li><li>Which fields must be present for the source to support detection?</li><li>What enrichment would change severity for that source?</li><li>What would break if the source stopped arriving for 24 hours?</li></ol></section>
+
+<section id="practice-lab"><h2>22. Practice Lab</h2>
+<h3>Goal</h3><p>Build a small local telemetry pipeline from fictional JSONL logs. The lab parses events, normalizes fields, enriches assets and identities, summarizes source health, and prints candidate investigation signals.</p>
+<h3>Step 1: Create the fictional event file</h3>
+<p>Create a folder named <code>siem-pipeline-lab</code>. Save the following as <code>raw_events.jsonl</code>.</p>
+<pre><code>{"time":"2026-06-01T08:10:04Z","source":"idp","actorEmail":"admin@example.test","activity":"login","status":"failure","ipAddress":"203.0.113.50","app":"console","mfa":"not_challenged"}
+{"time":"2026-06-01T08:10:31Z","source":"idp","actorEmail":"admin@example.test","activity":"login","status":"failure","ipAddress":"203.0.113.50","app":"console","mfa":"not_challenged"}
+{"time":"2026-06-01T08:11:02Z","source":"idp","actorEmail":"admin@example.test","activity":"login","status":"success","ipAddress":"203.0.113.50","app":"console","mfa":"passed"}
+{"timestamp":"2026-06-01T08:13:20Z","source":"cloud_audit","principal":"admin@example.test","eventName":"CreateAccessKey","resultCode":"success","resource":"svc-backup","src_ip":"203.0.113.50","region":"eu-west-1"}
+{"timestamp":"2026-06-01T08:20:48Z","source":"dns","client_ip":"10.20.4.21","query":"backup-status.example.test","answer":"198.51.100.77","record_type":"A"}
+{"timestamp":"2026-06-01T08:24:10Z","source":"edr","hostname":"ws-014","user":"sam@example.test","process":"powershell.exe","cmdline":"powershell.exe -NoProfile Get-Process","action":"process_start","severity":"low"}
+{"timestamp":"2026-06-01T08:30:05Z","source":"firewall","src_ip":"10.20.4.21","dst_ip":"198.51.100.77","dst_port":443,"proto":"tcp","action":"allow","rule_id":"egress-web"}
+{"timestamp":"2026-06-01T08:35:44Z","source":"cloud_audit","principal":"deploy-bot@example.test","eventName":"UpdateFunctionCode","resultCode":"success","resource":"payment-api","src_ip":"10.1.2.9","region":"us-east-1"}</code></pre>
+<h3>Step 2: Create the enrichment file</h3>
+<p>Save this as <code>context.json</code>.</p>
+<pre><code>{
+  "identities": {
+    "admin@example.test": {"role": "cloud-admin", "risk": "high", "department": "platform"},
+    "deploy-bot@example.test": {"role": "service-account", "risk": "medium", "department": "engineering"},
+    "sam@example.test": {"role": "standard-user", "risk": "low", "department": "finance"}
+  },
+  "assets": {
+    "svc-backup": {"owner": "platform", "criticality": "high"},
+    "payment-api": {"owner": "payments", "criticality": "high"},
+    "ws-014": {"owner": "finance", "criticality": "medium"}
+  }
+}</code></pre>
+<h3>Step 3: Create the normalizer</h3>
+<p>Save this as <code>normalize_pipeline.py</code>.</p>
+<pre><code>import json
+from collections import Counter, defaultdict
+from pathlib import Path
+
+RAW_EVENTS = Path("raw_events.jsonl")
+CONTEXT = Path("context.json")
+
+FIELD_MAP = {
+    "actorEmail": "actor",
+    "principal": "actor",
+    "user": "actor",
+    "ipAddress": "source_ip",
+    "src_ip": "source_ip",
+    "client_ip": "source_ip",
+    "eventName": "action",
+    "activity": "action",
+    "resultCode": "outcome",
+    "status": "outcome",
+    "time": "timestamp",
+}
+
+
+def normalize(record):
+    normalized = dict(record)
+    for old, new in FIELD_MAP.items():
+        if old in record and new not in normalized:
+            normalized[new] = record[old]
+    normalized.setdefault("outcome", record.get("action", "unknown"))
+    normalized.setdefault("actor", record.get("hostname", "unknown"))
+    normalized.setdefault("source_ip", "unknown")
+    normalized.setdefault("timestamp", record.get("time", "unknown"))
+    normalized["event_source"] = record.get("source", "unknown")
+    return normalized
+
+
+def enrich(event, context):
+    actor = event.get("actor")
+    resource = event.get("resource") or event.get("hostname")
+    identity_context = context.get("identities", {}).get(actor, {})
+    asset_context = context.get("assets", {}).get(resource, {})
+    event["actor_role"] = identity_context.get("role", "unknown")
+    event["actor_risk"] = identity_context.get("risk", "unknown")
+    event["asset_owner"] = asset_context.get("owner", "unknown")
+    event["asset_criticality"] = asset_context.get("criticality", "unknown")
+    return event
+
+
+def load_events():
+    with RAW_EVENTS.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                yield json.loads(line)
+
+
+def main():
+    context = json.loads(CONTEXT.read_text(encoding="utf-8"))
+    events = [enrich(normalize(record), context) for record in load_events()]
+
+    print("Normalized events:")
+    for event in events:
+        print(json.dumps(event, indent=2, sort_keys=True))
+
+    print("\nSource counts:")
+    for source, count in Counter(e["event_source"] for e in events).items():
+        print(f"- {source}: {count}")
+
+    failures = defaultdict(int)
+    successes = []
+    for event in events:
+        if event.get("action") == "login" and event.get("outcome") == "failure":
+            failures[(event.get("actor"), event.get("source_ip"))] += 1
+        if event.get("action") == "login" and event.get("outcome") == "success":
+            successes.append(event)
+
+    print("\nCandidate signals:")
+    for event in successes:
+        key = (event.get("actor"), event.get("source_ip"))
+        if failures[key] &gt;= 2 and event.get("actor_risk") == "high":
+            print(f"- High-risk identity had {failures[key]} failures then success: {key}")
+
+    for event in events:
+        if event.get("action") == "CreateAccessKey" and event.get("asset_criticality") == "high":
+            print(f"- Access key created for high-criticality resource: {event.get('resource')} by {event.get('actor')}")
+
+
+if __name__ == "__main__":
+    main()</code></pre>
+<h3>Step 4: Run and interpret</h3>
+<ol><li>Run <code>python3 normalize_pipeline.py</code> on Linux/macOS or <code>python normalize_pipeline.py</code> on Windows.</li><li>Confirm that different source fields map to <code>actor</code>, <code>source_ip</code>, <code>action</code>, <code>outcome</code>, and <code>timestamp</code>.</li><li>Identify which event sequence would deserve analyst review.</li><li>Write one paragraph explaining which enrichment fields changed severity.</li><li>Write one pipeline improvement you would make before turning this into a detection rule.</li></ol>
+<h3>Expected outcomes</h3><ul><li>You can explain the difference between raw and normalized events.</li><li>You can show why identity and asset context affect prioritization.</li><li>You can identify a small candidate signal without touching real systems.</li><li>You can describe a telemetry gap or parser risk in operational language.</li></ul></section>
+
+<section id="further-reading"><h2>23. Further Reading</h2>
+<ul><li>NIST guidance on computer security log management.</li><li>NIST guidance on incident handling and evidence preservation.</li><li>MITRE ATT&amp;CK data sources and data components.</li><li>OpenTelemetry concepts for telemetry pipelines and structured observability.</li><li>Elastic Common Schema, Splunk Common Information Model, and other schema references for understanding normalization tradeoffs.</li><li>Vendor documentation for SIEM ingestion, parsing, retention, and access-control models.</li></ul></section>
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="security-operations-from-first-principles.html">← Lesson 11.1</a><a class="btn btn-primary" href="detection-engineering-and-rule-lifecycle.html">Lesson 11.3 →</a></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

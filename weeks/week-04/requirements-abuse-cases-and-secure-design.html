@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 4.2: Requirements, Abuse Cases, and Secure Design | MS Cybersecurity</title>
+  <meta name="description" content="Security requirements, abuse cases, and secure design from first principles: assets, user stories, misuse, trust boundaries, design decisions, acceptance criteria, and safe labs.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-04-02" data-title="Lesson 4.2: Requirements, Abuse Cases, and Secure Design">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 4</a> / Lesson 4.2</div>
+      <header class="hero">
+        <div class="eyebrow">Week 4 · Secure Software and Supply Chain</div>
+        <h1>Lesson 4.2: Requirements, Abuse Cases, and Secure Design</h1>
+        <p class="lead">Security failures often begin before code exists. A vague requirement, missing abuse case, or unsafe design assumption can become a breach months later. This lesson teaches how to define security behavior before implementation.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>240–340 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 0.1–4.1 recommended; no prior design course required</div>
+          <div class="meta-item"><strong>Practice time</strong>5–8 hours</div>
+        </div>
+        <div class="toolbar">
+          <button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button>
+          <button id="completeBtn" class="complete-btn" type="button">Mark complete</button>
+          <button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button>
+          <button class="pdf-btn print-page" type="button">Download lesson as PDF</button>
+          <button class="theme-toggle" type="button">Toggle dark mode</button>
+        </div>
+      </header>
+
+      <section class="lesson-visual card">
+        <div class="visual-graphic" aria-label="Secure design funnel illustration">
+          <svg viewBox="0 0 620 380" role="img" aria-labelledby="svg-title svg-desc">
+            <title id="svg-title">Secure design funnel</title>
+            <desc id="svg-desc">Feature ideas become requirements, abuse cases, design constraints, controls, tests, and release evidence.</desc>
+            <defs>
+              <linearGradient id="designGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#6ea8ff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient>
+            </defs>
+            <rect x="30" y="36" width="560" height="308" rx="30" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/>
+            <path d="M94 80h432l-70 82H164z" fill="url(#designGrad)" opacity=".88"/>
+            <path d="M164 170h292l-50 70H214z" fill="url(#designGrad)" opacity=".62"/>
+            <path d="M214 250h192l-38 54H252z" fill="url(#designGrad)" opacity=".42"/>
+            <text x="310" y="125" text-anchor="middle" font-size="22" fill="white">Requirements</text>
+            <text x="310" y="212" text-anchor="middle" font-size="21" fill="white">Abuse Cases</text>
+            <text x="310" y="286" text-anchor="middle" font-size="20" fill="white">Secure Design</text>
+            <g fill="var(--bg)" stroke="var(--border)" stroke-width="2">
+              <rect x="62" y="278" width="110" height="40" rx="14"/>
+              <rect x="448" y="278" width="110" height="40" rx="14"/>
+            </g>
+            <text x="117" y="304" text-anchor="middle" font-size="14">Controls</text>
+            <text x="503" y="304" text-anchor="middle" font-size="14">Tests</text>
+            <path d="M172 298h76M372 298h76" stroke="var(--muted)" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="visual-panel">
+          <h2>Design is where security becomes specific.</h2>
+          <p>A secure design translates vague goals such as “protect grades” into precise behavior: who may access which object, under what conditions, how denials are logged, how misuse is detected, and how the system fails safely.</p>
+          <div class="visual-steps">
+            <div class="visual-step"><strong>Requirement</strong><span>What must be true?</span></div>
+            <div class="visual-step"><strong>Abuse case</strong><span>How could it be misused?</span></div>
+            <div class="visual-step"><strong>Design control</strong><span>What prevents, detects, or limits harm?</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview">
+            <h2>Week 4 Context</h2>
+            <p>Lesson 4.1 introduced secure software engineering as a lifecycle discipline. Lesson 4.2 moves earlier in that lifecycle: requirements and design. This matters because many severe vulnerabilities are not caused by a missing library call. They are caused by unclear authorization rules, unsafe trust assumptions, missing logging, weak defaults, or designs that put too much responsibility on users.</p>
+            <p>The main output of this lesson is a <strong>secure design packet</strong>: a small set of artifacts that can be reviewed before code is written. It includes assets, security requirements, abuse cases, a data-flow diagram, trust boundaries, controls, acceptance tests, and residual risks.</p>
+            <div class="callout warning"><p><strong>Boundary:</strong> all examples use fictional systems or your own local files. Do not review, test, or probe real systems unless you have written authorization and a defined scope.</p></div>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <h3>Plain-English explanation</h3>
+            <p>A <strong>requirement</strong> says what a system must do. A <strong>security requirement</strong> says what a system must do to protect something. An <strong>abuse case</strong> says how a feature could be misused. A <strong>secure design</strong> is the plan that makes the required protection realistic.</p>
+            <p>Analogy: suppose a university builds a room for storing exam papers. A weak requirement says, “Make the room safe.” A better requirement says, “Only authorized exam officers may enter the room; every entry must be logged; exam papers must stay locked when unattended.” An abuse case says, “A student tries to enter by following an officer through the door.” A secure design adds badge access, anti-tailgating procedure, cameras, locked cabinets, and audit review.</p>
+            <h3>Why the topic exists</h3>
+            <p>Software teams need a way to decide security behavior before code is written. Without explicit security requirements, developers may implement different assumptions. Without abuse cases, teams may test only friendly behavior. Without secure design, controls are often bolted on late and inconsistently.</p>
+            <h3>Why the topic matters</h3>
+            <p>Design flaws are expensive because they shape the whole system. A missing input check may require a small patch. A missing authorization model may require redesigning APIs, databases, caches, logs, user interfaces, and administrative workflows.</p>
+            <h3>Where it is used</h3>
+            <ul>
+              <li>Product planning and feature design.</li>
+              <li>Architecture review boards.</li>
+              <li>Secure software development life cycle gates.</li>
+              <li>Threat modeling workshops.</li>
+              <li>Pull-request and design-document reviews.</li>
+              <li>Compliance evidence and audit preparation.</li>
+            </ul>
+            <h3>Who uses it</h3>
+            <ul>
+              <li><strong>Developers</strong> use requirements and design notes to implement the correct behavior.</li>
+              <li><strong>Security engineers</strong> use abuse cases to find missing controls early.</li>
+              <li><strong>Architects</strong> use trust boundaries and data flows to choose safe structures.</li>
+              <li><strong>Product managers</strong> use security acceptance criteria to prioritize work.</li>
+              <li><strong>Quality assurance teams</strong> use abuse cases as negative tests.</li>
+              <li><strong>Auditors</strong> use the artifacts as evidence that security was considered before release.</li>
+            </ul>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <p>After finishing this lesson, you should be able to:</p>
+            <ul>
+              <li>Define functional, non-functional, security, privacy, safety, and operational requirements.</li>
+              <li>Convert vague security goals into specific, testable requirements.</li>
+              <li>Write abuse cases that describe realistic misuse without giving instructions for unauthorized activity.</li>
+              <li>Draw a simple data-flow diagram and identify trust boundaries.</li>
+              <li>Explain how secure design principles guide architecture choices.</li>
+              <li>Map assets, subjects, objects, actions, threats, controls, tests, and residual risks.</li>
+              <li>Distinguish prevention, detection, response, and recovery controls in design.</li>
+              <li>Write security acceptance criteria that can be tested before release.</li>
+              <li>Evaluate a small feature design for missing authorization, logging, data validation, and failure-mode decisions.</li>
+              <li>Create a complete safe design-review packet for a fictional feature.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <p>This lesson assumes no prior design or software-engineering course. It uses these concepts:</p>
+            <h3>Feature</h3>
+            <p>A <strong>feature</strong> is a capability a system provides. Example: “download transcript,” “reset password,” or “invite a new user.”</p>
+            <h3>User story</h3>
+            <p>A <strong>user story</strong> is a short description of what a legitimate user wants. Example: “As a student, I want to download my transcript so that I can apply for a scholarship.”</p>
+            <h3>Asset</h3>
+            <p>An <strong>asset</strong> is anything worth protecting: data, identity, money, service availability, safety, reputation, or system control.</p>
+            <h3>Subject, object, and action</h3>
+            <p>In access-control thinking, a <strong>subject</strong> is the actor, an <strong>object</strong> is the protected thing, and an <strong>action</strong> is what the subject wants to do. Example: student Alice reads transcript T100.</p>
+            <h3>Trust boundary</h3>
+            <p>A <strong>trust boundary</strong> is a place where data or control crosses from one trust level to another. Example: a browser request enters a server. The server should not blindly trust client-provided values.</p>
+            <h3>Control</h3>
+            <p>A <strong>control</strong> is a safeguard that prevents, detects, limits, or helps recover from harm. Examples: authentication, authorization, encryption, logging, rate limiting, backups, and approval workflows.</p>
+            <details class="callout">
+              <summary>Mini-explanation: friendly path vs hostile path</summary>
+              <p>The friendly path asks, “What should happen when the correct user follows the instructions?” The hostile path asks, “What could go wrong if input is wrong, identity is false, timing is unusual, or a user tries to access something they should not?” Secure design needs both paths.</p>
+            </details>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 Requirements are security contracts</h3>
+            <p>A good requirement is a contract between the system and its stakeholders. It should be clear enough that two people can test whether the system satisfies it.</p>
+            <table>
+              <thead><tr><th>Requirement type</th><th>Plain meaning</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td>Functional requirement</td><td>What the system should do</td><td>A student can download their transcript.</td></tr>
+                <tr><td>Security requirement</td><td>What must be protected and how</td><td>A student can download only their own transcript.</td></tr>
+                <tr><td>Privacy requirement</td><td>How personal data should be limited and protected</td><td>Transcript access logs must not expose grades to help-desk staff.</td></tr>
+                <tr><td>Safety requirement</td><td>How the system avoids physical or serious human harm</td><td>A medical device must fail into a clinically safe state.</td></tr>
+                <tr><td>Operational requirement</td><td>How the system is run and maintained</td><td>Security patches must be deployable without manual database edits.</td></tr>
+                <tr><td>Assurance requirement</td><td>How confidence is demonstrated</td><td>Authorization tests must cover owner, non-owner, admin, and unauthenticated cases.</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.2 Testable requirements</h3>
+            <p>A requirement is <strong>testable</strong> when a reviewer can check it using inspection, test, demonstration, analysis, or audit evidence.</p>
+            <table>
+              <thead><tr><th>Vague</th><th>Testable</th><th>Test method</th></tr></thead>
+              <tbody>
+                <tr><td>Protect student data.</td><td>Only the transcript owner, registrar role, or approved advisor may read a transcript.</td><td>Authorization unit and integration tests.</td></tr>
+                <tr><td>Log important things.</td><td>Every denied transcript access must log actor, object, action, decision, timestamp, and request ID.</td><td>Integration test and log review.</td></tr>
+                <tr><td>Use secure defaults.</td><td>New transcript-sharing links must be disabled unless an authorized user creates them with an expiry time.</td><td>Default-configuration test.</td></tr>
+                <tr><td>Prevent abuse.</td><td>The API must reject transcript requests where authenticated_user_id does not match transcript_owner_id unless the user has registrar approval.</td><td>Negative authorization tests.</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.3 Acceptance criteria</h3>
+            <p><strong>Acceptance criteria</strong> are conditions that must be true before a feature is accepted as done. Security acceptance criteria should include normal behavior and denial behavior.</p>
+            <ul>
+              <li>Owner access succeeds.</li>
+              <li>Non-owner access fails.</li>
+              <li>Unauthenticated access fails.</li>
+              <li>Registrar access succeeds only with the correct role.</li>
+              <li>Denied requests create audit events.</li>
+              <li>Error messages do not reveal sensitive object details.</li>
+            </ul>
+
+            <h3>4.4 Abuse cases</h3>
+            <p>An <strong>abuse case</strong> is a story about misuse. It should be specific enough to guide controls and tests, but it should not become an instruction for attacking real systems.</p>
+            <table>
+              <thead><tr><th>Feature</th><th>Use case</th><th>Abuse case</th><th>Design response</th></tr></thead>
+              <tbody>
+                <tr><td>Download transcript</td><td>Student downloads own transcript</td><td>Student changes transcript ID to another student’s ID</td><td>Server-side object-level authorization</td></tr>
+                <tr><td>Password reset</td><td>User resets forgotten password</td><td>Attacker triggers reset spam or takes over weak recovery</td><td>Rate limiting, strong recovery proof, event logging</td></tr>
+                <tr><td>Admin export</td><td>Registrar exports records</td><td>Insider exports excessive data</td><td>Least privilege, approval, export limits, monitoring</td></tr>
+                <tr><td>File upload</td><td>User uploads profile document</td><td>User uploads unexpected file type or oversized content</td><td>Type validation, size limits, storage isolation, malware scanning</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.5 Data-flow diagrams</h3>
+            <p>A <strong>data-flow diagram</strong>, or <strong>DFD</strong>, shows how data moves between users, processes, stores, and external systems. It helps reviewers ask: Where does data enter? Where does it leave? Where is it stored? Where does trust change?</p>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  Student[Student Browser] --&gt;|HTTPS request| Web[Web Application]
+  Web --&gt;|Read/write| DB[(Transcript Database)]
+  Web --&gt;|Audit event| Logs[(Audit Log)]
+  Registrar[Registrar] --&gt;|Admin request| Web
+  Web --&gt;|Email notice| Mail[Email Service]
+
+  subgraph Public_Device[Less trusted device]
+    Student
+  end
+  subgraph University_Cloud[University controlled environment]
+    Web
+    DB
+    Logs
+  end
+  subgraph Third_Party[External service]
+    Mail
+  end</pre></div>
+
+            <h3>4.6 Trust boundaries</h3>
+            <p>A trust boundary appears when control changes. The browser is less trusted than the server. A third-party email service is outside the university’s direct control. An admin interface has more privilege than a student interface. Every boundary needs validation, authentication, authorization, logging, and failure handling appropriate to the risk.</p>
+
+            <h3>4.7 Secure design principles</h3>
+            <p>Secure design principles are reusable rules of judgment. They do not replace analysis, but they prevent common bad decisions.</p>
+            <table>
+              <thead><tr><th>Principle</th><th>Meaning</th><th>Design question</th></tr></thead>
+              <tbody>
+                <tr><td>Least privilege</td><td>Give only the access needed</td><td>Does this component need write access or only read access?</td></tr>
+                <tr><td>Deny by default</td><td>Reject unless explicitly allowed</td><td>What happens when a role is missing or unknown?</td></tr>
+                <tr><td>Secure defaults</td><td>Default state should be safe</td><td>Are new sharing links off unless deliberately enabled?</td></tr>
+                <tr><td>Complete mediation</td><td>Check every protected access</td><td>Is authorization checked on each transcript request?</td></tr>
+                <tr><td>Fail safely</td><td>Failure should not create excess access</td><td>If the policy service is down, does the app allow or deny?</td></tr>
+                <tr><td>Separation of duties</td><td>Divide sensitive powers</td><td>Can one person both approve and execute a high-risk export?</td></tr>
+                <tr><td>Defense in depth</td><td>Use multiple layers</td><td>If one control fails, what still limits harm?</td></tr>
+                <tr><td>Minimize attack surface</td><td>Expose less functionality</td><td>Is an admin API reachable from the public internet?</td></tr>
+                <tr><td>Psychological acceptability</td><td>Security should be usable enough to follow</td><td>Will users bypass the control because it is too painful?</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.8 Prevention, detection, response, and recovery by design</h3>
+            <p>Secure design should not contain only prevention. Some failures will occur. The design should also detect misuse, support response, and enable recovery.</p>
+            <ul>
+              <li><strong>Prevention:</strong> authorization checks block non-owner transcript access.</li>
+              <li><strong>Detection:</strong> audit logs reveal repeated denied access attempts.</li>
+              <li><strong>Response:</strong> security staff can disable a suspicious account.</li>
+              <li><strong>Recovery:</strong> backups and change history help restore corrupted records.</li>
+            </ul>
+
+            <h3>4.9 Traceability</h3>
+            <p><strong>Traceability</strong> means linking requirements to design decisions, controls, tests, and evidence. Without traceability, teams cannot easily answer, “Which test proves this requirement?” or “Which control addresses this abuse case?”</p>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  Asset[Asset: transcript] --&gt; Req[Requirement: owner-only read]
+  Req --&gt; Abuse[Abuse case: ID tampering]
+  Abuse --&gt; Control[Control: object authorization]
+  Control --&gt; Test[Test: non-owner denied]
+  Test --&gt; Evidence[Evidence: CI test result and review note]</pre></div>
+
+            <h3>4.10 Residual risk</h3>
+            <p><strong>Residual risk</strong> is the risk that remains after controls are applied. Secure design is not a promise of zero risk. It is a disciplined way to reduce risk, make assumptions visible, and decide what remains acceptable.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>Secure feature design workflow</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Idea[Feature idea] --&gt; Asset[Identify assets]
+  Asset --&gt; Stakeholder[Identify stakeholders]
+  Stakeholder --&gt; Req[Write testable security requirements]
+  Req --&gt; Abuse[Write abuse cases]
+  Abuse --&gt; DFD[Draw data-flow diagram]
+  DFD --&gt; Boundary[Mark trust boundaries]
+  Boundary --&gt; Control[Choose controls]
+  Control --&gt; Criteria[Write acceptance criteria]
+  Criteria --&gt; Review[Security design review]
+  Review --&gt; Build[Implement]
+  Build --&gt; Test[Verify requirements and abuse cases]
+  Test --&gt; Release{Ready?}
+  Release -- no --&gt; Fix[Fix design or implementation]
+  Fix --&gt; Review
+  Release -- yes --&gt; Operate[Release and monitor]</pre></div>
+
+            <h3>Sequence diagram: secure transcript download</h3>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+  actor Student
+  participant Browser
+  participant App as Web Application
+  participant AuthZ as Authorization Policy
+  participant DB as Transcript Database
+  participant Log as Audit Log
+  Student-&gt;&gt;Browser: Click download transcript
+  Browser-&gt;&gt;App: Request transcript T100 with session
+  App-&gt;&gt;AuthZ: Can user read T100?
+  AuthZ--&gt;&gt;App: Permit or deny
+  alt permitted
+    App-&gt;&gt;DB: Read transcript T100
+    DB--&gt;&gt;App: Transcript data
+    App-&gt;&gt;Log: Write successful access event
+    App--&gt;&gt;Browser: Return transcript
+  else denied
+    App-&gt;&gt;Log: Write denied access event
+    App--&gt;&gt;Browser: Return generic denial
+  end</pre></div>
+
+            <h3>Architecture diagram: design-review artifacts</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+  subgraph Design_Packet[Secure design packet]
+    A[Asset list]
+    R[Security requirements]
+    U[Abuse cases]
+    D[Data-flow diagram]
+    T[Trust boundaries]
+    C[Controls]
+    V[Verification tests]
+    Risk[Residual risk note]
+  end
+  Design_Packet --&gt; PR[Pull request]
+  Design_Packet --&gt; Audit[Audit evidence]
+  Design_Packet --&gt; Ops[Monitoring plan]</pre></div>
+
+            <h3>Decision tree: what type of requirement is needed?</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+  Start[New feature behavior] --&gt; Data{Handles sensitive data?}
+  Data -- yes --&gt; Privacy[Add privacy and data protection requirements]
+  Data -- no --&gt; Identity{Depends on user identity?}
+  Privacy --&gt; Identity
+  Identity -- yes --&gt; Auth[Add authentication and authorization requirements]
+  Identity -- no --&gt; Availability{Must remain available?}
+  Auth --&gt; Availability
+  Availability -- yes --&gt; Resilience[Add rate limit, backup, failover, recovery requirements]
+  Availability -- no --&gt; Logs{Needs investigation evidence?}
+  Resilience --&gt; Logs
+  Logs -- yes --&gt; Audit[Add audit logging and retention requirements]
+  Logs -- no --&gt; Done[Document assumptions]
+  Audit --&gt; Done</pre></div>
+
+            <h3>State diagram: access decision states</h3>
+            <div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; Unauthenticated
+  Unauthenticated --&gt; Authenticated: valid login
+  Authenticated --&gt; Authorized: policy permits action
+  Authenticated --&gt; Denied: policy rejects action
+  Authorized --&gt; AccessGranted: object returned
+  Denied --&gt; AuditLogged: denial recorded
+  AccessGranted --&gt; AuditLogged: success recorded
+  AuditLogged --&gt; [*]</pre></div>
+
+            <h3>ASCII diagram: trust boundary intuition</h3>
+            <pre><code class="language-text">Less trusted side                         More trusted side
++----------------+      HTTPS request      +-------------------+
+| Student browser| ----------------------&gt; | University server |
+| user controls  |                         | policy enforced   |
++----------------+                         +-------------------+
+        |                                             |
+        | user can change local values                | server must verify identity,
+        | URL IDs, form fields, timing                | authorization, input, and logs</code></pre>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Secure Design))
+    Requirements
+      Functional
+      Security
+      Privacy
+      Safety
+      Operational
+      Assurance
+    Abuse Cases
+      Misuse
+      Edge cases
+      Insider risk
+      Automation abuse
+      Data exposure
+    Architecture
+      Data flows
+      Trust boundaries
+      Components
+      External services
+    Controls
+      Prevention
+      Detection
+      Response
+      Recovery
+    Principles
+      Least privilege
+      Deny by default
+      Secure defaults
+      Fail safely
+      Complete mediation
+      Defense in depth
+    Evidence
+      Acceptance criteria
+      Tests
+      Review notes
+      Risk decisions</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <p>Secure design is partly qualitative, but basic quantitative thinking helps prioritize work. The numbers below are teaching models, not precise predictions.</p>
+            <h3>Risk as expected loss</h3>
+            <p>A simple model is:</p>
+            <p><strong>Expected loss = probability of event × impact if event occurs</strong></p>
+            <p>If a feature has a 5% annual chance of exposing transcript data and the estimated impact is $200,000, then:</p>
+            <p><strong>Expected annual loss = 0.05 × 200,000 = $10,000</strong></p>
+            <p>This does not mean the organization will lose exactly $10,000. It means the average expected loss under the model is $10,000 per year.</p>
+
+            <h3>Control benefit</h3>
+            <p>If object-level authorization and audit review reduce estimated probability from 5% to 1%, then:</p>
+            <p><strong>New expected annual loss = 0.01 × 200,000 = $2,000</strong></p>
+            <p><strong>Expected reduction = 10,000 − 2,000 = $8,000</strong></p>
+
+            <h3>Prioritization score</h3>
+            <p>Teams often need rough prioritization. One simple score is:</p>
+            <p><strong>Priority = asset value × abuse likelihood × design exposure × control gap</strong></p>
+            <p>Use a 1–5 scale for each factor.</p>
+            <table>
+              <thead><tr><th>Feature</th><th>Asset value</th><th>Abuse likelihood</th><th>Exposure</th><th>Control gap</th><th>Priority</th></tr></thead>
+              <tbody>
+                <tr><td>Transcript download</td><td>5</td><td>4</td><td>4</td><td>3</td><td>240</td></tr>
+                <tr><td>Theme color setting</td><td>1</td><td>2</td><td>2</td><td>1</td><td>4</td></tr>
+              </tbody>
+            </table>
+            <p>The transcript feature should receive more design attention because the protected asset and possible harm are greater.</p>
+
+            <h3>Availability math</h3>
+            <p>If a design has one required component with 99% availability, the feature’s availability cannot exceed that component’s availability. If two required independent components are both 99% available, the simple series estimate is:</p>
+            <p><strong>0.99 × 0.99 = 0.9801 = 98.01%</strong></p>
+            <p>This is why design must consider dependencies. Adding components can add capability, but it can also add failure paths.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>Linux example</h3>
+            <p>Create a local folder for safe design-review artifacts. Do not use real student records, real secrets, or real production diagrams.</p>
+            <pre><code class="language-bash"># Create a local lesson lab folder. This stays on your own machine.
+mkdir -p secure-design-lab
+cd secure-design-lab
+
+# Create files for a fictional design review.
+printf &quot;asset,owner,security_goal\ngrade_record,registrar,confidentiality integrity\n&quot; &gt; assets.csv
+printf &quot;abuse_case,control\nstudent changes ID in URL,object-level authorization\n&quot; &gt; abuse_cases.csv
+
+# Review the files.
+cat assets.csv
+cat abuse_cases.csv
+
+# Optional: place the files under Git so changes are traceable.
+git init
+git add assets.csv abuse_cases.csv
+git commit -m &quot;Add initial secure design review artifacts&quot;</code></pre>
+
+            <h3>Windows example</h3>
+            <pre><code class="language-powershell"># Windows PowerShell: create a local lesson lab folder.
+New-Item -ItemType Directory -Force -Path secure-design-lab | Out-Null
+Set-Location secure-design-lab
+
+# Create a small asset inventory for a fictional system.
+&quot;asset,owner,security_goal&quot; | Out-File assets.csv
+&quot;grade_record,registrar,confidentiality integrity&quot; | Add-Content assets.csv
+
+# Create a small abuse-case list.
+&quot;abuse_case,control&quot; | Out-File abuse_cases.csv
+&quot;student changes ID in URL,object-level authorization&quot; | Add-Content abuse_cases.csv
+
+Get-Content assets.csv
+Get-Content abuse_cases.csv</code></pre>
+
+            <h3>Python example</h3>
+            <p>This local toy example shows a common design issue: checking that an object exists is not the same as checking that the current subject may access it.</p>
+            <pre><code class="language-python"># Defensive example: checking authorization before returning a record.
+# This is a toy local example. It does not connect to a real service.
+
+records = {
+    &quot;student-100&quot;: {&quot;owner&quot;: &quot;alice&quot;, &quot;grade&quot;: &quot;A&quot;},
+    &quot;student-200&quot;: {&quot;owner&quot;: &quot;bob&quot;, &quot;grade&quot;: &quot;B&quot;},
+}
+
+def get_grade_insecure(current_user, record_id):
+    # Mistake: the function checks that the record exists,
+    # but it does NOT check whether the current user owns it.
+    return records.get(record_id)
+
+def get_grade_secure(current_user, record_id):
+    # Step 1: find the requested object.
+    record = records.get(record_id)
+
+    # Step 2: fail closed if the object does not exist.
+    # Returning None avoids exposing details in this toy example.
+    if record is None:
+        return None
+
+    # Step 3: authorize this specific subject-object-action.
+    # Subject: current_user
+    # Object: record
+    # Action: read grade
+    if record[&quot;owner&quot;] != current_user:
+        return None
+
+    # Step 4: return only the allowed data.
+    return {&quot;grade&quot;: record[&quot;grade&quot;]}
+
+print(&quot;Insecure:&quot;, get_grade_insecure(&quot;alice&quot;, &quot;student-200&quot;))
+print(&quot;Secure:&quot;, get_grade_secure(&quot;alice&quot;, &quot;student-200&quot;))</code></pre>
+
+            <h3>Network example</h3>
+            <p>Requirement: “The admin API must not be reachable from the public internet.” Design response: place the admin API behind a private network boundary, require administrator identity, log access, and block public routes. Test: from a non-admin network segment, the admin endpoint must be unreachable.</p>
+
+            <h3>Web example</h3>
+            <p>Requirement: “A user may edit only their own profile.” Abuse case: “A user changes <code>user_id</code> in a request and attempts to edit another profile.” Design response: the server derives the acting user from the authenticated session, not from a client-supplied user ID, and checks object ownership on every edit.</p>
+
+            <h3>Cloud example</h3>
+            <p>Requirement: “Build jobs may deploy only to the test environment unless approved.” Abuse case: “A compromised build token deploys directly to production.” Design response: separate cloud roles for test and production, require protected branch rules and human approval for production, use short-lived workload credentials, and log deployment actions.</p>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>Line-by-line: authorization check</h3>
+            <p>The secure function in the earlier Python example follows a design requirement: “A student may read only their own grade record.”</p>
+            <ol>
+              <li><code>records</code> is a toy in-memory database. Real systems would use a database and stronger controls.</li>
+              <li><code>current_user</code> represents the authenticated subject.</li>
+              <li><code>record_id</code> identifies the requested object.</li>
+              <li>The insecure function returns the object if it exists, regardless of ownership.</li>
+              <li>The secure function first fails closed if the object does not exist.</li>
+              <li>It then checks that <code>record["owner"]</code> matches <code>current_user</code>.</li>
+              <li>If the check fails, it returns nothing rather than exposing another user’s data.</li>
+              <li>If the check succeeds, it returns only the allowed field.</li>
+            </ol>
+
+            <h3>Simple requirements-as-data example</h3>
+            <pre><code class="language-python"># Tiny local requirements checker.
+# It does NOT prove a system is secure. It only shows how requirements
+# can be written in a testable form.
+
+security_requirements = [
+    {
+        &quot;id&quot;: &quot;SEC-AUTHZ-001&quot;,
+        &quot;statement&quot;: &quot;A student may read only their own grade record.&quot;,
+        &quot;asset&quot;: &quot;grade record&quot;,
+        &quot;subject&quot;: &quot;student&quot;,
+        &quot;action&quot;: &quot;read&quot;,
+        &quot;verification&quot;: &quot;unit test + code review&quot;
+    },
+    {
+        &quot;id&quot;: &quot;SEC-LOG-001&quot;,
+        &quot;statement&quot;: &quot;Every denied grade-record access must create an audit event.&quot;,
+        &quot;asset&quot;: &quot;audit log&quot;,
+        &quot;subject&quot;: &quot;application&quot;,
+        &quot;action&quot;: &quot;write audit event&quot;,
+        &quot;verification&quot;: &quot;integration test + log inspection&quot;
+    }
+]
+
+for req in security_requirements:
+    print(f&quot;{req[&#x27;id&#x27;]}: {req[&#x27;statement&#x27;]}&quot;)
+    print(f&quot;  Verification: {req[&#x27;verification&#x27;]}&quot;)</code></pre>
+            <p>This code does not enforce security by itself. Its purpose is to show how requirements can be written clearly enough to be reviewed, tested, and traced.</p>
+
+            <h3>Common mistakes</h3>
+            <ul>
+              <li><strong>Trusting client-side checks:</strong> browser JavaScript can improve user experience, but server-side authorization must enforce security.</li>
+              <li><strong>Checking role but not object:</strong> “is user a student?” is not enough; the system must check whether this student may access this object.</li>
+              <li><strong>Returning detailed denials:</strong> error messages may reveal whether a private record exists.</li>
+              <li><strong>Logging secrets:</strong> audit logs should record security-relevant events without exposing passwords, tokens, or sensitive content.</li>
+              <li><strong>Missing negative tests:</strong> tests must prove that forbidden actions fail.</li>
+            </ul>
+
+            <h3>Secure coding practices tied to design</h3>
+            <p>Secure coding is stronger when it implements explicit design decisions. A checklist helps reviewers connect code to the design:</p>
+            <pre><code class="language-text">Security review checklist for a pull request that adds &quot;download transcript&quot;:
+
+[ ] Requirement states who can download which transcript.
+[ ] Abuse case covers changing transcript_id to another user&#x27;s ID.
+[ ] Server-side authorization checks every download request.
+[ ] Client-side checks are not treated as security controls.
+[ ] Error messages do not reveal whether another transcript exists.
+[ ] Successful and denied downloads are audit logged.
+[ ] Tests include owner access, non-owner denial, unauthenticated denial, and admin workflow.
+[ ] Design document shows data flow and trust boundary.
+[ ] Sensitive files are not cached publicly.
+[ ] Rollback plan exists if the feature leaks data.</code></pre>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common attacks</h3>
+            <ul>
+              <li><strong>Broken access control:</strong> a user performs an action or accesses an object they should not access.</li>
+              <li><strong>Insecure direct object reference:</strong> a client-supplied object ID is trusted without object-level authorization.</li>
+              <li><strong>Privilege escalation:</strong> a lower-privilege user gains higher-privilege capability.</li>
+              <li><strong>Data overexposure:</strong> an API returns more data than the user needs.</li>
+              <li><strong>Workflow bypass:</strong> a user skips approval steps by calling a backend endpoint directly.</li>
+              <li><strong>Rate abuse:</strong> repeated use of a feature creates spam, lockouts, resource exhaustion, or enumeration.</li>
+            </ul>
+            <h3>Common vulnerabilities</h3>
+            <ul>
+              <li>Vague requirements such as “make it secure.”</li>
+              <li>No abuse cases for high-risk features.</li>
+              <li>No server-side authorization decision.</li>
+              <li>Missing trust boundary documentation.</li>
+              <li>Unsafe defaults that expose data unless users configure protection.</li>
+              <li>Audit logs that are missing, excessive, or not reviewable.</li>
+            </ul>
+            <h3>Defensive strategies</h3>
+            <ul>
+              <li>Use security requirements and abuse cases during planning.</li>
+              <li>Require design review for high-risk features.</li>
+              <li>Document subjects, objects, actions, and allowed conditions.</li>
+              <li>Mark trust boundaries and validate data at boundaries.</li>
+              <li>Write negative tests for denied behavior.</li>
+              <li>Use secure defaults and deny by default.</li>
+            </ul>
+            <h3>Detection methods</h3>
+            <ul>
+              <li>Monitor denied authorization attempts.</li>
+              <li>Alert on unusual admin exports or repeated object-ID access patterns.</li>
+              <li>Review audit logs for high-risk workflow bypass indicators.</li>
+              <li>Track changes to authorization code, policy files, and admin workflows.</li>
+            </ul>
+            <h3>Mitigation and best practices</h3>
+            <ul>
+              <li>Fail closed when policy decisions cannot be made safely.</li>
+              <li>Keep authorization on the server side.</li>
+              <li>Separate user identity, role, object ownership, and context.</li>
+              <li>Use central policy helpers where appropriate to avoid inconsistent checks.</li>
+              <li>Document residual risks rather than hiding them.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <table>
+              <thead><tr><th>Sector</th><th>How secure design is used</th></tr></thead>
+              <tbody>
+                <tr><td>Banks</td><td>Payment workflows require authorization, fraud checks, transaction limits, audit trails, segregation of duties, and rollback procedures.</td></tr>
+                <tr><td>Governments</td><td>Citizen services need identity assurance, privacy, records integrity, public availability, and strong change control.</td></tr>
+                <tr><td>Cloud providers</td><td>APIs must enforce tenant isolation, IAM policy, rate limits, logging, and safe defaults at very large scale.</td></tr>
+                <tr><td>Healthcare</td><td>Systems must protect patient data, support emergency access workflows, preserve auditability, and avoid unsafe clinical failure modes.</td></tr>
+                <tr><td>Defense</td><td>Design emphasizes least privilege, compartmentalization, supply-chain trust, tamper resistance, and mission resilience.</td></tr>
+                <tr><td>Universities</td><td>Systems protect grades, research data, identities, financial aid, learning platforms, and public services with mixed user populations.</td></tr>
+                <tr><td>Large enterprises</td><td>Design review supports consistent controls across many teams, applications, cloud accounts, and regulatory obligations.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Secure requirements and design remain active research areas because human judgment, complex systems, and changing attacker behavior make full automation difficult.</p>
+            <h3>Current research directions</h3>
+            <ul>
+              <li><strong>Automated threat modeling:</strong> deriving likely threats from architecture diagrams, code, cloud configurations, or infrastructure-as-code.</li>
+              <li><strong>Security requirements engineering:</strong> improving how teams discover, specify, verify, and maintain security requirements.</li>
+              <li><strong>Usable security for developers:</strong> studying how developers understand warnings, APIs, libraries, and review feedback.</li>
+              <li><strong>Policy-as-code:</strong> expressing authorization and infrastructure rules in testable machine-readable form.</li>
+              <li><strong>Secure-by-design metrics:</strong> measuring whether products reduce customer security burden.</li>
+              <li><strong>AI-assisted design review:</strong> using language models to find missing requirements, unsafe assumptions, and untested abuse cases, while managing hallucination risk.</li>
+            </ul>
+            <h3>Open problems</h3>
+            <ul>
+              <li>How to make threat modeling lightweight enough that teams actually do it.</li>
+              <li>How to keep design documents accurate after systems change.</li>
+              <li>How to measure whether a requirement is complete.</li>
+              <li>How to verify authorization behavior across microservices and cloud policy layers.</li>
+              <li>How to balance privacy, auditability, safety, and operational usability.</li>
+            </ul>
+            <h3>Notable research themes</h3>
+            <p>Students should look for papers on requirements engineering for security, threat modeling methods, security design patterns, formal methods for access control, usable secure APIs, and empirical studies of developer security behavior. Do not copy copyrighted papers into reports; summarize the ideas and cite them properly.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>Case Study 1: Broken object-level authorization in web APIs</h3>
+            <p><strong>What happened:</strong> many real web and API incidents occur when a user changes an object identifier and the server returns data belonging to someone else.</p>
+            <p><strong>Root cause:</strong> the design checks that the user is logged in, but not whether that user is authorized for the specific object.</p>
+            <p><strong>Impact:</strong> confidential data can be exposed or modified.</p>
+            <p><strong>Lessons learned:</strong> requirements must specify object-level authorization, tests must include non-owner access, and server-side policy must not rely on client-side controls.</p>
+
+            <h3>Case Study 2: Unsafe defaults and exposed storage</h3>
+            <p><strong>What happened:</strong> organizations have repeatedly exposed sensitive data through misconfigured cloud storage or overly broad sharing settings.</p>
+            <p><strong>Root cause:</strong> design and operational assumptions placed too much responsibility on users or administrators to configure protection correctly.</p>
+            <p><strong>Impact:</strong> public exposure of private records, intellectual property, backups, or credentials.</p>
+            <p><strong>Lessons learned:</strong> secure defaults, least privilege, policy guardrails, monitoring, and clear ownership must be part of design.</p>
+
+            <h3>Case Study 3: Payment and approval workflow bypass</h3>
+            <p><strong>What happened:</strong> in many business systems, attackers or insiders try to bypass approval workflows by calling backend endpoints directly or abusing missing state checks.</p>
+            <p><strong>Root cause:</strong> the design treats the user interface as the workflow authority instead of enforcing workflow state on the server.</p>
+            <p><strong>Impact:</strong> unauthorized transfers, fraudulent approvals, or unauthorized administrative changes.</p>
+            <p><strong>Lessons learned:</strong> workflows need server-side state machines, separation of duties, audit logs, and tests for skipped or repeated steps.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <table>
+              <thead><tr><th>Misconception</th><th>Why it is wrong</th></tr></thead>
+              <tbody>
+                <tr><td>“We can add security after the feature works.”</td><td>Some controls depend on architecture and data model choices. Late security often becomes expensive and incomplete.</td></tr>
+                <tr><td>“Authentication means the user can access everything.”</td><td>Authentication proves identity; authorization decides allowed actions.</td></tr>
+                <tr><td>“Client-side checks are enough.”</td><td>Users can modify client-side requests. Servers must enforce security decisions.</td></tr>
+                <tr><td>“If we use encryption, the design is secure.”</td><td>Encryption does not solve authorization, logging, input validation, workflow abuse, or unsafe defaults.</td></tr>
+                <tr><td>“Threat modeling is only for experts.”</td><td>Beginners can use simple questions: what are we protecting, who might misuse it, where does trust change, and what should fail closed?</td></tr>
+                <tr><td>“A requirement can say ‘must be secure.’”</td><td>That is not testable. Requirements must specify asset, actor, action, condition, and verification.</td></tr>
+                <tr><td>“Logging everything is always good.”</td><td>Logs can expose sensitive data. Good logging records security events while minimizing secrets and unnecessary personal data.</td></tr>
+                <tr><td>“Secure design guarantees no breaches.”</td><td>It reduces risk and improves evidence; it cannot eliminate all uncertainty.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Secure software begins before coding. Requirements define what security behavior must exist. Abuse cases reveal how features can be misused. Secure design chooses controls, architecture, trust boundaries, failure behavior, logging, and verification methods. The strongest designs connect assets to requirements, requirements to abuse cases, abuse cases to controls, controls to tests, and tests to evidence.</p>
+            <p>The practical habit to build: never accept “make it secure” as a requirement. Ask what asset is being protected, who may do what, what abuse is likely, where trust changes, what should fail closed, and how the team will prove the control works.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <dl>
+              <dt>Acceptance criteria</dt><dd>Conditions that must be satisfied before a feature is considered complete.</dd>
+              <dt>Abuse case</dt><dd>A description of how a feature could be misused to cause harm.</dd>
+              <dt>Asset</dt><dd>Something valuable that needs protection.</dd>
+              <dt>Assurance requirement</dt><dd>A requirement describing how confidence in security will be demonstrated.</dd>
+              <dt>Control</dt><dd>A safeguard that prevents, detects, limits, or helps recover from harm.</dd>
+              <dt>Data-flow diagram</dt><dd>A diagram showing how data moves between users, processes, stores, and external systems.</dd>
+              <dt>Deny by default</dt><dd>A design rule where access is rejected unless explicitly allowed.</dd>
+              <dt>Design review</dt><dd>A structured review of architecture and decisions before or during implementation.</dd>
+              <dt>Functional requirement</dt><dd>A statement describing what the system should do.</dd>
+              <dt>Negative test</dt><dd>A test that checks forbidden, invalid, or hostile behavior is rejected safely.</dd>
+              <dt>Residual risk</dt><dd>Risk that remains after controls are applied.</dd>
+              <dt>Security requirement</dt><dd>A testable statement describing required security behavior.</dd>
+              <dt>Traceability</dt><dd>The ability to link requirements, design decisions, controls, tests, and evidence.</dd>
+              <dt>Trust boundary</dt><dd>A place where data or control crosses between different trust levels.</dd>
+              <dt>User story</dt><dd>A short description of what a legitimate user wants to accomplish.</dd>
+            </dl>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <div class="quiz-grid">
+              <div class="quiz-card" data-answer="B"><p><strong>1. What is a security requirement?</strong></p><label class="quiz-option"><input type="radio" name="q1" value="A"> A. A slogan about safety</label><label class="quiz-option"><input type="radio" name="q1" value="B"> B. A testable statement about required security behavior</label><label class="quiz-option"><input type="radio" name="q1" value="C"> C. A software logo</label><label class="quiz-option"><input type="radio" name="q1" value="D"> D. A password list</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. It should be specific and verifiable.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>2. Which requirement is most testable?</strong></p><label class="quiz-option"><input type="radio" name="q2" value="A"> A. The system should be secure</label><label class="quiz-option"><input type="radio" name="q2" value="B"> B. Security should be good</label><label class="quiz-option"><input type="radio" name="q2" value="C"> C. Only transcript owners may download their own transcript</label><label class="quiz-option"><input type="radio" name="q2" value="D"> D. Users should feel safe</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. It defines subject, action, and object.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>3. What is an abuse case?</strong></p><label class="quiz-option"><input type="radio" name="q3" value="A"> A. A normal success path only</label><label class="quiz-option"><input type="radio" name="q3" value="B"> B. A password hashing algorithm</label><label class="quiz-option"><input type="radio" name="q3" value="C"> C. A network cable diagram</label><label class="quiz-option"><input type="radio" name="q3" value="D"> D. A description of how a feature could be misused</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. Abuse cases help teams design controls and negative tests.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>4. What does a trust boundary show?</strong></p><label class="quiz-option"><input type="radio" name="q4" value="A"> A. Where data or control crosses between trust levels</label><label class="quiz-option"><input type="radio" name="q4" value="B"> B. The color of a web page</label><label class="quiz-option"><input type="radio" name="q4" value="C"> C. A user’s favorite feature</label><label class="quiz-option"><input type="radio" name="q4" value="D"> D. The number of comments in code</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. Boundaries are where validation and policy enforcement matter.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>5. Why are negative tests important?</strong></p><label class="quiz-option"><input type="radio" name="q5" value="A"> A. They remove the need for design</label><label class="quiz-option"><input type="radio" name="q5" value="B"> B. They prove forbidden behavior is rejected safely</label><label class="quiz-option"><input type="radio" name="q5" value="C"> C. They make logs unnecessary</label><label class="quiz-option"><input type="radio" name="q5" value="D"> D. They replace authentication</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. Security requires testing denials, not only success.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>6. What is the main problem with “make it secure”?</strong></p><label class="quiz-option"><input type="radio" name="q6" value="A"> A. It is too long</label><label class="quiz-option"><input type="radio" name="q6" value="B"> B. It requires Linux</label><label class="quiz-option"><input type="radio" name="q6" value="C"> C. It is vague and not directly testable</label><label class="quiz-option"><input type="radio" name="q6" value="D"> D. It uses encryption</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Security must be made specific.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>7. What does deny by default mean?</strong></p><label class="quiz-option"><input type="radio" name="q7" value="A"> A. Reject access unless explicitly allowed</label><label class="quiz-option"><input type="radio" name="q7" value="B"> B. Allow all users first</label><label class="quiz-option"><input type="radio" name="q7" value="C"> C. Disable all tests</label><label class="quiz-option"><input type="radio" name="q7" value="D"> D. Remove audit logs</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. This reduces accidental exposure.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>8. Which is an example of complete mediation?</strong></p><label class="quiz-option"><input type="radio" name="q8" value="A"> A. Checking authorization only on login</label><label class="quiz-option"><input type="radio" name="q8" value="B"> B. Trusting the browser after first request</label><label class="quiz-option"><input type="radio" name="q8" value="C"> C. Skipping checks for cached records</label><label class="quiz-option"><input type="radio" name="q8" value="D"> D. Checking authorization on every protected object access</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. Every protected access needs a decision.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>9. What is residual risk?</strong></p><label class="quiz-option"><input type="radio" name="q9" value="A"> A. Risk before any controls</label><label class="quiz-option"><input type="radio" name="q9" value="B"> B. Risk remaining after controls</label><label class="quiz-option"><input type="radio" name="q9" value="C"> C. A type of source code</label><label class="quiz-option"><input type="radio" name="q9" value="D"> D. A browser cookie</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. No design removes all risk.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>10. What does traceability connect?</strong></p><label class="quiz-option"><input type="radio" name="q10" value="A"> A. Only fonts and colors</label><label class="quiz-option"><input type="radio" name="q10" value="B"> B. Only usernames and passwords</label><label class="quiz-option"><input type="radio" name="q10" value="C"> C. Requirements, controls, tests, and evidence</label><label class="quiz-option"><input type="radio" name="q10" value="D"> D. Only hardware cables</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Traceability helps prove intent was implemented and tested.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>11. Which control is mainly preventive?</strong></p><label class="quiz-option"><input type="radio" name="q11" value="A"> A. Server-side authorization check</label><label class="quiz-option"><input type="radio" name="q11" value="B"> B. Post-incident review</label><label class="quiz-option"><input type="radio" name="q11" value="C"> C. Backup restore drill</label><label class="quiz-option"><input type="radio" name="q11" value="D"> D. Monthly report after compromise</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It blocks unauthorized access before it happens.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>12. Which control is mainly detective?</strong></p><label class="quiz-option"><input type="radio" name="q12" value="A"> A. Disabling all logs</label><label class="quiz-option"><input type="radio" name="q12" value="B"> B. Public write access</label><label class="quiz-option"><input type="radio" name="q12" value="C"> C. Hardcoded password</label><label class="quiz-option"><input type="radio" name="q12" value="D"> D. Alert on repeated denied access attempts</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. It helps find suspicious behavior.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>13. What is a data-flow diagram useful for?</strong></p><label class="quiz-option"><input type="radio" name="q13" value="A"> A. Choosing a wallpaper</label><label class="quiz-option"><input type="radio" name="q13" value="B"> B. Showing how data moves through components</label><label class="quiz-option"><input type="radio" name="q13" value="C"> C. Replacing all tests</label><label class="quiz-option"><input type="radio" name="q13" value="D"> D. Creating passwords</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. DFDs reveal inputs, stores, exits, and boundaries.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>14. Why is server-side enforcement required?</strong></p><label class="quiz-option"><input type="radio" name="q14" value="A"> A. Servers are always perfect</label><label class="quiz-option"><input type="radio" name="q14" value="B"> B. Browsers cannot display forms</label><label class="quiz-option"><input type="radio" name="q14" value="C"> C. Clients can be modified by users</label><label class="quiz-option"><input type="radio" name="q14" value="D"> D. It removes the need for authentication</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. Client-side checks are not authoritative controls.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>15. What is fail-safe design?</strong></p><label class="quiz-option"><input type="radio" name="q15" value="A"> A. Failures should not grant unsafe access</label><label class="quiz-option"><input type="radio" name="q15" value="B"> B. Failures should reveal all data</label><label class="quiz-option"><input type="radio" name="q15" value="C"> C. Failures should disable backups</label><label class="quiz-option"><input type="radio" name="q15" value="D"> D. Failures should skip logging</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. Failure must not become a privilege escalation path.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>16. Which feature should receive more design attention?</strong></p><label class="quiz-option"><input type="radio" name="q16" value="A"> A. Changing a public theme color</label><label class="quiz-option"><input type="radio" name="q16" value="B"> B. Exporting all student records</label><label class="quiz-option"><input type="radio" name="q16" value="C"> C. Displaying a public campus map</label><label class="quiz-option"><input type="radio" name="q16" value="D"> D. Showing a help page</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. High-value assets and broad access increase risk.</p></div>
+              <div class="quiz-card" data-answer="D"><p><strong>17. What is one purpose of security acceptance criteria?</strong></p><label class="quiz-option"><input type="radio" name="q17" value="A"> A. Hide requirements from testers</label><label class="quiz-option"><input type="radio" name="q17" value="B"> B. Avoid documenting decisions</label><label class="quiz-option"><input type="radio" name="q17" value="C"> C. Replace authorization checks</label><label class="quiz-option"><input type="radio" name="q17" value="D"> D. Define what must be verified before release</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: D. Acceptance criteria make completion measurable.</p></div>
+              <div class="quiz-card" data-answer="C"><p><strong>18. Which is a secure default?</strong></p><label class="quiz-option"><input type="radio" name="q18" value="A"> A. Public sharing enabled for all files</label><label class="quiz-option"><input type="radio" name="q18" value="B"> B. Admin access for all new users</label><label class="quiz-option"><input type="radio" name="q18" value="C"> C. Sharing disabled unless explicitly enabled by an authorized user</label><label class="quiz-option"><input type="radio" name="q18" value="D"> D. Logs disabled by default</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: C. The safe state is the starting state.</p></div>
+              <div class="quiz-card" data-answer="A"><p><strong>19. What is separation of duties?</strong></p><label class="quiz-option"><input type="radio" name="q19" value="A"> A. Dividing sensitive powers so one actor cannot complete the whole risky action alone</label><label class="quiz-option"><input type="radio" name="q19" value="B"> B. Removing all users</label><label class="quiz-option"><input type="radio" name="q19" value="C"> C. Letting one admin do every critical task without review</label><label class="quiz-option"><input type="radio" name="q19" value="D"> D. Encrypting public images</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: A. It reduces insider and mistake risk.</p></div>
+              <div class="quiz-card" data-answer="B"><p><strong>20. What is the best design output before implementation?</strong></p><label class="quiz-option"><input type="radio" name="q20" value="A"> A. A vague promise</label><label class="quiz-option"><input type="radio" name="q20" value="B"> B. Assets, requirements, abuse cases, DFD, controls, tests, and residual risk</label><label class="quiz-option"><input type="radio" name="q20" value="C"> C. No documentation</label><label class="quiz-option"><input type="radio" name="q20" value="D"> D. Only a UI screenshot</label><button class="check-quiz" type="button">Check answer</button><p class="answer">Answer: B. This forms a reviewable secure design packet.</p></div>
+            </div>
+
+            <h3>10 short questions</h3>
+            <ol>
+              <li>Define security requirement in your own words.</li>
+              <li>Why is “make it secure” not a useful requirement?</li>
+              <li>What is the difference between a use case and an abuse case?</li>
+              <li>What is a trust boundary?</li>
+              <li>Give one example of a negative authorization test.</li>
+              <li>Why must the server enforce authorization?</li>
+              <li>What information should a denied-access audit log contain?</li>
+              <li>What is residual risk?</li>
+              <li>Why is traceability useful?</li>
+              <li>Give one example of a secure default.</li>
+            </ol>
+
+            <h3>5 long questions</h3>
+            <ol>
+              <li>Design security requirements and abuse cases for a university transcript-download feature.</li>
+              <li>Explain how a data-flow diagram helps discover missing controls.</li>
+              <li>Compare prevention, detection, response, and recovery controls for a file-sharing feature.</li>
+              <li>Analyze why a client-side-only authorization check is an insecure design.</li>
+              <li>Create a traceability matrix linking assets, requirements, abuse cases, controls, and tests for a password-reset feature.</li>
+            </ol>
+
+            <h3>Scenario-based questions</h3>
+            <ol>
+              <li>A professor can export all grades without approval. What requirements and controls would you add?</li>
+              <li>A mobile app hides the admin button but the backend endpoint is public. What design assumption failed?</li>
+              <li>A cloud storage feature defaults new folders to public. What secure-design principle is violated?</li>
+              <li>An authorization policy service is offline. Should the application allow access? Explain the trade-off.</li>
+            </ol>
+
+            <h3>Interview questions</h3>
+            <ol>
+              <li>How do you turn a vague security goal into a testable requirement?</li>
+              <li>How do abuse cases improve testing?</li>
+              <li>What is the difference between authentication and authorization in design?</li>
+              <li>How would you review a design for broken object-level authorization?</li>
+              <li>What evidence would you want before approving a high-risk feature?</li>
+            </ol>
+
+            <h3>Critical thinking questions</h3>
+            <ol>
+              <li>Can too many security requirements harm usability? Give an example and mitigation.</li>
+              <li>When might fail-open be necessary for safety or availability, and what compensating controls would you need?</li>
+              <li>How can logs support accountability without violating privacy?</li>
+              <li>What are the limits of threat modeling in fast-moving software teams?</li>
+            </ol>
+
+            <h3>Research questions</h3>
+            <ol>
+              <li>How can AI tools help identify missing abuse cases without inventing false risks?</li>
+              <li>How can secure design documents stay synchronized with rapidly changing code?</li>
+              <li>What metrics can measure whether secure-by-design work reduces real vulnerabilities?</li>
+              <li>How can formal methods verify authorization policies in large distributed systems?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title</h3>
+            <p><strong>Design a secure transcript-download feature for a fictional university portal.</strong></p>
+            <h3>Safety statement</h3>
+            <p>This lab uses a fictional system and local documents only. Do not test a real university portal, cloud account, website, or API.</p>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Basic file editing.</li>
+              <li>Basic Git knowledge from Lesson 0.5.</li>
+              <li>Basic authorization concepts from Week 2.</li>
+              <li>Basic threat modeling concepts from Lesson 1.4.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Identify assets and stakeholders.</li>
+              <li>Write testable security requirements.</li>
+              <li>Write abuse cases.</li>
+              <li>Draw a data-flow diagram.</li>
+              <li>Identify trust boundaries.</li>
+              <li>Choose controls and acceptance tests.</li>
+              <li>Document residual risks.</li>
+            </ul>
+            <h3>Scenario</h3>
+            <p>CampusOne is a fictional university portal. Students can download transcripts. Registrars can approve official transcript exports. Advisors may view transcripts only for assigned advisees. The system sends email notifications after successful downloads.</p>
+            <h3>Tasks</h3>
+            <ol>
+              <li>Create a folder named <code>secure-design-lab</code>.</li>
+              <li>Create <code>assets.md</code> listing at least five assets.</li>
+              <li>Create <code>requirements.md</code> with at least eight testable security requirements.</li>
+              <li>Create <code>abuse-cases.md</code> with at least eight abuse cases.</li>
+              <li>Create <code>design.md</code> containing a data-flow diagram in Mermaid.</li>
+              <li>Create <code>controls.md</code> mapping each abuse case to a prevention or detection control.</li>
+              <li>Create <code>tests.md</code> with positive and negative acceptance tests.</li>
+              <li>Create <code>risk.md</code> describing residual risks and assumptions.</li>
+              <li>Commit the files with Git.</li>
+            </ol>
+            <h3>Expected outcomes</h3>
+            <ul>
+              <li>A reviewer can tell exactly what security behavior the feature requires.</li>
+              <li>At least one abuse case maps to each high-value asset.</li>
+              <li>Every important trust boundary has a control.</li>
+              <li>Tests include allowed and denied behavior.</li>
+              <li>Residual risk is visible rather than hidden.</li>
+            </ul>
+            <h3>Optional extension</h3>
+            <p>Add a traceability matrix with columns: asset, requirement ID, abuse case ID, control ID, test ID, evidence.</p>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li>NIST SP 800-218, <em>Secure Software Development Framework</em>.</li>
+              <li>OWASP Application Security Verification Standard, especially architecture, design, threat modeling, authentication, access control, and validation requirements.</li>
+              <li>OWASP Abuse Case Cheat Sheet.</li>
+              <li>OWASP Cheat Sheet Series for secure coding and application security topics.</li>
+              <li>CISA Secure by Design guidance.</li>
+              <li>NIST SP 800-53 Rev. 5 security and privacy controls for information systems and organizations.</li>
+              <li>Research topics: requirements engineering for security, threat modeling automation, policy-as-code, formal verification of access control, developer-centered usable security, and secure-by-design metrics.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="secure-software-engineering-from-first-principles.html">← Lesson 4.1</a><a class="btn" href="index.html">Week 4 Overview</a><a class="btn btn-primary" href="input-validation-output-encoding-and-error-handling.html">Next: Lesson 4.3 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Website Architecture | MS Cybersecurity</title><meta name="description" content="Architecture and folder structure for the MS Cybersecurity Interactive Learning Platform.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css"></head>
+<body data-root="" data-page-id="architecture" data-title="Website Architecture"><a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div><div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell"><aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav></aside>
+<main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="index.html">Home</a> / Architecture</div><h1 class="page-title">Website Architecture</h1><p class="lead">This scaffold is designed for free GitHub Pages hosting, low maintenance, accessibility, and gradual lesson-by-lesson growth.</p>
+<div class="layout-article"><article class="article">
+<h2>1. Design Constraints</h2>
+<ul>
+<li><strong>Free hosting:</strong> no server, database, paid build service, or backend.</li>
+<li><strong>Beginner maintainability:</strong> plain HTML, CSS, and JavaScript instead of a complex framework.</li>
+<li><strong>Modular expansion:</strong> each week and lesson is a separate page.</li>
+<li><strong>Learning features:</strong> search, diagrams, quizzes, bookmarking, progress tracking, and print-to-PDF are implemented client-side.</li>
+<li><strong>Safety:</strong> all labs must be isolated and authorized.</li>
+</ul>
+<h2>2. Information Architecture</h2>
+<div class="diagram"><pre class="mermaid">
+flowchart TD
+  A[Home] --> B[Week Pages]
+  B --> C[Lesson Pages]
+  C --> D[Practice Labs]
+  C --> E[Self Assessment]
+  A --> F[Glossary]
+  A --> G[Search]
+  A --> H[Architecture]
+  I[Local Storage] --> J[Bookmarks]
+  I --> K[Progress]
+  I --> L[Recently Viewed]
+</pre></div>
+<h2>3. Folder Structure</h2>
+<pre><code>ms-cybersecurity-platform/
+├── index.html
+├── architecture.html
+├── glossary.html
+├── search.html
+├── README.md
+├── LICENSE-CODE.md
+├── LICENSE-CONTENT.md
+├── assets/
+│   ├── css/
+│   │   └── styles.css
+│   └── js/
+│       ├── nav-data.js
+│       ├── search-index.js
+│       ├── glossary-data.js
+│       └── site.js
+├── weeks/
+│   ├── week-00/
+│   │   ├── index.html
+│   │   └── lab-readiness-and-learning-path.html
+│   └── week-01/
+│       └── index.html
+└── content/
+    ├── templates/
+    │   └── lesson-template.html
+    └── week-00/
+        └── lesson-00-01-outline.md</code></pre>
+<h2>4. Page Template</h2>
+<p>Every lesson page uses the same structure: metadata, breadcrumbs, toolbar, table of contents, content sections, self-assessment, lab, further reading, and previous/next navigation.</p>
+<h2>5. Feature Implementation</h2>
+<table><thead><tr><th>Feature</th><th>Implementation</th></tr></thead><tbody>
+<tr><td>Sidebar navigation</td><td><code>assets/js/nav-data.js</code> renders navigation.</td></tr>
+<tr><td>Full-text search</td><td><code>assets/js/search-index.js</code> provides a browser-side index.</td></tr>
+<tr><td>Breadcrumbs</td><td>Manual semantic breadcrumbs per page.</td></tr>
+<tr><td>Dark mode</td><td>CSS variables and Local Storage.</td></tr>
+<tr><td>Reading progress</td><td>Scroll percentage bar.</td></tr>
+<tr><td>Table of contents</td><td>Generated from lesson headings.</td></tr>
+<tr><td>Previous/Next navigation</td><td>Lesson-level links.</td></tr>
+<tr><td>Copy code buttons</td><td>Injected into code blocks by <code>site.js</code>.</td></tr>
+<tr><td>Syntax highlighting</td><td>Optional Highlight.js CDN on lesson pages.</td></tr>
+<tr><td>Collapsible sections</td><td>Native HTML <code>&lt;details&gt;</code>.</td></tr>
+<tr><td>Mermaid diagrams</td><td>Mermaid CDN on diagram pages.</td></tr>
+<tr><td>Download as PDF</td><td>Print-friendly CSS and browser Save as PDF.</td></tr>
+<tr><td>Bookmarks</td><td>Local Storage.</td></tr>
+<tr><td>Recently viewed</td><td>Local Storage.</td></tr>
+<tr><td>Glossary search</td><td><code>assets/js/glossary-data.js</code>.</td></tr>
+<tr><td>Progress tracker</td><td>Local Storage completion state.</td></tr>
+<tr><td>Quiz mode</td><td>Client-side answer hiding and checking.</td></tr>
+<tr><td>Accessibility</td><td>Skip links, semantic structure, keyboard focus, reduced motion, responsive layout, print styles.</td></tr>
+</tbody></table>
+<h2>6. Content Generation Rule</h2>
+<p>New content should be added one lesson at a time. Each lesson must define all technical terms before using them, include safe labs only, and avoid instructions for unauthorized real-world activity.</p>
+<h2>7. Deployment</h2>
+<ol>
+<li>Create a GitHub repository.</li>
+<li>Upload these files to the repository root.</li>
+<li>Open repository settings and enable GitHub Pages from the branch/root publishing source.</li>
+<li>Visit the published URL after GitHub Pages finishes deployment.</li>
+</ol>
+</article><aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside></div>
+<footer class="footer">Architecture page for the scaffold release.</footer></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script></body></html>

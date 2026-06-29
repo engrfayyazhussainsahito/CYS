@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 10.3: Containers, Images, and Kubernetes Security | MS Cybersecurity</title>
+  <meta name="description" content="Containers, images, and Kubernetes security from first principles: container isolation, image supply chain, Dockerfiles, registries, pods, RBAC, service accounts, security contexts, network policies, admission control, and safe labs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-10-03" data-title="Lesson 10.3: Containers, Images, and Kubernetes Security">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 10</a> / Lesson 10.3</div>
+<header class="hero"><div class="eyebrow">Week 10 · Cloud, Containers, and DevSecOps</div><h1>Lesson 10.3: Containers, Images, and Kubernetes Security</h1><p class="lead">Containers make applications portable. Kubernetes makes many containers manageable. Security fails when teams treat that portability as automatic safety. This lesson starts from zero and builds toward graduate-level reasoning about container isolation, image supply chains, workload identity, cluster policy, runtime monitoring, and Kubernetes hardening.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>650–950 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–9 and Lessons 10.1–10.2 recommended; key ideas are reintroduced</div><div class="meta-item"><strong>Practice time</strong>8–14 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+<section class="lesson-visual card"><div class="visual-graphic" aria-label="Container and Kubernetes security stack illustration"><svg viewBox="0 0 1120 620" role="img" aria-labelledby="k8s-title k8s-desc"><title id="k8s-title">Container and Kubernetes security stack</title><desc id="k8s-desc">A layered view showing source code, image build, registry, admission control, Kubernetes cluster, pods, nodes, network policies, and logs.</desc><defs><linearGradient id="kg" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7aa2ff"/><stop offset="100%" stop-color="#55d6bd"/></linearGradient><filter id="ks"><feDropShadow dx="0" dy="10" stdDeviation="13" flood-opacity="0.18"/></filter></defs><rect x="35" y="35" width="1050" height="545" rx="34" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><circle cx="560" cy="310" r="220" fill="url(#kg)" opacity="0.14"/><g filter="url(#ks)" font-size="17" fill="var(--text)"><rect x="70" y="95" width="185" height="80" rx="18" fill="var(--bg)" stroke="var(--border)"/><text x="162" y="128" text-anchor="middle">Source Code</text><text x="162" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">dependencies</text><rect x="300" y="95" width="185" height="80" rx="18" fill="var(--bg)" stroke="var(--border)"/><text x="392" y="128" text-anchor="middle">Image Build</text><text x="392" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">Dockerfile, SBOM</text><rect x="530" y="95" width="185" height="80" rx="18" fill="var(--bg)" stroke="var(--border)"/><text x="622" y="128" text-anchor="middle">Registry</text><text x="622" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">signed images</text><rect x="760" y="95" width="250" height="80" rx="18" fill="var(--bg)" stroke="var(--border)"/><text x="885" y="128" text-anchor="middle">Admission Control</text><text x="885" y="154" text-anchor="middle" font-size="13" fill="var(--muted)">policy gate</text><rect x="130" y="275" width="860" height="235" rx="26" fill="var(--bg)" stroke="var(--border)"/><text x="560" y="310" text-anchor="middle" font-size="21">Kubernetes Cluster</text><rect x="185" y="350" width="210" height="105" rx="18" fill="var(--panel)" stroke="var(--border)"/><text x="290" y="383" text-anchor="middle">Pod</text><text x="290" y="413" text-anchor="middle" font-size="13" fill="var(--muted)">containers + identity</text><rect x="455" y="350" width="210" height="105" rx="18" fill="var(--panel)" stroke="var(--border)"/><text x="560" y="383" text-anchor="middle">Node</text><text x="560" y="413" text-anchor="middle" font-size="13" fill="var(--muted)">runtime + kernel</text><rect x="725" y="350" width="210" height="105" rx="18" fill="var(--panel)" stroke="var(--border)"/><text x="830" y="383" text-anchor="middle">Policies</text><text x="830" y="413" text-anchor="middle" font-size="13" fill="var(--muted)">RBAC, network, logs</text></g><g stroke="var(--accent)" stroke-width="4" marker-end="url(#arrow)"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L7,3 z" fill="var(--accent)"/></marker></defs><line x1="255" y1="135" x2="300" y2="135"/><line x1="485" y1="135" x2="530" y2="135"/><line x1="715" y1="135" x2="760" y2="135"/><line x1="885" y1="175" x2="885" y2="275"/></g></svg></div></section>
+
+<div class="content-grid"><article class="lesson-content card article">
+<section id="overview"><h2>Overview</h2><p><strong>Containers</strong> package an application and its runtime dependencies so it can run consistently across environments. <strong>Kubernetes</strong> coordinates containers across many machines. Together they support modern cloud-native systems, but they also create new places for security mistakes: vulnerable base images, leaked secrets, excessive container privileges, broad service-account permissions, weak registry controls, exposed control planes, missing network policies, and poor runtime visibility.</p><p>The core idea is simple: containers are not magic boxes. They are ordinary processes with packaging, namespaces, cgroups, filesystem layers, and runtime configuration. Kubernetes is not magic automation. It is a distributed control system that tries to make the actual state match the desired state. Security comes from controlling what gets built, what gets admitted, what runs, what it can access, how it communicates, and what evidence is recorded.</p></section>
+
+<section id="introduction"><h2>1. Introduction</h2><p>Plain English: a container is a way to run an application in a controlled environment that carries its files and dependencies with it. Imagine a lunchbox: the meal, fork, napkin, and instructions are packed together. The lunchbox is not the building. It is a portable package. A container image is the packed lunchbox template. A running container is one opened lunchbox being used.</p><p>Containers exist because software often fails when moved between machines. A developer says, “It works on my laptop.” The production server has a different library version, environment variable, file path, or operating system configuration. Containers reduce this problem by packaging application dependencies and declaring runtime behavior.</p><p>They matter because banks, governments, healthcare systems, universities, cloud providers, defense teams, and large enterprises use containers for web APIs, data pipelines, machine-learning services, microservices, batch jobs, security tools, and internal platforms.</p><p>Kubernetes exists because running one container is easy, but running thousands reliably is hard. Teams need scheduling, health checks, scaling, service discovery, rollout, rollback, identity, secrets, storage, and policy. Kubernetes provides a common orchestration model.</p><p>Who uses these technologies? Developers build images. Platform engineers operate clusters. Security engineers write guardrails and detections. DevSecOps teams scan and sign artifacts. Incident responders investigate suspicious workloads. Researchers study misconfiguration detection, runtime isolation, policy verification, and supply-chain integrity.</p></section>
+
+<section id="learning-objectives"><h2>2. Learning Outcomes</h2><ol><li>Explain what containers, images, layers, registries, and runtimes are.</li><li>Distinguish containers from virtual machines using accurate security language.</li><li>Read a basic Dockerfile and identify risky build patterns.</li><li>Explain why image provenance, scanning, signing, SBOMs, and patching matter.</li><li>Define Kubernetes Pods, nodes, clusters, control plane, kubelet, scheduler, API server, and etcd.</li><li>Explain Kubernetes RBAC, service accounts, namespaces, secrets, ConfigMaps, security contexts, admission control, and NetworkPolicy.</li><li>Identify common Kubernetes misconfigurations without exploiting any real system.</li><li>Design safer container and Kubernetes deployment defaults.</li><li>Write a beginner-safe local manifest review script.</li><li>Produce a container security review report for a fictional deployment.</li></ol></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2><p>You need five ideas. First, a <strong>process</strong> is a running program. Second, an <strong>operating system kernel</strong> controls access to CPU, memory, files, and network. Third, <strong>identity</strong> controls who or what can access resources. Fourth, <strong>networking</strong> lets services communicate. Fifth, <strong>software supply chain</strong> means the chain from source code and dependencies to build artifacts and deployed software.</p><p>We will reintroduce each concept in container form. If you know Linux permissions, cloud IAM, and secure software, containers are a composition of those earlier topics.</p></section>
+
+
+
+
+
+
+
+<section id="core-concepts"><h2>4. Core Concepts</h2><h3>4.1 Containers as processes, not tiny virtual machines</h3><p>A container usually runs as one or more processes on a host kernel. It may have isolated views of files, process IDs, users, network interfaces, and resource usage. That isolation is provided by operating-system features, not by a full guest operating system in the usual container model.</p><p>A virtual machine runs a guest operating system on virtualized hardware. A container shares the host kernel. This makes containers fast and efficient, but security depends heavily on kernel isolation, runtime configuration, privilege settings, and host hardening.</p><h3>4.2 Images, layers, and registries</h3><p>A <strong>container image</strong> is a read-only template. It contains a filesystem, metadata, default command, environment settings, and dependency layers. A <strong>layer</strong> is a filesystem change stacked on previous layers. A <strong>registry</strong> stores and distributes images.</p><p>Intuition: an image is a recipe plus packed ingredients. A registry is the warehouse. A running container is the meal prepared from that recipe.</p><h3>4.3 Dockerfile security</h3><p>A Dockerfile describes how to build an image. Dangerous patterns include using floating base tags, copying secrets into the image, installing unnecessary packages, running as root, skipping vulnerability scans, and failing to pin dependencies. Safer patterns include minimal base images, explicit versions, non-root users, no secrets in builds, reproducible dependencies, and clear runtime commands.</p><h3>4.4 Image supply chain</h3><p>Images inherit risk from base operating-system packages, language packages, build scripts, source repositories, CI/CD runners, registries, and signing systems. A vulnerability in a base image can affect every application that uses it. An attacker who can push an image to a trusted registry may compromise many deployments.</p><p>Defenders use scanning, SBOMs, provenance, signatures, registry access control, immutable tags or digests, and deployment policy. These controls reduce risk, but none proves an image is safe forever. New vulnerabilities can be discovered after an image is built.</p><h3>4.5 Container runtime and host security</h3><p>The <strong>container runtime</strong> starts and manages containers. The host still matters. If the host kernel, runtime, kubelet, or node credentials are compromised, container boundaries may not protect workloads. Host hardening, patching, logging, resource limits, and least privilege remain essential.</p><h3>4.6 Kubernetes architecture</h3><p>A Kubernetes <strong>cluster</strong> contains a <strong>control plane</strong> and <strong>worker nodes</strong>. The control plane exposes the API, stores cluster state, schedules workloads, and runs controllers. Worker nodes run pods through the kubelet, container runtime, and network components. <strong>etcd</strong> stores cluster state and must be protected carefully.</p><h3>4.7 Desired state and reconciliation</h3><p>Kubernetes works by desired state. You submit objects such as Deployments, Services, ConfigMaps, Secrets, and NetworkPolicies. Controllers continually compare desired state with actual state and make changes. Security policies should therefore control both configuration before admission and behavior after runtime.</p><h3>4.8 Pods, deployments, services, and namespaces</h3><p>A <strong>Pod</strong> is the smallest commonly scheduled Kubernetes unit. It can contain one or more containers that share network and storage context. A <strong>Deployment</strong> manages replica Pods and rollout. A <strong>Service</strong> provides stable network access. A <strong>Namespace</strong> groups resources and can help separate teams, environments, or applications.</p><h3>4.9 Kubernetes identity and RBAC</h3><p>Kubernetes has human users and service accounts. A <strong>service account</strong> gives a workload an identity. <strong>RBAC</strong> uses Roles, ClusterRoles, RoleBindings, and ClusterRoleBindings to control who can perform verbs such as get, list, create, update, delete, or watch on resources. Broad permissions can become privilege-escalation paths.</p><h3>4.10 Security contexts</h3><p>A <strong>security context</strong> defines privilege and access-control settings for Pods or containers. Examples include run as non-root, disallow privilege escalation, drop Linux capabilities, use a read-only root filesystem, set seccomp profile, and avoid privileged mode.</p><h3>4.11 Secrets and ConfigMaps</h3><p>A <strong>ConfigMap</strong> stores non-sensitive configuration. A <strong>Secret</strong> stores sensitive values such as tokens or passwords, but Kubernetes Secrets require careful handling. They are not automatically safe just because the object is named Secret. Encryption at rest, RBAC, workload scoping, external secret managers, and audit logs matter.</p><h3>4.12 NetworkPolicy</h3><p>Kubernetes networking is often permissive by default. <strong>NetworkPolicy</strong> can restrict pod-to-pod and pod-to-external communication when the cluster network plugin supports it. A common design is deny by default, then allow only required flows.</p><h3>4.13 Admission control and policy as code</h3><p><strong>Admission control</strong> checks API requests before objects are stored. Admission policies can reject privileged Pods, require signed images, enforce non-root execution, block hostPath volumes, require resource limits, or require approved registries. Policy as code makes these decisions reviewable and testable.</p><h3>4.14 Runtime detection</h3><p>Build-time controls are not enough. Runtime monitoring watches process behavior, file writes, network connections, DNS queries, API calls, and unusual resource usage. Detection helps identify cryptomining, suspicious shell execution, unexpected package installation, lateral movement, or abnormal service-account use.</p></section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2><h3>5.1 Container lifecycle</h3><pre class="mermaid"><code>flowchart LR
+  A[Source code] --> B[Build image]
+  B --> C[Scan image]
+  C --> D[Sign image]
+  D --> E[Push to registry]
+  E --> F[Admission policy]
+  F --> G[Run as container]
+  G --> H[Runtime logs and detections]
+  H --> I[Patch, rebuild, redeploy]</code></pre><h3>5.2 Kubernetes request sequence</h3><pre class="mermaid"><code>sequenceDiagram
+  participant Dev as Developer or CI/CD
+  participant API as Kubernetes API Server
+  participant Adm as Admission Controller
+  participant ETCD as etcd State Store
+  participant Sch as Scheduler
+  participant Node as Worker Node
+  Dev->>API: Submit Deployment manifest
+  API->>Adm: Validate policy
+  Adm-->>API: Allow or deny
+  API->>ETCD: Store desired state
+  Sch->>API: Watch for unscheduled Pods
+  Sch->>API: Bind Pod to node
+  Node->>API: Kubelet watches assigned Pods
+  Node->>Node: Pull image and start container
+  Node-->>API: Report status and events</code></pre><h3>5.3 Cluster security architecture</h3><pre class="mermaid"><code>flowchart TB
+  subgraph Supply Chain
+    Repo[Source repository]
+    Build[CI/CD build]
+    Scan[Scan and SBOM]
+    Sign[Sign image]
+    Registry[Registry]
+  end
+  subgraph Control Plane
+    API[API server]
+    Admission[Admission control]
+    RBAC[RBAC]
+    ETCD[etcd]
+  end
+  subgraph Worker Nodes
+    Kubelet[kubelet]
+    Runtime[Container runtime]
+    PodA[Pod: web]
+    PodB[Pod: API]
+    PodC[Pod: database client]
+  end
+  Repo --> Build --> Scan --> Sign --> Registry
+  Registry --> Admission
+  Admission --> API
+  RBAC --> API
+  API --> ETCD
+  API --> Kubelet
+  Kubelet --> Runtime
+  Runtime --> PodA
+  Runtime --> PodB
+  Runtime --> PodC
+  PodA -. NetworkPolicy .-> PodB
+  PodB -. Restricted access .-> PodC</code></pre><h3>5.4 Decision tree for risky manifests</h3><pre class="mermaid"><code>flowchart TD
+  Start[Review workload manifest] --> A{Trusted image source?}
+  A -- No --> Reject1[Reject or require approval]
+  A -- Yes --> B{Pinned version or digest?}
+  B -- No --> Fix1[Pin image]
+  B -- Yes --> C{Runs as non-root?}
+  C -- No --> Fix2[Change user or justify exception]
+  C -- Yes --> D{Privileged or host access?}
+  D -- Yes --> Reject2[Reject unless exceptional system workload]
+  D -- No --> E{Resource limits set?}
+  E -- No --> Fix3[Add requests and limits]
+  E -- Yes --> F{Network access restricted?}
+  F -- No --> Fix4[Add policy or document reason]
+  F -- Yes --> Accept[Approve with monitoring]</code></pre><h3>5.5 Timeline</h3><pre class="mermaid"><code>timeline
+  title Container Security Timeline
+  Source created : Dependency risk enters
+  Image built : Base image and build risk enter
+  Image stored : Registry access and signing matter
+  Manifest submitted : Admission control checks policy
+  Pod scheduled : Node and runtime controls matter
+  Workload runs : Telemetry detects behavior
+  Vulnerability disclosed : Rebuild and redeploy are required</code></pre></section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><pre class="mermaid"><code>mindmap
+  root((Container and Kubernetes Security))
+    Containers
+      Images
+      Layers
+      Runtime
+      Namespaces
+      cgroups
+      Non-root user
+    Supply Chain
+      Base images
+      Dependency scanning
+      SBOM
+      Signatures
+      Provenance
+      Registry access
+    Kubernetes
+      Pods
+      Nodes
+      Control plane
+      API server
+      etcd
+      Scheduler
+      Kubelet
+    Policy
+      RBAC
+      Service accounts
+      Security contexts
+      Admission control
+      NetworkPolicy
+    Operations
+      Logging
+      Runtime detection
+      Patch and rebuild
+      Incident response
+      Governance</code></pre></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2><p>Container security uses practical measurement. The numbers are imperfect, but they help prioritize work.</p><h3>7.1 Image risk score</h3><p>A simple teaching model:</p><pre><code>Image Risk = Vulnerability Severity × Exposure × Privilege × Deployment Count</code></pre><p>Worked example: an image has a high-severity vulnerability scored 8 on a 0–10 teaching scale. It is internet-facing, so exposure is 3. It runs as non-root, so privilege is 1. It runs in 20 replicas.</p><pre><code>Risk = 8 × 3 × 1 × 20 = 480</code></pre><p>If the same image runs privileged with host access, privilege might be 5:</p><pre><code>Risk = 8 × 3 × 5 × 20 = 2400</code></pre><p>The vulnerability did not change. The deployment context changed the risk.</p><h3>7.2 Vulnerability density</h3><pre><code>Vulnerability Density = Number of Findings / Image Size in MB</code></pre><p>If image A has 30 findings and is 300 MB, density is 0.10 findings per MB. If image B has 15 findings and is 50 MB, density is 0.30 findings per MB. This does not prove B is worse; it only gives another review signal. Severity, exploitability, reachability, and business exposure matter more than raw count.</p><h3>7.3 Availability and resource limits</h3><p>Resource limits reduce noisy-neighbor and denial-of-service risk. If each Pod requests 250 millicores of CPU and a node has 4000 millicores allocatable, a rough upper bound is:</p><pre><code>Maximum requested Pods = 4000 / 250 = 16 Pods</code></pre><p>This is a scheduling estimate, not a security proof. Memory, storage, networking, and daemon overhead also matter.</p></section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2><h3>Linux examples</h3><pre><code class="language-bash"># These commands inspect local container-related files only.
+# They do not scan public networks or access a Kubernetes cluster.
+
+mkdir container-security-lab
+cd container-security-lab
+
+# Save the example files from this lesson, then review them.
+python3 manifest_review.py
+
+# Optional, if Docker is installed locally: inspect local Docker version.
+docker --version
+
+# Optional, if kubectl is installed: validate manifest syntax without applying it.
+kubectl apply --dry-run=client -f safe-pod.yaml</code></pre><h3>Windows examples</h3><pre><code class="language-powershell"># PowerShell examples for a local-only lab.
+New-Item -ItemType Directory -Path container-security-lab
+Set-Location container-security-lab
+
+# Run the local manifest review script after saving the lesson files.
+python .\manifest_review.py
+
+# Optional local tool checks.
+docker --version
+kubectl version --client</code></pre><h3>Python example</h3><p>The following script reviews local manifest files for beginner-pattern risks. It is intentionally simple and is not a replacement for professional policy tools.</p><pre><code class="language-python"># manifest_review.py
+# Purpose: review local Kubernetes YAML-like text for beginner security risks.
+# Safety: this script reads local files only. It does not connect to a cluster,
+# cloud account, registry, or network service.
+
+from pathlib import Path
+import re
+
+FILES = [&quot;safe-pod.yaml&quot;, &quot;risky-pod.yaml&quot;, &quot;network-policy.yaml&quot;]
+
+CHECKS = [
+    (&quot;privileged container&quot;, r&quot;privileged:\s*true&quot;),
+    (&quot;runs as root or UID 0&quot;, r&quot;runAsUser:\s*0\b&quot;),
+    (&quot;privilege escalation allowed&quot;, r&quot;allowPrivilegeEscalation:\s*true&quot;),
+    (&quot;host namespace requested&quot;, r&quot;host(Network|PID|IPC):\s*true&quot;),
+    (&quot;host path volume&quot;, r&quot;hostPath:&quot;),
+    (&quot;latest tag used&quot;, r&quot;image:\s*[^\s]+:latest&quot;),
+    (&quot;missing resource limits&quot;, r&quot;kind:\s*Pod(?:(?!limits:).)*$&quot;),
+]
+
+for name in FILES:
+    path = Path(name)
+    if not path.exists():
+        print(f&quot;SKIP {name}: file not found&quot;)
+        continue
+
+    text = path.read_text(encoding=&quot;utf-8&quot;)
+    print(f&quot;\nReviewing {name}&quot;)
+    findings = []
+
+    for label, pattern in CHECKS:
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+            findings.append(label)
+
+    if findings:
+        print(&quot;Findings:&quot;)
+        for finding in findings:
+            print(f&quot; - {finding}&quot;)
+    else:
+        print(&quot;No beginner-pattern findings detected. Manual review is still required.&quot;)</code></pre><h3>Network example</h3><p>A web Pod should not automatically talk to every Pod. A safer design permits only required flows.</p><pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api-only
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: web
+      ports:
+        - protocol: TCP
+          port: 8080</code></pre><h3>Web example</h3><p>A containerized web API should receive configuration from the environment or a secret manager, not from hardcoded secrets in the image. Logs should avoid secrets, session tokens, and full request bodies containing private data.</p><h3>Cloud example</h3><p>A managed Kubernetes service still follows shared responsibility. The provider may operate parts of the control plane, but the customer usually remains responsible for workload configuration, image security, IAM, network policy, secrets handling, and application security.</p></section>
+
+<section id="code-examples"><h2>9. Code Examples</h2><h3>9.1 Safer Dockerfile</h3><pre><code class="language-dockerfile"># Use a small, specific base image tag instead of a floating &quot;latest&quot; tag.
+FROM python:3.12-slim
+
+# Create a non-root user for the application process.
+RUN useradd --create-home --shell /usr/sbin/nologin appuser
+
+# Set a working directory inside the image.
+WORKDIR /app
+
+# Copy only dependency metadata first to support repeatable builds.
+COPY requirements.txt ./
+
+# Install dependencies without retaining package-manager cache.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code after dependencies.
+COPY app.py ./
+
+# Drop root privileges before the application starts.
+USER appuser
+
+# Document the port used by the application.
+EXPOSE 8080
+
+# Start the application with an explicit command.
+CMD [&quot;python&quot;, &quot;app.py&quot;]</code></pre><p>Line-by-line reasoning: the base image is specific; a non-root user is created; dependencies are installed before code to support repeatable builds; package cache is not retained; root privilege is dropped before runtime; the startup command is explicit.</p><h3>9.2 Risky Dockerfile</h3><pre><code class="language-dockerfile">FROM python:latest
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+USER root
+CMD python app.py</code></pre><p>Common mistakes: <code>latest</code> is floating; <code>COPY . .</code> may include secrets or unnecessary files; package versions are not clearly controlled; the application runs as root; the command uses shell form, which can complicate signal handling and parsing.</p><h3>9.3 Safer Pod manifest</h3><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: safe-training-pod
+  labels:
+    app: training
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: example.invalid/training-app:1.0.0
+      ports:
+        - containerPort: 8080
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [&quot;ALL&quot;]
+      resources:
+        requests:
+          cpu: &quot;100m&quot;
+          memory: &quot;128Mi&quot;
+        limits:
+          cpu: &quot;500m&quot;
+          memory: &quot;256Mi&quot;</code></pre><p>Security reasoning: the service-account token is not mounted automatically; the pod runs as non-root; seccomp uses the runtime default; privilege escalation is disabled; Linux capabilities are dropped; the root filesystem is read-only; resource requests and limits are declared.</p><h3>9.4 Risky Pod manifest for review only</h3><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: risky-training-pod
+spec:
+  hostNetwork: true
+  containers:
+    - name: app
+      image: example.invalid/training-app:latest
+      securityContext:
+        privileged: true
+        allowPrivilegeEscalation: true
+        runAsUser: 0
+      volumeMounts:
+        - name: host-root
+          mountPath: /host
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /</code></pre><p>This file is intentionally unsafe for local review. Do not apply it to a cluster. The risks include host networking, privileged mode, root execution, privilege escalation, a floating image tag, and host filesystem mounting.</p></section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2><h3>Common attacks and weaknesses</h3><ul><li>Image poisoning: a trusted-looking image contains malicious code or vulnerable dependencies.</li><li>Secret leakage: credentials are baked into images, environment variables, build logs, or manifests.</li><li>Overprivileged containers: workloads run as root, privileged, or with unnecessary Linux capabilities.</li><li>Host escape risk: a vulnerability or misconfiguration allows access beyond the container boundary.</li><li>Weak RBAC: service accounts can read secrets, create pods, or modify roles unnecessarily.</li><li>Exposed control plane: API endpoints or dashboards are reachable from untrusted networks.</li><li>Unrestricted pod traffic: missing network policy permits lateral movement.</li><li>Supply-chain drift: old images continue running after patches are available.</li><li>Runtime abuse: attackers use containers for cryptomining, scanning, data staging, or command execution.</li></ul><h3>Defensive strategies</h3><ul><li>Use trusted registries, image signatures, SBOMs, provenance, and vulnerability scanning.</li><li>Prefer minimal base images and rebuild regularly.</li><li>Run containers as non-root and drop unnecessary capabilities.</li><li>Set resource requests and limits.</li><li>Use admission control to enforce baseline policies.</li><li>Use RBAC least privilege and review service accounts.</li><li>Use NetworkPolicy to reduce lateral movement.</li><li>Protect Kubernetes API server, etcd, kubelet, and node credentials.</li><li>Collect audit logs, container runtime logs, DNS logs, and cloud control-plane logs.</li></ul><h3>Detection methods</h3><ul><li>Alert on privileged Pod creation, hostPath mounts, or host networking.</li><li>Alert on service accounts reading many secrets.</li><li>Alert on new ClusterRoleBinding to broad roles.</li><li>Monitor unusual CPU use, network connections, DNS queries, and shell execution.</li><li>Compare running images against approved digests.</li><li>Detect workloads launched from unapproved registries.</li></ul></section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><p><strong>Banks</strong> use containers to deploy APIs and fraud-detection services, but they require strong identity, audit logs, image provenance, and segregation of duties. <strong>Governments</strong> use Kubernetes for digital services and often emphasize hardening baselines, supply-chain evidence, and policy enforcement. <strong>Cloud providers</strong> offer managed Kubernetes, registries, image scanning, workload identity, policy engines, and logging integrations.</p><p><strong>Healthcare</strong> uses containers for patient portals, analytics, and interoperability APIs; privacy and recovery requirements are central. <strong>Defense</strong> environments care about strict isolation, signed artifacts, least privilege, disconnected or constrained networks, and tamper evidence. <strong>Universities</strong> use containers for research platforms and teaching labs; multi-tenant separation and cost controls matter. <strong>Large enterprises</strong> use platform teams to provide paved roads: approved images, templates, CI/CD controls, and cluster guardrails.</p></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2><p>Current research includes container escape analysis, Kubernetes misconfiguration detection, policy verification, SBOM accuracy, artifact signing and provenance, runtime anomaly detection, side-channel risks in multi-tenant environments, confidential containers, eBPF-based observability, and least-privilege synthesis for RBAC and NetworkPolicy.</p><p>Open problems remain. Scanners can disagree. SBOMs can be incomplete. Runtime behavior baselines can produce false positives. Kubernetes policy languages can be difficult to use correctly. Workload identity can be hard to reason about across cloud IAM, Kubernetes RBAC, and application-level authorization. Confidential-computing approaches can reduce some infrastructure trust assumptions, but they add complexity and do not automatically fix application vulnerabilities.</p></section>
+
+<section id="case-studies"><h2>13. Case Studies</h2><h3>13.1 Tesla cloud cryptojacking report</h3><p>Researchers reported that an exposed Kubernetes administrative console was abused in a cloud cryptomining incident. The lesson is not “Kubernetes is bad.” The lesson is that exposed admin surfaces, weak authentication, secrets in workloads, and poor runtime visibility can combine into a cloud compromise path.</p><h3>13.2 Vulnerable public images</h3><p>Many organizations inherit risk from base images and language packages. A container can be newly built but still contain old vulnerable packages. Security teams therefore need image inventories, rebuild processes, vulnerability triage, and ownership.</p><h3>13.3 Misconfigured service accounts</h3><p>In many cluster incidents, the first compromised workload is less important than what its service account can do. If a web Pod can read secrets or create privileged Pods, a small application flaw can become a cluster-level incident.</p><h3>13.4 Missing network policy</h3><p>Flat cluster networks allow compromised workloads to reach internal services. NetworkPolicy does not fix vulnerable applications, but it reduces blast radius by limiting unnecessary communication.</p></section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul><li><strong>“Containers are the same as virtual machines.”</strong> Incorrect. They usually share the host kernel and require different security assumptions.</li><li><strong>“If the image scans clean, it is safe.”</strong> Incorrect. Scanners miss issues and new vulnerabilities appear later.</li><li><strong>“Kubernetes secrets are automatically secure.”</strong> Incorrect. Access control, encryption, external secret management, and logs still matter.</li><li><strong>“NetworkPolicy always works by default.”</strong> Incorrect. It depends on network plugin support and correct policy design.</li><li><strong>“Non-root containers remove all risk.”</strong> Incorrect. They reduce privilege but do not fix vulnerable applications or broad identity permissions.</li><li><strong>“Managed Kubernetes means the provider handles everything.”</strong> Incorrect. Shared responsibility still leaves workload, IAM, network, and data controls to the customer.</li><li><strong>“Admission control replaces monitoring.”</strong> Incorrect. Admission prevents some bad states; runtime monitoring detects behavior after deployment.</li></ul></section>
+
+<section id="summary"><h2>15. Summary</h2><p>Containers package software and dependencies. Kubernetes orchestrates containers across machines. Security depends on the full lifecycle: source, build, image, registry, admission, runtime, identity, networking, logging, and recovery. The safest mental model is layered defense: build trustworthy images, admit only policy-compliant workloads, run with least privilege, restrict communication, monitor behavior, patch continuously, and review access.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl><dt>Admission Controller</dt><dd>A Kubernetes component that can validate or mutate API requests before objects are stored.</dd><dt>Base Image</dt><dd>The starting image layer used to build another image.</dd><dt>Cluster</dt><dd>A group of machines and control-plane components managed as one Kubernetes environment.</dd><dt>Container</dt><dd>A packaged runtime environment for an application process using operating-system isolation features.</dd><dt>Container Image</dt><dd>A read-only template used to create containers.</dd><dt>Container Runtime</dt><dd>Software that starts and manages containers on a host.</dd><dt>etcd</dt><dd>Kubernetes key-value store that holds cluster state.</dd><dt>Image Layer</dt><dd>A filesystem change stacked as part of a container image.</dd><dt>Kubelet</dt><dd>Node agent that communicates with the Kubernetes API server and manages Pods on a node.</dd><dt>Kubernetes</dt><dd>An open-source system for automating deployment, scaling, and management of containerized applications.</dd><dt>Namespace</dt><dd>A Kubernetes grouping mechanism for resources.</dd><dt>NetworkPolicy</dt><dd>A Kubernetes resource used to control network traffic to or from selected Pods when supported by the network plugin.</dd><dt>Pod</dt><dd>The smallest commonly scheduled Kubernetes workload unit, usually containing one or more containers.</dd><dt>Registry</dt><dd>A service that stores and distributes container images.</dd><dt>Security Context</dt><dd>Pod or container privilege and access-control settings.</dd><dt>Service Account</dt><dd>A Kubernetes identity commonly used by workloads.</dd><dt>SBOM</dt><dd>Software Bill of Materials; an inventory of software components.</dd><dt>Workload Identity</dt><dd>A digital identity assigned to software or a runtime workload.</dd></dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><ol><li><strong>What is a container?</strong><br>A. A lightweight package and runtime environment for an application process<br>B. A physical server rack only<br>C. A replacement for all security controls<br>D. A DNS record<br><em>Answer: A</em></li><li><strong>What is a container image?</strong><br>A. A read-only template used to create containers<br>B. A live running process only<br>C. A firewall rule<br>D. A browser cookie<br><em>Answer: A</em></li><li><strong>What is the safest interpretation of container isolation?</strong><br>A. Useful isolation, but not the same as a full security boundary in every design<br>B. Perfect isolation that removes all risk<br>C. No isolation at all<br>D. Only encryption<br><em>Answer: A</em></li><li><strong>Why should images avoid the latest tag for production?</strong><br>A. The exact contents can change without clear version intent<br>B. It always disables TLS<br>C. It prevents all logging<br>D. It makes images smaller by definition<br><em>Answer: A</em></li><li><strong>What is a base image?</strong><br>A. The starting filesystem layer used by an image<br>B. A Kubernetes namespace<br>C. A secret manager<br>D. A cloud billing account<br><em>Answer: A</em></li><li><strong>Which practice reduces container privilege?</strong><br>A. Run as a non-root user<br>B. Run as root with hostPath mounted to /<br>C. Use privileged mode by default<br>D. Disable logs<br><em>Answer: A</em></li><li><strong>What does a Kubernetes Pod usually represent?</strong><br>A. One or more containers scheduled together with shared networking and storage context<br>B. A password database<br>C. A firewall appliance only<br>D. An SSH key<br><em>Answer: A</em></li><li><strong>What does Kubernetes orchestrate?</strong><br>A. Deployment, scaling, scheduling, and management of containerized workloads<br>B. Keyboard layouts<br>C. Password complexity only<br>D. Disk formatting only<br><em>Answer: A</em></li><li><strong>What is a Kubernetes node?</strong><br>A. A worker machine that runs pods<br>B. A browser tab<br>C. A text editor<br>D. A DNS TLD<br><em>Answer: A</em></li><li><strong>What is the Kubernetes control plane?</strong><br>A. Components that expose the API, store desired state, schedule work, and reconcile the cluster<br>B. A single application log file<br>C. A USB device<br>D. A password hash<br><em>Answer: A</em></li><li><strong>What does RBAC help control in Kubernetes?</strong><br>A. Which subjects can perform which actions on which resources<br>B. CPU instruction timing only<br>C. Image compression ratios<br>D. HTML rendering<br><em>Answer: A</em></li><li><strong>What is a service account commonly used for?</strong><br>A. Giving a workload an identity inside the cluster<br>B. Replacing all user accounts in a company<br>C. Encrypting a Wi-Fi password only<br>D. Drawing diagrams<br><em>Answer: A</em></li><li><strong>What is a NetworkPolicy intended to control?</strong><br>A. Allowed network traffic to or from selected pods, when supported by the network plugin<br>B. Password rotation intervals<br>C. Source-code formatting<br>D. Browser bookmarks<br><em>Answer: A</em></li><li><strong>What is a security context?</strong><br>A. Pod or container privilege and access-control settings<br>B. A spreadsheet color<br>C. A domain name record<br>D. A conference agenda<br><em>Answer: A</em></li><li><strong>Which setting is usually suspicious in ordinary application pods?</strong><br>A. privileged: true<br>B. readOnlyRootFilesystem: true<br>C. allowPrivilegeEscalation: false<br>D. runAsNonRoot: true<br><em>Answer: A</em></li><li><strong>What is an admission controller?</strong><br>A. A component that can validate or mutate requests before objects are persisted<br>B. A packet sniffer only<br>C. A password vault<br>D. An image layer<br><em>Answer: A</em></li><li><strong>Why scan container images?</strong><br>A. To find known vulnerable packages, secrets, and policy issues before deployment<br>B. To prove there are no risks ever<br>C. To make RBAC unnecessary<br>D. To bypass approvals<br><em>Answer: A</em></li><li><strong>What is an SBOM useful for?</strong><br>A. Listing software components so dependencies can be tracked and assessed<br>B. Replacing authentication<br>C. Hiding image contents<br>D. Disabling logs<br><em>Answer: A</em></li><li><strong>What is a registry?</strong><br>A. A service that stores and distributes container images<br>B. A kernel thread<br>C. A password rule<br>D. A subnet mask<br><em>Answer: A</em></li><li><strong>What is the safest lab boundary for beginners?</strong><br>A. Review local example manifests and never test real clusters without written authorization<br>B. Scan random Kubernetes APIs on the internet<br>C. Use leaked registry credentials<br>D. Pull unknown images from untrusted links and run them<br><em>Answer: A</em></li></ol><h3>10 Short Questions</h3><ol><li>Define container in one paragraph.</li><li>Explain image layers using an analogy.</li><li>Why is running as root inside a container risky?</li><li>What problem does Kubernetes solve?</li><li>What is the difference between a Pod and a container?</li><li>Why does a service account token matter?</li><li>What is a NetworkPolicy and what limitation should beginners remember?</li><li>Name three security risks in a Dockerfile.</li><li>Explain why an SBOM does not automatically make an image safe.</li><li>Describe the difference between preventive and detective container controls.</li></ol><h3>5 Long Questions</h3><ol><li>Design a secure container build process for a small web API. Include base image selection, dependency management, scanning, signing, and registry controls.</li><li>Explain the Kubernetes control plane and worker-node architecture from a security perspective.</li><li>Compare VM isolation and container isolation. Where are containers efficient, and where do they need extra controls?</li><li>Build a threat model for a Kubernetes namespace that hosts a student records API.</li><li>Explain how a weak workload identity can become a cloud compromise path.</li></ol><h3>Scenario-Based Questions</h3><ol><li>A development team uses image: app:latest in production. What could go wrong, and what release-control changes would you recommend?</li><li>A Pod requests hostNetwork, privileged mode, and a hostPath mount. What assets are at risk?</li><li>A namespace has no NetworkPolicy. What evidence would you collect before recommending deny-by-default controls?</li><li>A service account has broad permissions but no one knows why. How would you conduct a safe access review?</li><li>A registry contains old images with critical vulnerabilities. How would you prioritize remediation?</li></ol><h3>Interview Questions</h3><ol><li>Explain Kubernetes to a non-technical executive in two minutes.</li><li>What Kubernetes security settings do you check first in a workload manifest?</li><li>What is the difference between an image scanner and a runtime detector?</li><li>How do you reduce blast radius in a Kubernetes cluster?</li><li>What is the relationship between DevSecOps and container security?</li></ol><h3>Critical Thinking Questions</h3><ol><li>When might a container be the wrong deployment model?</li><li>Why can a vulnerability scanner create false confidence?</li><li>How can strict security policies slow delivery, and how can teams manage that trade-off?</li><li>Why is Kubernetes hard to secure even for experienced teams?</li><li>Which is more dangerous: a vulnerable image or an overprivileged workload identity? Defend your answer with assumptions.</li></ol><h3>Research Questions</h3><ol><li>Study recent research on Kubernetes misconfiguration detection and classify the most common weakness categories.</li><li>Evaluate SBOM accuracy for container images across two tools using a local test image.</li><li>Compare admission-control policy languages such as OPA Gatekeeper and Kyverno at a conceptual level.</li><li>Research confidential containers and explain what threat model they are trying to address.</li><li>Investigate runtime anomaly detection for containers and identify limits of behavior baselining.</li></ol></section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2><h3>Lab: Local Container Manifest Review</h3><p><strong>Safety boundary:</strong> this lab uses only local text files. Do not connect to any real cluster. Do not scan internet systems. Do not pull or run untrusted images.</p><p><strong>Prerequisites:</strong> a text editor and Python 3. Docker and kubectl are optional for local version checks and client-side manifest validation.</p><p><strong>Objectives:</strong></p><ol><li>Create three local files: <code>safe-pod.yaml</code>, <code>risky-pod.yaml</code>, and <code>network-policy.yaml</code>.</li><li>Create <code>manifest_review.py</code>.</li><li>Run the script locally.</li><li>Write a report explaining each finding, risk, and safer alternative.</li></ol><p><strong>Expected outcomes:</strong> students should be able to identify privileged containers, root execution, hostPath mounts, host networking, floating image tags, missing resource limits, and network-policy intent.</p><details><summary>Lab files</summary><h4>safe-pod.yaml</h4><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: safe-training-pod
+  labels:
+    app: training
+spec:
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: example.invalid/training-app:1.0.0
+      ports:
+        - containerPort: 8080
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [&quot;ALL&quot;]
+      resources:
+        requests:
+          cpu: &quot;100m&quot;
+          memory: &quot;128Mi&quot;
+        limits:
+          cpu: &quot;500m&quot;
+          memory: &quot;256Mi&quot;</code></pre><h4>risky-pod.yaml</h4><pre><code class="language-yaml">apiVersion: v1
+kind: Pod
+metadata:
+  name: risky-training-pod
+spec:
+  hostNetwork: true
+  containers:
+    - name: app
+      image: example.invalid/training-app:latest
+      securityContext:
+        privileged: true
+        allowPrivilegeEscalation: true
+        runAsUser: 0
+      volumeMounts:
+        - name: host-root
+          mountPath: /host
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /</code></pre><h4>network-policy.yaml</h4><pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api-only
+spec:
+  podSelector:
+    matchLabels:
+      app: api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: web
+      ports:
+        - protocol: TCP
+          port: 8080</code></pre><h4>manifest_review.py</h4><pre><code class="language-python"># manifest_review.py
+# Purpose: review local Kubernetes YAML-like text for beginner security risks.
+# Safety: this script reads local files only. It does not connect to a cluster,
+# cloud account, registry, or network service.
+
+from pathlib import Path
+import re
+
+FILES = [&quot;safe-pod.yaml&quot;, &quot;risky-pod.yaml&quot;, &quot;network-policy.yaml&quot;]
+
+CHECKS = [
+    (&quot;privileged container&quot;, r&quot;privileged:\s*true&quot;),
+    (&quot;runs as root or UID 0&quot;, r&quot;runAsUser:\s*0\b&quot;),
+    (&quot;privilege escalation allowed&quot;, r&quot;allowPrivilegeEscalation:\s*true&quot;),
+    (&quot;host namespace requested&quot;, r&quot;host(Network|PID|IPC):\s*true&quot;),
+    (&quot;host path volume&quot;, r&quot;hostPath:&quot;),
+    (&quot;latest tag used&quot;, r&quot;image:\s*[^\s]+:latest&quot;),
+    (&quot;missing resource limits&quot;, r&quot;kind:\s*Pod(?:(?!limits:).)*$&quot;),
+]
+
+for name in FILES:
+    path = Path(name)
+    if not path.exists():
+        print(f&quot;SKIP {name}: file not found&quot;)
+        continue
+
+    text = path.read_text(encoding=&quot;utf-8&quot;)
+    print(f&quot;\nReviewing {name}&quot;)
+    findings = []
+
+    for label, pattern in CHECKS:
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+            findings.append(label)
+
+    if findings:
+        print(&quot;Findings:&quot;)
+        for finding in findings:
+            print(f&quot; - {finding}&quot;)
+    else:
+        print(&quot;No beginner-pattern findings detected. Manual review is still required.&quot;)</code></pre></details><h3>Report template</h3><pre><code class="language-text">Finding:
+Evidence:
+Risk:
+Affected object:
+Recommended fix:
+Residual risk:
+Owner:
+Priority:
+Validation method:</code></pre></section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul><li>Kubernetes documentation: security concepts, Pod Security Standards, security contexts, RBAC, and NetworkPolicy.</li><li>NIST SP 800-190: Application Container Security Guide.</li><li>NSA/CISA Kubernetes Hardening Guidance.</li><li>Docker documentation on image security, SBOMs, and scanning.</li><li>OWASP Kubernetes and cloud-native security resources.</li><li>SLSA provenance and software supply-chain integrity material.</li><li>Research topics: Kubernetes policy verification, container runtime detection, SBOM accuracy, confidential containers, and least-privilege RBAC generation.</li></ul></section>
+</article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div><div class="prev-next"><a class="btn" href="cloud-iam-and-identity-governance.html">← Lesson 10.2</a><a class="btn btn-primary" href="devsecops-pipelines-and-infrastructure-as-code.html">Lesson 10.4 →</a></div>
+</div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>
