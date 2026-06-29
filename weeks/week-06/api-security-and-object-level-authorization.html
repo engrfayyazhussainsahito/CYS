@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 6.4: API Security and Object-Level Authorization | MS Cybersecurity</title>
+  <meta name="description" content="API security from first principles: REST-style APIs, JSON, authentication, authorization, BOLA/IDOR, object property authorization, rate limiting, schemas, API gateways, logging, and safe local labs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-06-04" data-title="Lesson 6.4: API Security and Object-Level Authorization">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 6</a> / Lesson 6.4</div>
+    <header class="hero"><div class="eyebrow">Week 6 · Web and API Security</div><h1>Lesson 6.4: API Security and Object-Level Authorization</h1><p class="lead">This lesson teaches APIs from first principles, then focuses on the most common API security failure: an authenticated user can access or modify an object that does not belong to them. You will learn REST-style design, JSON, tokens, scopes, object ownership, BOLA/IDOR, property-level authorization, schemas, rate limits, API gateways, and evidence-based API logging.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>360–540 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Lessons 2.4, 6.1, 6.2, and 6.3 recommended; prerequisites are reintroduced</div><div class="meta-item"><strong>Practice time</strong>6–10 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="API authorization illustration"><svg viewBox="0 0 960 500" role="img" aria-labelledby="svg-title svg-desc"><title id="svg-title">Object-level authorization boundary</title><desc id="svg-desc">The API must verify the authenticated subject is allowed to perform the requested action on the requested object before returning or changing data.</desc><defs><linearGradient id="apiGrad64" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7aa7ff"/><stop offset="100%" stop-color="#42d6b5"/></linearGradient><marker id="arrow64" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#42d6b5"/></marker></defs><rect x="28" y="42" width="904" height="390" rx="34" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><g fill="var(--bg)" stroke="var(--border)" stroke-width="3"><rect x="72" y="126" width="160" height="120" rx="22"/><rect x="300" y="100" width="190" height="170" rx="22"/><rect x="565" y="100" width="190" height="170" rx="22"/><rect x="802" y="126" width="90" height="120" rx="22"/></g><g font-family="Arial" fill="var(--text)" text-anchor="middle"><text x="152" y="160" font-size="18">Client</text><text x="152" y="188" font-size="14">token + request</text><text x="152" y="212" font-size="14">/records/42</text><text x="395" y="136" font-size="18">API endpoint</text><text x="395" y="166" font-size="14">authenticate</text><text x="395" y="190" font-size="14">parse JSON</text><text x="395" y="214" font-size="14">validate schema</text><text x="395" y="238" font-size="14">route action</text><text x="660" y="136" font-size="18">Authorization</text><text x="660" y="166" font-size="14">subject?</text><text x="660" y="190" font-size="14">object?</text><text x="660" y="214" font-size="14">action?</text><text x="660" y="238" font-size="14">context?</text><text x="847" y="170" font-size="18">Data</text><text x="847" y="198" font-size="14">only if allowed</text></g><g stroke="#42d6b5" stroke-width="4" marker-end="url(#arrow64)"><line x1="238" y1="186" x2="294" y2="186"/><line x1="496" y1="186" x2="558" y2="186"/><line x1="760" y1="186" x2="795" y2="186"/></g><rect x="150" y="322" width="660" height="62" rx="31" fill="url(#apiGrad64)" opacity="0.22"/><text x="480" y="360" font-family="Arial" font-size="18" fill="var(--text)" text-anchor="middle">Security rule: authenticate the caller, then authorize every object access</text></svg></div></section>
+
+    <div class="content-grid"><article class="lesson-content card">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>An <strong>Application Programming Interface</strong>, usually shortened to <strong>API</strong>, is a controlled way for one piece of software to ask another piece of software for data or actions. A web page may call an API to load messages. A mobile banking app may call an API to show account balances. A cloud dashboard may call APIs to create servers, read logs, or change permissions.</p>
+<p>The plain-English idea is simple: an API is a service desk for software. A client makes a request, the API checks the request, performs a controlled operation, and sends back a response. The hard security problem is deciding whether the caller is allowed to do exactly that action on exactly that object.</p>
+<p>This lesson focuses on <strong>object-level authorization</strong>. An object is a specific record or resource: invoice 913, patient record 42, file abc123, repository project-7, order 5001, or message m-88. Object-level authorization asks: <em>Can this authenticated subject perform this action on this specific object right now?</em></p>
+<h3>Why this topic exists</h3><p>Traditional web pages often hid object identifiers inside server-rendered pages. Modern APIs expose many identifiers directly in URLs, JSON bodies, headers, or GraphQL variables. This makes APIs powerful and scalable, but it also creates a large attack surface if the backend trusts client-supplied IDs without checking ownership, role, relationship, tenant, purpose, and action.</p>
+<h3>Why it matters</h3><ul><li>An API can be perfectly authenticated and still dangerously unauthorized.</li><li>Changing an object ID in a request can expose another user's data if object-level checks are missing.</li><li>APIs are used by mobile apps, single-page applications, partners, cloud automation, microservices, and AI tools.</li><li>API failures can expose data at scale because APIs are designed for structured, automated access.</li><li>Object-level authorization belongs in server-side policy enforcement, not in hidden buttons or client-side checks.</li></ul>
+<h3>Where APIs are used</h3><p>APIs are used in banks, hospitals, universities, cloud platforms, identity providers, logistics systems, e-commerce, defense systems, research platforms, social networks, mobile apps, internal dashboards, and business-to-business integrations.</p>
+<h3>Who uses API security</h3><ul><li><strong>Developers</strong> design endpoints, schemas, authorization checks, tests, and error handling.</li><li><strong>Security engineers</strong> review API threat models, access control logic, tokens, logs, gateways, and abuse cases.</li><li><strong>Platform engineers</strong> operate API gateways, service meshes, rate limits, observability, and secrets.</li><li><strong>SOC analysts</strong> investigate token misuse, suspicious object access, enumeration, and abnormal API volumes.</li><li><strong>Researchers</strong> study automated API testing, authorization inference, OpenAPI security metadata, GraphQL risks, and microservice policy enforcement.</li></ul>
+<div class="callout warning"><strong>Safety boundary:</strong> all examples in this lesson use fictional APIs and local toy code. Do not test object ID changes, token behavior, rate limits, or API authorization on real websites, apps, university systems, cloud tenants, or third-party APIs without explicit written authorization.</div>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Define API, endpoint, resource, object, route, method, JSON, request body, response body, status code, bearer token, scope, claim, tenant, object-level authorization, BOLA, IDOR, and object-property authorization.</li>
+<li>Explain the difference between authentication, authorization, function-level authorization, object-level authorization, and property-level authorization.</li>
+<li>Describe REST-style API structure using resources, HTTP methods, status codes, and JSON.</li>
+<li>Explain why hiding a button in the browser does not enforce authorization.</li>
+<li>Explain why guessing or changing object IDs must not give access to another user's object.</li>
+<li>Write safe toy pseudocode for checking ownership before returning or modifying an object.</li>
+<li>Distinguish horizontal privilege failure from vertical privilege failure.</li>
+<li>Explain API risks including BOLA/IDOR, broken authentication, mass assignment, excessive data exposure, unrestricted resource consumption, SSRF, misconfiguration, inventory gaps, and unsafe third-party consumption.</li>
+<li>Use schemas and allowlists to validate API input shape.</li>
+<li>Explain rate limiting, quota, pagination limits, and response-size controls.</li>
+<li>Identify useful API logs for detection while avoiding token and secret leakage.</li>
+<li>Complete a safe local object-authorization lab and produce a professional remediation report.</li>
+</ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2>
+<p>This lesson reintroduces the necessary background. You do not need to be a web developer before starting.</p>
+<h3>3.1 Client and server</h3><p>A <strong>client</strong> asks for something. A <strong>server</strong> receives the request, decides what to do, and sends a response. A browser, mobile app, script, or another backend service can act as a client.</p>
+<h3>3.2 HTTP</h3><p><strong>HTTP</strong> is the request-response protocol used by the web. An HTTP request includes a method such as <code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code>, a path such as <code>/api/records/42</code>, headers, and sometimes a body. The response includes a status code, headers, and sometimes a body.</p>
+<h3>3.3 JSON</h3><p><strong>JavaScript Object Notation</strong>, or <strong>JSON</strong>, is a common text format for structured data. It represents objects, arrays, strings, numbers, booleans, and null values. APIs often receive and return JSON.</p>
+<h3>3.4 Identity</h3><p>A digital <strong>subject</strong> is the user, service, device, or workload making a request. The system must know which subject is acting before it can decide what the subject is allowed to do.</p>
+<h3>3.5 Authentication and authorization</h3><p><strong>Authentication</strong> answers, "Who or what is making this request?" <strong>Authorization</strong> answers, "Is that authenticated subject allowed to do this action on this resource?" Many API breaches happen because authentication exists but authorization is incomplete.</p>
+<h3>3.6 Database records</h3><p>A database stores records. In an API, an object identifier may point to one record. The API must not assume that a user is allowed to access a record simply because the user knows or can guess its identifier.</p>
+<h3>3.7 Trust boundary</h3><p>A <strong>trust boundary</strong> is a place where data crosses from a less trusted area to a more trusted area. Every API request crosses a trust boundary. The server must validate the request and enforce policy.</p>
+</section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 What an API really does</h3><p>An API accepts structured requests and returns structured responses. A human may never see the API directly, but software depends on it. A browser page can use JavaScript to call <code>/api/courses</code>. A mobile app can call <code>/api/accounts/123/balance</code>. A cloud tool can call <code>/api/v1/instances</code>.</p>
+<h3>4.2 Endpoint</h3><p>An <strong>endpoint</strong> is a specific API address plus behavior. For example, <code>GET /api/invoices/913</code> may return invoice 913, while <code>DELETE /api/invoices/913</code> may delete it. Same path, different method, different security impact.</p>
+<h3>4.3 Resource and object</h3><p>A <strong>resource</strong> is a type of thing the API exposes, such as invoices, messages, files, courses, devices, accounts, or tickets. An <strong>object</strong> is one specific item within that resource, such as invoice 913 or file abc123.</p>
+<h3>4.4 REST-style thinking</h3><p><strong>REST-style</strong> APIs often model resources with paths and use HTTP methods to express actions. It is not necessary to master REST theory here. The practical model is enough:</p><table><thead><tr><th>Method</th><th>Common meaning</th><th>Example</th><th>Security question</th></tr></thead><tbody><tr><td><code>GET</code></td><td>Read</td><td><code>GET /api/files/abc</code></td><td>Can this subject read this file?</td></tr><tr><td><code>POST</code></td><td>Create or submit</td><td><code>POST /api/files</code></td><td>Can this subject create a file here?</td></tr><tr><td><code>PUT</code></td><td>Replace</td><td><code>PUT /api/files/abc</code></td><td>Can this subject replace this file?</td></tr><tr><td><code>PATCH</code></td><td>Partial update</td><td><code>PATCH /api/files/abc</code></td><td>Can this subject change these fields?</td></tr><tr><td><code>DELETE</code></td><td>Delete</td><td><code>DELETE /api/files/abc</code></td><td>Can this subject delete this file?</td></tr></tbody></table>
+<h3>4.5 Status codes</h3><p>API responses use status codes. <code>200</code> usually means success. <code>201</code> means created. <code>400</code> means bad request. <code>401</code> means unauthenticated. <code>403</code> means authenticated but not allowed. <code>404</code> means not found. <code>429</code> means too many requests. <code>500</code> means server error.</p>
+<h3>4.6 Request body and response body</h3><p>The <strong>request body</strong> contains data sent to the API, often JSON. The <strong>response body</strong> contains data returned by the API. Both are security-sensitive because they can contain identifiers, fields, roles, tokens, personal data, or error details.</p>
+<h3>4.7 Authentication tokens</h3><p>APIs often use tokens instead of browser sessions. A <strong>bearer token</strong> means whoever possesses the token can present it to access the API. This is convenient, but dangerous if tokens leak. Tokens should be protected like passwords.</p>
+<h3>4.8 Claims and scopes</h3><p>A token may contain or reference <strong>claims</strong>, such as subject ID, issuer, audience, expiration time, tenant ID, or role. A <strong>scope</strong> is a permission-like string such as <code>files:read</code>. Scopes are useful, but a scope such as <code>files:read</code> does not automatically mean the subject can read every file. The API still needs object-level checks.</p>
+<h3>4.9 Authentication is not enough</h3><p>If Alice logs in, the API knows the caller is Alice. That does not mean Alice can read Bob's invoice. Authentication identifies Alice. Authorization decides whether Alice may access the requested object.</p>
+<h3>4.10 Function-level authorization</h3><p><strong>Function-level authorization</strong> asks whether the subject can use a feature or endpoint at all. Example: only administrators can call <code>POST /api/users</code> to create users.</p>
+<h3>4.11 Object-level authorization</h3><p><strong>Object-level authorization</strong> asks whether the subject can access a specific object. Example: a student can read their own transcript, but not another student's transcript. This must be checked every time the API reads, updates, deletes, exports, shares, or acts on an object.</p>
+<h3>4.12 BOLA and IDOR</h3><p><strong>Broken Object Level Authorization</strong>, or <strong>BOLA</strong>, is an API flaw where object-level checks are missing or incorrect. <strong>Insecure Direct Object Reference</strong>, or <strong>IDOR</strong>, is a related older term often used when changing a direct identifier gives unauthorized access. Modern API guidance commonly uses BOLA because the issue is authorization, not merely identifier format.</p>
+<h3>4.13 Sequential IDs and UUIDs</h3><p>Sequential numbers like <code>41</code>, <code>42</code>, and <code>43</code> are easy to guess. Random-looking identifiers such as UUIDs are harder to guess, but they are not authorization. If a user obtains a UUID through logs, browser history, email, sharing, analytics, or another endpoint, the API must still check permission.</p>
+<h3>4.14 Horizontal and vertical failures</h3><p>A <strong>horizontal authorization failure</strong> happens when one normal user accesses another normal user's object. A <strong>vertical authorization failure</strong> happens when a lower-privileged user performs a higher-privileged action. APIs need defenses against both.</p>
+<h3>4.15 Tenant isolation</h3><p>In multi-tenant systems, one application serves multiple organizations. A <strong>tenant</strong> is one customer, institution, or organization. Object authorization must often include tenant checks: the object must belong to the caller's tenant, and the caller must have rights inside that tenant.</p>
+<h3>4.16 Relationship-based access</h3><p>Access is not always simple ownership. A professor may read assignments for their course. A doctor may access records for assigned patients. A support engineer may access limited data during an approved support case. These are relationship-based policies and require careful design.</p>
+<h3>4.17 Policy decision and policy enforcement</h3><p>A <strong>Policy Decision Point</strong>, or <strong>PDP</strong>, decides whether access should be allowed. A <strong>Policy Enforcement Point</strong>, or <strong>PEP</strong>, enforces the decision at runtime. In a small app, both may be inside the same function. In a large platform, they may be separate services, libraries, gateways, or policy engines.</p>
+<h3>4.18 Object-property authorization</h3><p>Sometimes a subject may access the object but not every field. A patient portal may show appointment time but not internal clinical notes. A student API may show course grade to the student but not instructor-only comments. <strong>Object-property authorization</strong> checks which fields may be read or modified.</p>
+<h3>4.19 Mass assignment</h3><p><strong>Mass assignment</strong> occurs when an API automatically copies client-supplied JSON fields into server-side objects without allowlisting permitted fields. A user profile update should not let the client send <code>{"role":"admin"}</code> and have it applied. Use explicit field allowlists.</p>
+<h3>4.20 Excessive data exposure</h3><p><strong>Excessive data exposure</strong> happens when an API returns more fields than the client needs. Even if the user interface hides sensitive fields, the API response may still contain them. Security must be enforced in the API response, not only in the front end.</p>
+<h3>4.21 Broken authentication in APIs</h3><p>APIs may fail when tokens are weak, long-lived, accepted for the wrong audience, not checked for expiration, stored insecurely, or not bound to intended contexts. Authentication checks should verify issuer, audience, expiration, signature, token type, and revocation strategy where applicable.</p>
+<h3>4.22 Unrestricted resource consumption</h3><p>APIs consume CPU, memory, bandwidth, database queries, third-party billing, and storage. Without limits, attackers or buggy clients can cause cost, latency, or availability problems. Controls include rate limits, quotas, pagination limits, request-size limits, response-size limits, timeouts, and circuit breakers.</p>
+<h3>4.23 API schemas</h3><p>An <strong>API schema</strong> describes the expected shape of requests and responses: fields, types, formats, required values, and examples. Schemas help validation, documentation, testing, client generation, and security review. Schema validation does not replace authorization, but it reduces unexpected input shape.</p>
+<h3>4.24 OpenAPI</h3><p><strong>OpenAPI</strong> is a common way to describe REST-style APIs. It can document endpoints, methods, parameters, request bodies, response bodies, and authentication schemes. Its security value depends on accuracy and enforcement. A stale API specification can create false confidence.</p>
+<h3>4.25 API gateway</h3><p>An <strong>API gateway</strong> sits in front of services and can centralize routing, authentication integration, rate limiting, logging, TLS termination, request-size limits, and coarse policy. Gateways are useful, but they usually cannot understand every object-level business rule. Object-level authorization still belongs close to the data and business logic.</p>
+<h3>4.26 Service-to-service APIs</h3><p>APIs are not only public. Microservices call each other. Internal APIs still need authentication, authorization, encryption in transit, logging, and inventory. "Internal" is not the same as "trusted forever."</p>
+<h3>4.27 GraphQL and object authorization</h3><p><strong>GraphQL</strong> lets clients ask for specific fields in a structured query. This flexibility is powerful, but it can increase authorization complexity. Field-level authorization, query depth limits, cost limits, schema review, and resolver-level checks become important.</p>
+<h3>4.28 Webhooks</h3><p>A <strong>webhook</strong> is an HTTP callback from one system to another. Webhook security requires signature verification, replay protection, event-type validation, idempotency, and safe logging. A webhook sender should not be trusted merely because the request arrived at the right URL.</p>
+<h3>4.29 Error handling</h3><p>API errors should help legitimate clients without leaking secrets, stack traces, database names, internal paths, or policy details. A common pattern is to return a stable error code to the client and log detailed evidence server-side.</p>
+<h3>4.30 Logging and telemetry</h3><p>Useful API logs include timestamp, request ID, subject ID, tenant ID, endpoint, method, object type, object ID hash or safe reference, decision, status code, latency, client application, and correlation ID. Avoid logging tokens, passwords, full personal data, or secrets.</p>
+<h3>4.31 Detection thinking</h3><p>API abuse often appears as patterns: many object IDs accessed in sequence, many forbidden responses, unusual export volume, token use from new locations, impossible tenant combinations, abnormal request rates, many schema validation failures, or endpoint use outside normal workflows.</p>
+<h3>4.32 Best beginner model</h3><p>For every API request, ask: <strong>Who is calling?</strong> <strong>What action?</strong> <strong>Which object?</strong> <strong>Which fields?</strong> <strong>Which tenant?</strong> <strong>Which context?</strong> <strong>Where is the decision enforced?</strong></p>
+</section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>Basic API request-response flow</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant C as Client
+  participant G as API Gateway
+  participant A as API Service
+  participant DB as Database
+  C->>G: HTTP request with token and JSON
+  G->>G: TLS, routing, coarse checks, rate limit
+  G->>A: Forward request with identity context
+  A->>A: Validate schema and authenticate context
+  A->>DB: Load object metadata
+  A->>A: Authorize subject + action + object + fields
+  A->>DB: Read or write only if allowed
+  A-->>C: Response with safe fields and status code
+</pre></div>
+<h3>Object-level authorization decision</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  R[API request] --> Authn{Authenticated?}
+  Authn -- No --> S401[Return 401]
+  Authn -- Yes --> Parse[Parse method path JSON]
+  Parse --> Schema{Valid shape?}
+  Schema -- No --> S400[Return 400]
+  Schema -- Yes --> Load[Load target object metadata]
+  Load --> Exists{Object exists?}
+  Exists -- No --> S404[Return 404 or safe not-found]
+  Exists -- Yes --> Authz{Subject allowed for action on this object?}
+  Authz -- No --> S403[Return 403 or safe denial]
+  Authz -- Yes --> Fields{Requested fields allowed?}
+  Fields -- No --> Filter[Remove forbidden fields or deny]
+  Fields -- Yes --> Execute[Execute operation]
+  Filter --> Execute
+  Execute --> Log[Log decision without secrets]
+</pre></div>
+<h3>BOLA mental model</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  A[Alice token] --> Req[GET /api/transcripts/42]
+  Req --> API[API]
+  API --> Bad{Only checks login?}
+  Bad -- Yes --> Leak[May return object 42 even if it belongs to Bob]
+  API --> Good{Checks owner/course/tenant/policy?}
+  Good -- Yes --> Deny[Deny or return only authorized data]
+</pre></div>
+<h3>Function-level vs object-level vs property-level</h3><div class="diagram"><pre class="mermaid">flowchart TB
+  API[PATCH /api/users/17] --> F[Function-level: can caller use user-update endpoint?]
+  F --> O[Object-level: can caller update user 17?]
+  O --> P[Property-level: can caller modify each requested field?]
+  P --> D{Field allowlist}
+  D --> Name[displayName allowed]
+  D --> Phone[phone allowed]
+  D --> Role[role denied unless admin policy permits]
+</pre></div>
+<h3>API abuse timeline</h3><div class="diagram"><pre class="mermaid">timeline
+  title Typical object authorization failure lifecycle
+  Design : API exposes object IDs
+  Build : endpoint checks only whether user is logged in
+  Test : happy-path tests pass
+  Release : mobile and web clients call endpoint normally
+  Abuse : caller changes object ID or reuses leaked ID
+  Impact : unauthorized data read or modification
+  Fix : add server-side object policy and regression tests
+</pre></div>
+<h3>State machine for safe API access</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> RequestReceived
+  RequestReceived --> RejectedUnauthenticated: no valid identity
+  RequestReceived --> ShapeValidation: identity present
+  ShapeValidation --> RejectedBadRequest: invalid schema
+  ShapeValidation --> ObjectLookup: valid schema
+  ObjectLookup --> RejectedNotFound: missing object
+  ObjectLookup --> PolicyEvaluation: object metadata found
+  PolicyEvaluation --> RejectedForbidden: not authorized
+  PolicyEvaluation --> FieldFiltering: authorized object
+  FieldFiltering --> Executed: allowed fields/actions only
+  Executed --> Audited
+  RejectedUnauthenticated --> Audited
+  RejectedBadRequest --> Audited
+  RejectedNotFound --> Audited
+  RejectedForbidden --> Audited
+</pre></div>
+<h3>API gateway and service architecture</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Browser[Browser or mobile app] --> Edge[API gateway]
+  Partner[Partner system] --> Edge
+  Edge --> Auth[Identity provider]
+  Edge --> Orders[Orders API]
+  Edge --> Files[Files API]
+  Edge --> Billing[Billing API]
+  Orders --> Policy[Policy library or policy service]
+  Files --> Policy
+  Billing --> Policy
+  Orders --> DB1[(Orders DB)]
+  Files --> DB2[(Files DB)]
+  Billing --> DB3[(Billing DB)]
+  Edge --> Logs[(Central logs)]
+  Orders --> Logs
+  Files --> Logs
+  Billing --> Logs
+</pre></div>
+<h3>ASCII policy check</h3><pre><code>Request:
+  subject = user:alice
+  action  = read
+  object  = transcript:42
+  fields  = [course, grade, instructor_note]
+
+Policy checks:
+  1. Is Alice authenticated?                         yes
+  2. Does transcript 42 exist?                       yes
+  3. Is transcript 42 owned by Alice?                no
+  4. Is Alice instructor/advisor for the student?    no
+  5. Are requested fields allowed?                   no
+
+Decision:
+  Deny. Do not return the transcript.</code></pre>
+</section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((API Security))
+    Foundations
+      HTTP methods
+      JSON
+      Endpoints
+      Resources
+      Status codes
+    Identity
+      Tokens
+      Claims
+      Scopes
+      Tenants
+      Service accounts
+    Authorization
+      Function level
+      Object level
+      Property level
+      Relationship based
+      Policy enforcement
+    Risks
+      BOLA IDOR
+      Broken authentication
+      Mass assignment
+      Excessive data exposure
+      Resource consumption
+      SSRF
+      Misconfiguration
+      Inventory gaps
+    Defenses
+      Server side checks
+      Schema validation
+      Field allowlists
+      Rate limits
+      Logging
+      Tests
+      Gateways
+</pre></div></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Authorization as a predicate</h3><p>An authorization decision can be modeled as a Boolean predicate:</p><pre><code>Allow(subject, action, object, context) → true or false</code></pre><p>For example:</p><pre><code>Allow(alice, read, transcript_42, current_time) = false</code></pre><p>This model is useful because it reminds us that authorization is not just a role check. It includes the subject, action, object, and context.</p>
+<h3>7.2 Object enumeration risk</h3><p>If object identifiers are sequential and an attacker can make many requests, the number of possible neighboring IDs is small. If a system has records 1 through 10,000, an attacker can guess many possible IDs. Random IDs increase guessing difficulty, but they do not remove the need for authorization.</p>
+<h3>7.3 Rate limiting formula</h3><p>A simple fixed-window rate limit can be described as:</p><pre><code>requests(subject, window) ≤ limit</code></pre><p>If the limit is 100 requests per minute, then request 101 in the same minute is rejected or delayed. More advanced systems use sliding windows, token buckets, adaptive throttling, or per-endpoint cost models.</p>
+<h3>7.4 Token bucket intuition</h3><p>A token bucket has capacity <code>C</code> and refill rate <code>r</code>. Each request costs one or more tokens. A request is allowed only if enough tokens exist.</p><pre><code>new_tokens = min(C, old_tokens + r × elapsed_time)
+allow request if new_tokens ≥ request_cost</code></pre><p>Worked example: capacity is 10 tokens, refill is 2 tokens per second, current tokens are 4, and 3 seconds pass. New tokens equal <code>min(10, 4 + 2 × 3) = 10</code>. A request costing 4 tokens is allowed, leaving 6 tokens.</p>
+<h3>7.5 Response minimization</h3><p>Let <code>F</code> be all fields in an object and <code>A</code> be the fields allowed for this subject and action. The API should return:</p><pre><code>returned_fields = F ∩ A</code></pre><p>If <code>F = {name, grade, advisor_note}</code> and <code>A = {name, grade}</code>, then <code>advisor_note</code> must not appear in the response.</p>
+<h3>7.6 Detection ratios</h3><p>A simple signal for suspicious object probing is the denial ratio:</p><pre><code>denial_ratio = forbidden_or_not_found_object_requests / total_object_requests</code></pre><p>A high denial ratio is not proof of attack, but it is a useful triage signal when combined with request volume, endpoint type, user history, and client application.</p>
+</section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2>
+<h3>8.1 Linux examples</h3><p>Inspect a local JSON API response saved to a file:</p><pre><code class="language-bash">cat response.json
+python3 -m json.tool response.json
+jq '.id, .owner_id, .status' response.json  # if jq is installed</code></pre><p>Search local application logs for API denials without exposing tokens:</p><pre><code class="language-bash">grep 'status=403' api.log
+awk '/status=403/ {print $1, $2, $4, $6}' api.log</code></pre>
+<h3>8.2 Windows examples</h3><p>In PowerShell, pretty-print a local JSON file:</p><pre><code class="language-powershell">Get-Content .\response.json | ConvertFrom-Json | Format-List
+Select-String -Path .\api.log -Pattern 'status=403'</code></pre>
+<h3>8.3 Python examples</h3><p>Use Python to check a fictional authorization rule:</p><pre><code class="language-python">def can_read_record(user, record):
+    return record["tenant_id"] == user["tenant_id"] and (
+        record["owner_id"] == user["id"] or "advisor" in user["roles"]
+    )</code></pre>
+<h3>8.4 Network examples</h3><p>At the network level, API requests are HTTP messages over TLS. On a real system you normally cannot read the encrypted payload without endpoint access. In a local lab, you can inspect request paths, methods, status codes, timing, and logs generated by your own toy service.</p>
+<h3>8.5 Web examples</h3><p>A single-page web app may call:</p><pre><code>GET /api/profile/me
+GET /api/courses/2026-security/assignments</code></pre><p>The backend must not rely on hidden buttons. If the browser does not show an admin button, a user may still send a direct API request. The server must enforce policy.</p>
+<h3>8.6 Cloud examples</h3><p>Cloud APIs use identity, permissions, resource identifiers, policies, and logs. A cloud control plane must decide whether a subject can read, create, modify, or delete a specific resource. Cloud audit logs are critical evidence for investigating unauthorized API activity.</p>
+</section>
+
+<section id="code-examples"><h2>9. Code Examples</h2>
+<div class="callout warning"><strong>Important:</strong> these examples are intentionally small toy examples for local learning. They are not production frameworks, not complete authentication systems, and not permission to test real APIs.</div>
+<h3>9.1 Unsafe pattern: checking login only</h3><pre><code class="language-python"># Toy example: unsafe pattern.
+# The function checks that someone is logged in,
+# but it does not check whether the record belongs to that user.
+
+records = {
+    1: {"id": 1, "owner_id": "alice", "tenant_id": "university-a", "grade": "A"},
+    2: {"id": 2, "owner_id": "bob", "tenant_id": "university-a", "grade": "B"},
+}
+
+def get_record_unsafe(current_user, record_id):
+    if current_user is None:
+        return {"status": 401, "error": "authentication required"}
+
+    # Mistake: the API returns the object only because the caller is logged in.
+    # It never asks whether this specific object is allowed.
+    record = records.get(record_id)
+    if record is None:
+        return {"status": 404, "error": "not found"}
+    return {"status": 200, "data": record}</code></pre>
+<h3>Line-by-line explanation</h3><ul><li><code>records</code> is a fictional in-memory database.</li><li><code>current_user</code> represents the authenticated subject.</li><li>The function correctly rejects unauthenticated callers.</li><li>The function incorrectly returns any existing record to any logged-in user.</li><li>The missing step is object-level authorization.</li></ul>
+<h3>9.2 Safer pattern: check subject, action, object, and tenant</h3><pre><code class="language-python">records = {
+    1: {"id": 1, "owner_id": "alice", "tenant_id": "university-a", "grade": "A", "advisor_note": "On track"},
+    2: {"id": 2, "owner_id": "bob", "tenant_id": "university-a", "grade": "B", "advisor_note": "Needs support"},
+}
+
+PUBLIC_FIELDS_FOR_STUDENT = {"id", "owner_id", "tenant_id", "grade"}
+
+def can_read_record(current_user, record):
+    same_tenant = current_user["tenant_id"] == record["tenant_id"]
+    owns_record = current_user["id"] == record["owner_id"]
+    is_advisor = "advisor" in current_user.get("roles", [])
+    return same_tenant and (owns_record or is_advisor)
+
+def filter_fields_for_user(current_user, record):
+    if "advisor" in current_user.get("roles", []):
+        return dict(record)
+    return {key: value for key, value in record.items() if key in PUBLIC_FIELDS_FOR_STUDENT}
+
+def get_record_safe(current_user, record_id):
+    if current_user is None:
+        return {"status": 401, "error": "authentication required"}
+
+    record = records.get(record_id)
+    if record is None:
+        return {"status": 404, "error": "not found"}
+
+    if not can_read_record(current_user, record):
+        return {"status": 403, "error": "forbidden"}
+
+    safe_record = filter_fields_for_user(current_user, record)
+    return {"status": 200, "data": safe_record}</code></pre>
+<h3>Line-by-line explanation</h3><ul><li><code>PUBLIC_FIELDS_FOR_STUDENT</code> is an allowlist of fields normal students may see.</li><li><code>can_read_record</code> checks tenant match and relationship to the object.</li><li><code>filter_fields_for_user</code> applies object-property authorization.</li><li><code>get_record_safe</code> authenticates, loads object metadata, checks authorization, filters fields, and returns only allowed data.</li></ul>
+<h3>9.3 Safe field updates with an allowlist</h3><pre><code class="language-python">ALLOWED_PROFILE_FIELDS = {"display_name", "phone", "preferred_language"}
+
+def update_profile(current_user, profile, requested_changes):
+    if current_user["id"] != profile["owner_id"]:
+        return {"status": 403, "error": "forbidden"}
+
+    clean_changes = {}
+    for field, value in requested_changes.items():
+        if field not in ALLOWED_PROFILE_FIELDS:
+            return {"status": 400, "error": f"field not allowed: {field}"}
+        clean_changes[field] = value
+
+    profile.update(clean_changes)
+    return {"status": 200, "data": profile}</code></pre>
+<p>This prevents mass assignment because the client can only modify fields explicitly allowed by the server.</p>
+<h3>9.4 Schema-style validation with Python</h3><pre><code class="language-python">def validate_profile_patch(body):
+    if not isinstance(body, dict):
+        raise ValueError("JSON object required")
+
+    allowed = {"display_name": str, "phone": str, "preferred_language": str}
+    for key, value in body.items():
+        if key not in allowed:
+            raise ValueError(f"unexpected field: {key}")
+        if not isinstance(value, allowed[key]):
+            raise ValueError(f"wrong type for field: {key}")
+        if len(value) > 120:
+            raise ValueError(f"value too long for field: {key}")
+    return True</code></pre>
+<h3>9.5 Safe API logging</h3><pre><code class="language-python">import hashlib
+
+def safe_object_ref(object_id):
+    digest = hashlib.sha256(str(object_id).encode("utf-8")).hexdigest()
+    return digest[:12]
+
+def log_api_decision(subject_id, method, path, object_id, decision, status):
+    print(
+        "api_decision",
+        f"subject={subject_id}",
+        f"method={method}",
+        f"path={path}",
+        f"object_ref={safe_object_ref(object_id)}",
+        f"decision={decision}",
+        f"status={status}",
+    )</code></pre>
+<p>This toy logger records useful decision evidence but avoids printing tokens or full sensitive object data.</p>
+<h3>9.6 Common coding mistakes</h3><ul><li>Checking only that a user is logged in.</li><li>Checking only role but not object ownership or tenant.</li><li>Trusting object IDs from the client.</li><li>Applying authorization in the front end only.</li><li>Returning full database objects to the client.</li><li>Letting client JSON update all server-side fields.</li><li>Using UUIDs as a substitute for authorization.</li><li>Logging bearer tokens or full personal data.</li><li>Not writing negative authorization tests.</li></ul>
+</section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li><strong>BOLA/IDOR:</strong> changing an object identifier to access another user's object.</li><li><strong>Broken function-level authorization:</strong> calling an endpoint reserved for higher privileges.</li><li><strong>Broken object-property authorization:</strong> reading or changing fields the user should not access.</li><li><strong>Mass assignment:</strong> submitting unexpected fields such as roles, balances, approval flags, or tenant IDs.</li><li><strong>Token abuse:</strong> using stolen, leaked, over-scoped, expired, or wrong-audience tokens.</li><li><strong>Enumeration:</strong> attempting many object IDs, usernames, invoice numbers, or file references.</li><li><strong>Unrestricted resource consumption:</strong> using expensive API calls to cause cost or availability problems.</li><li><strong>SSRF through APIs:</strong> causing the server to request attacker-chosen URLs when API inputs feed backend fetchers.</li><li><strong>API misconfiguration:</strong> verbose errors, debug endpoints, permissive CORS, missing TLS, or exposed admin APIs.</li><li><strong>Inventory gaps:</strong> forgotten API versions, shadow APIs, undocumented partner endpoints, or old mobile endpoints.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li>Missing server-side object checks.</li><li>Policy spread inconsistently across controllers.</li><li>Trusting client-side filtering.</li><li>Overly broad roles and scopes.</li><li>Lack of tenant isolation.</li><li>Raw database object serialization.</li><li>Missing request schema validation.</li><li>No pagination or response-size limits.</li><li>No useful audit trail for denied and allowed decisions.</li><li>No regression tests for forbidden object access.</li></ul>
+<h3>Defensive strategies</h3><ul><li>Centralize authorization patterns while keeping business context close to the data.</li><li>Check <strong>subject + action + object + fields + tenant + context</strong> for every object access.</li><li>Use deny-by-default policy design.</li><li>Use field allowlists for input and output.</li><li>Validate request shape with schemas.</li><li>Apply rate limits, quotas, pagination, and cost controls.</li><li>Use short-lived, appropriately scoped tokens.</li><li>Log decisions without secrets.</li><li>Write negative tests: user A must not access user B's object.</li><li>Review old API versions and remove unused endpoints.</li></ul>
+<h3>Detection methods</h3><ul><li>High rate of <code>403</code> or <code>404</code> responses for object endpoints.</li><li>Sequential object ID access by one subject.</li><li>Cross-tenant access attempts.</li><li>Large export volume from unusual clients.</li><li>Token use from impossible or unusual locations.</li><li>Endpoint calls outside normal user interface flow.</li><li>Schema validation failures clustered by client or route.</li><li>Unexpected field names in update requests.</li></ul>
+<h3>Mitigation</h3><p>Mitigation should fix the root cause, not only hide symptoms. If an API has BOLA, rate limiting alone is insufficient. The API must enforce object-level policy. If an API exposes excessive fields, the response model must be reduced or filtered server-side. If mass assignment exists, the update model must use explicit allowlists.</p>
+<h3>Best practices</h3><ul><li>Design authorization during API design, not after release.</li><li>Document object ownership and relationships.</li><li>Use stable policy helpers or policy engines where appropriate.</li><li>Test authorization at unit, integration, and end-to-end levels.</li><li>Maintain an accurate API inventory.</li><li>Version APIs deliberately and retire old versions.</li><li>Use least privilege for databases and service accounts.</li><li>Separate public, partner, internal, and administrative APIs.</li><li>Review OpenAPI specifications against implementation behavior.</li></ul>
+</section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2>
+<h3>Banks</h3><p>Banks use APIs for mobile apps, payment networks, partner integrations, fraud systems, and open banking. Object-level authorization is critical because an authenticated customer must only access their own accounts, cards, statements, and payment instructions unless a delegated access relationship exists.</p>
+<h3>Governments</h3><p>Government APIs handle benefits, tax, identity, permits, law-enforcement data, and public services. They must enforce citizen, agency, role, case, and jurisdiction boundaries. Logging and auditability are especially important.</p>
+<h3>Cloud providers</h3><p>Cloud control-plane APIs create and modify infrastructure. Authorization must consider account, project, resource, region, action, tag, policy, and service principal. A weak API policy can lead to large-scale resource exposure or destructive changes.</p>
+<h3>Healthcare</h3><p>Healthcare APIs must protect patient records, appointments, prescriptions, lab results, and insurance data. Access often depends on patient relationship, care team, consent, emergency context, and regulatory obligations.</p>
+<h3>Defense</h3><p>Defense systems use APIs for logistics, communications, intelligence workflows, and operational platforms. Object-level access may be tied to mission, classification, need-to-know, unit assignment, and audit requirements.</p>
+<h3>Universities</h3><p>Universities use APIs for learning management systems, grades, transcripts, housing, research data, identity, and library services. Common policy questions include student ownership, instructor course membership, advisor access, department administration, and research-project roles.</p>
+<h3>Large enterprises</h3><p>Enterprises operate many internal and external APIs. Their risks include shadow APIs, inconsistent authorization libraries, stale API versions, partner tokens, overbroad service accounts, and incomplete logging across microservices.</p>
+</section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2>
+<p>API security research is active because APIs combine software engineering, authorization policy, distributed systems, formal models, usability, and automated testing.</p>
+<h3>Current research directions</h3><ul><li><strong>Authorization inference:</strong> automatically learning expected access-control rules from code, traces, schemas, or tests.</li><li><strong>BOLA detection:</strong> finding endpoints where object IDs flow from requests to data access without policy checks.</li><li><strong>OpenAPI security extensions:</strong> describing object-level and field-level policy requirements in machine-readable API specifications.</li><li><strong>GraphQL authorization:</strong> enforcing field-level and resolver-level policies while controlling query depth and cost.</li><li><strong>Microservice policy consistency:</strong> preventing policy drift across many services and versions.</li><li><strong>Property-based and differential testing:</strong> generating tests that compare what different users can see and change.</li><li><strong>API abuse detection:</strong> distinguishing malicious enumeration from legitimate high-volume automation.</li><li><strong>Zero Trust API access:</strong> continuously evaluating identity, device, workload, context, and resource sensitivity.</li></ul>
+<h3>Open problems</h3><ul><li>How can developers express object-level authorization requirements clearly without excessive complexity?</li><li>How can tools identify missing authorization with low false positives?</li><li>How should API schemas represent object ownership, tenant boundaries, and field-level policy?</li><li>How can large organizations prove that every API endpoint has current authorization tests?</li><li>How should AI agents safely call APIs on behalf of users without overbroad delegated authority?</li></ul>
+<h3>Notable paper directions</h3><p>Recent research explores BOLA under zero-trust principles, empirical taxonomies from bug-bounty reports, and OpenAPI extensions for object-level security metadata. Read these as research directions, not as production recipes. Reproduce only in authorized local environments.</p>
+</section>
+
+<section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Case Study 1: Facebook/Cambridge Analytica platform data access</h3><p><strong>What happened:</strong> third-party application access to social-platform data became a major privacy and governance controversy. <strong>Root cause:</strong> broad API access patterns, platform policy decisions, and data-sharing controls created exposure beyond what many users expected. <strong>Impact:</strong> regulatory, legal, reputational, and public-trust consequences. <strong>Lessons learned:</strong> API authorization is not only technical; it includes consent, data minimization, third-party governance, review, and auditability.</p>
+<h3>Case Study 2: Twitter API misuse and data exposure patterns</h3><p><strong>What happened:</strong> multiple public incidents over the years have involved API behavior, account metadata, scraping, or token/access-control issues. <strong>Root cause:</strong> APIs that expose structured data can be abused at scale when access, rate limits, data minimization, or monitoring are insufficient. <strong>Impact:</strong> user privacy risk and regulatory scrutiny. <strong>Lessons learned:</strong> rate limiting and authentication are not enough without data-minimizing responses and abuse monitoring.</p>
+<h3>Case Study 3: Cloud metadata and API credential abuse</h3><p><strong>What happened:</strong> attackers in several cloud incidents have abused application weaknesses to reach metadata services or steal API credentials. <strong>Root cause:</strong> server-side request paths, over-permissive roles, and insufficient egress/metadata protections. <strong>Impact:</strong> unauthorized cloud API access, data exposure, or resource manipulation. <strong>Lessons learned:</strong> API security includes workload identity, metadata protections, least privilege, monitoring, and SSRF-resistant design.</p>
+<h3>Case Study 4: Partner and mobile APIs</h3><p><strong>What happened:</strong> many real-world API flaws appear in partner, mobile, or legacy endpoints rather than the main website. <strong>Root cause:</strong> old versions, undocumented endpoints, inconsistent authorization checks, and assumptions that only the official client will call the API. <strong>Impact:</strong> unauthorized data access and operational risk. <strong>Lessons learned:</strong> maintain an API inventory and test authorization at the server, independent of any client user interface.</p>
+</section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><dl>
+<dt>"If the user is logged in, the API is secure."</dt><dd>Wrong. Login proves identity; it does not prove permission to access every object.</dd>
+<dt>"UUIDs fix IDOR."</dt><dd>Wrong. UUIDs reduce guessing but do not enforce authorization.</dd>
+<dt>"The button is hidden, so users cannot call the endpoint."</dt><dd>Wrong. API endpoints can be called directly. Server-side policy must enforce access.</dd>
+<dt>"The API gateway handles authorization."</dt><dd>Partly. Gateways can enforce coarse controls, but most object-level business rules require service-level checks.</dd>
+<dt>"Scopes solve object-level authorization."</dt><dd>Not by themselves. A scope may allow reading files generally, but object-level policy decides which files.</dd>
+<dt>"Internal APIs do not need security."</dt><dd>Wrong. Internal systems are still reachable by compromised workloads, insiders, misconfigurations, and lateral movement.</dd>
+<dt>"Returning extra fields is fine because the UI hides them."</dt><dd>Wrong. API clients can inspect raw responses.</dd>
+<dt>"Rate limiting prevents BOLA."</dt><dd>Wrong. Rate limiting reduces scale but does not fix unauthorized access.</dd>
+<dt>"OpenAPI documentation guarantees security."</dt><dd>Wrong. Documentation helps only if accurate and backed by enforcement and tests.</dd>
+<dt>"403 and 404 choices are always obvious."</dt><dd>Not always. Sometimes systems avoid revealing object existence. The right choice depends on product, threat model, and usability.</dd>
+</dl></section>
+
+<section id="summary"><h2>15. Summary</h2><p>APIs let software talk to software. They are essential for modern applications, mobile apps, cloud platforms, microservices, and partner integrations. Their security depends on more than authentication. Every object access must be authorized server-side.</p><p>The central lesson is: <strong>authenticate the caller, validate the request, load the object metadata, authorize the action on that object, filter fields, execute safely, and log the decision without secrets.</strong></p><p>BOLA/IDOR occurs when an API exposes object identifiers but fails to check whether the caller is allowed to access the requested object. UUIDs, hidden buttons, mobile-app assumptions, and broad scopes do not replace object-level policy. Strong API security combines design, schemas, least privilege, rate limits, gateways, object and field-level checks, negative tests, observability, and inventory management.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl>
+<dt>API</dt><dd>Application Programming Interface; a controlled way for software to request data or actions from other software.</dd>
+<dt>API Gateway</dt><dd>A component that sits in front of APIs and can provide routing, authentication integration, rate limiting, logging, and coarse controls.</dd>
+<dt>Bearer Token</dt><dd>A token that grants access to whoever presents it.</dd>
+<dt>BOLA</dt><dd>Broken Object Level Authorization; an API weakness where object-level permission checks are missing or incorrect.</dd>
+<dt>Claim</dt><dd>A statement about a subject or token, such as user ID, issuer, audience, role, or expiration.</dd>
+<dt>Endpoint</dt><dd>A specific API path and method that performs a defined operation.</dd>
+<dt>Function-Level Authorization</dt><dd>Checking whether a subject may use a feature or endpoint.</dd>
+<dt>GraphQL</dt><dd>An API query language that lets clients request specific fields from a schema.</dd>
+<dt>IDOR</dt><dd>Insecure Direct Object Reference; a weakness where direct object identifiers can be manipulated to access unauthorized objects.</dd>
+<dt>JSON</dt><dd>JavaScript Object Notation; a text format for structured data.</dd>
+<dt>Mass Assignment</dt><dd>A weakness where client-supplied fields are automatically copied into server objects without allowlisting.</dd>
+<dt>Object</dt><dd>A specific resource instance, such as one invoice, file, record, account, or message.</dd>
+<dt>Object-Level Authorization</dt><dd>Checking whether a subject can perform an action on a specific object.</dd>
+<dt>Object-Property Authorization</dt><dd>Checking whether a subject can read or modify specific fields of an object.</dd>
+<dt>OpenAPI</dt><dd>A specification format for describing REST-style APIs.</dd>
+<dt>Policy Decision Point</dt><dd>The component that evaluates policy and decides whether access is allowed.</dd>
+<dt>Policy Enforcement Point</dt><dd>The component that enforces a policy decision at runtime.</dd>
+<dt>Rate Limit</dt><dd>A control that restricts request volume over time.</dd>
+<dt>Resource</dt><dd>A type of thing exposed by an API, such as users, invoices, files, or tickets.</dd>
+<dt>Scope</dt><dd>A permission-like value associated with a token or client authorization.</dd>
+<dt>Tenant</dt><dd>An organization, customer, or logical boundary in a multi-tenant system.</dd>
+<dt>Webhook</dt><dd>An HTTP callback sent from one system to another when an event occurs.</dd>
+</dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2>
+<h3>20 MCQs</h3><ol>
+<li class="quiz-question">What does API stand for? <details><summary>Answer</summary>Application Programming Interface.</details></li>
+<li class="quiz-question">What does object-level authorization ask? <details><summary>Answer</summary>Whether a subject can perform an action on a specific object.</details></li>
+<li class="quiz-question">What is BOLA? <details><summary>Answer</summary>Broken Object Level Authorization.</details></li>
+<li class="quiz-question">Does authentication prove authorization? <details><summary>Answer</summary>No. Authentication identifies the caller; authorization decides what they may do.</details></li>
+<li class="quiz-question">What is an endpoint? <details><summary>Answer</summary>A specific API path and method that performs a defined operation.</details></li>
+<li class="quiz-question">Which status code usually means unauthenticated? <details><summary>Answer</summary>401.</details></li>
+<li class="quiz-question">Which status code usually means authenticated but not allowed? <details><summary>Answer</summary>403.</details></li>
+<li class="quiz-question">Do UUIDs replace authorization checks? <details><summary>Answer</summary>No. They reduce guessing but do not enforce permission.</details></li>
+<li class="quiz-question">What is mass assignment? <details><summary>Answer</summary>Automatically applying client-supplied fields to server objects without an allowlist.</details></li>
+<li class="quiz-question">What is excessive data exposure? <details><summary>Answer</summary>Returning more fields than the client or user is allowed or needs to see.</details></li>
+<li class="quiz-question">What does a bearer token imply? <details><summary>Answer</summary>Whoever holds the token can present it, so it must be protected.</details></li>
+<li class="quiz-question">What is a scope? <details><summary>Answer</summary>A permission-like value associated with a token or authorization grant.</details></li>
+<li class="quiz-question">Why do scopes not solve object authorization by themselves? <details><summary>Answer</summary>They may allow a type of action generally but not decide which specific object is allowed.</details></li>
+<li class="quiz-question">What is a tenant? <details><summary>Answer</summary>A customer, organization, or logical boundary in a multi-tenant system.</details></li>
+<li class="quiz-question">What is object-property authorization? <details><summary>Answer</summary>Checking access to specific fields of an object.</details></li>
+<li class="quiz-question">What does rate limiting help control? <details><summary>Answer</summary>Request volume, resource consumption, and some abuse patterns.</details></li>
+<li class="quiz-question">Does rate limiting fix BOLA? <details><summary>Answer</summary>No. It may reduce scale but does not authorize access.</details></li>
+<li class="quiz-question">What is an API inventory? <details><summary>Answer</summary>A current list of known APIs, endpoints, versions, owners, and exposure levels.</details></li>
+<li class="quiz-question">What should API logs avoid storing? <details><summary>Answer</summary>Tokens, passwords, secrets, and unnecessary sensitive data.</details></li>
+<li class="quiz-question">What is the best beginner model for API authorization? <details><summary>Answer</summary>Who is calling, what action, which object, which fields, which tenant, which context, and where is the decision enforced?</details></li>
+</ol>
+<h3>10 short questions</h3><ol><li>Define API in your own words.</li><li>Explain the difference between resource and object.</li><li>Explain the difference between authentication and authorization.</li><li>What is BOLA?</li><li>Why is ID guessing not the real root problem?</li><li>What is mass assignment?</li><li>What is excessive data exposure?</li><li>Why is client-side authorization insufficient?</li><li>What should be logged for an API authorization denial?</li><li>Why do APIs need inventory management?</li></ol>
+<h3>5 long questions</h3><ol><li>Design authorization for a university transcript API used by students, instructors, advisors, and administrators.</li><li>Compare function-level, object-level, and property-level authorization using a healthcare portal example.</li><li>Explain why broad token scopes can create risk in a cloud control-plane API.</li><li>Design safe logging for an API that handles financial account records.</li><li>Create a remediation plan for an API that returns full user records when the UI needs only names and IDs.</li></ol>
+<h3>Scenario-based questions</h3><ol><li>A student API endpoint is <code>GET /api/transcripts/10045</code>. Alice can change the number and view Bob's transcript. Identify the weakness and root cause.</li><li>A profile update API accepts any JSON field and writes it to the user record. What could go wrong?</li><li>A team says the mobile app never calls admin endpoints. Why is that not enough?</li><li>A partner API token has <code>records:read</code> for all tenants. What design changes would you recommend?</li><li>An API returns many <code>403</code> responses from one client. What evidence should you collect?</li></ol>
+<h3>Interview questions</h3><ol><li>Explain BOLA to a junior developer.</li><li>How would you test object-level authorization safely in a staging environment?</li><li>What is the difference between 401 and 403?</li><li>Why are UUIDs not an authorization control?</li><li>How would you prevent mass assignment?</li></ol>
+<h3>Critical thinking questions</h3><ol><li>Should an unauthorized object return 403 or 404? What variables affect the decision?</li><li>When might centralized authorization create risk?</li><li>How can teams balance detailed API errors with information disclosure risk?</li><li>How could AI agents increase API authorization risk?</li><li>What evidence would prove that object-level authorization is consistently enforced?</li></ol>
+<h3>Research questions</h3><ol><li>How can static analysis identify missing object authorization checks?</li><li>How can OpenAPI specifications express object ownership requirements?</li><li>How can GraphQL query cost and field authorization be enforced together?</li><li>How can API abuse detection distinguish malicious enumeration from legitimate automation?</li><li>How should delegated authorization work for AI assistants calling APIs on behalf of users?</li></ol>
+</section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Title</h3><p>Safe Local Object-Level Authorization Review</p>
+<h3>Prerequisites</h3><ul><li>Python 3 installed.</li><li>A terminal or PowerShell.</li><li>No external API, account, cloud tenant, or internet-facing target is required.</li></ul>
+<h3>Objectives</h3><ul><li>Explain object-level authorization with toy data.</li><li>Compare unsafe login-only access with safer object policy checks.</li><li>Apply field allowlists to prevent excessive data exposure.</li><li>Identify mass-assignment risk.</li><li>Create a short API security review report.</li></ul>
+<h3>Part A: Create the toy lab file</h3><ol><li>Create a folder named <code>api-authz-lab</code>.</li><li>Create a file named <code>api_authz_lab.py</code>.</li><li>Copy the safe and unsafe functions from Section 9.</li><li>Add two users: Alice as a student and Dana as an advisor.</li><li>Call <code>get_record_unsafe</code> and <code>get_record_safe</code> with different users and record IDs.</li></ol>
+<h3>Part B: Analyze the decisions</h3><ol><li>For each call, write the subject, action, object, tenant, and decision.</li><li>Identify which result demonstrates the unsafe pattern.</li><li>Explain why the safer function denies or filters data.</li><li>Explain what fields are returned to a student and what fields are returned to an advisor.</li></ol>
+<h3>Part C: Add update protection</h3><ol><li>Use the <code>update_profile</code> function from Section 9.3.</li><li>Try a fictional update containing <code>display_name</code>.</li><li>Try a fictional update containing <code>role</code>.</li><li>Explain why the role update must be rejected.</li></ol>
+<h3>Part D: Write the review report</h3><p>Your report should include:</p><ul><li>API endpoint or function reviewed.</li><li>Assets protected.</li><li>Subjects and roles.</li><li>Objects and fields.</li><li>Authorization rule.</li><li>Negative test cases.</li><li>Logging recommendation.</li><li>Residual risk.</li></ul>
+<h3>Expected outcomes</h3><ul><li>You can explain why login-only checks are insufficient.</li><li>You can design a basic object-level authorization rule.</li><li>You can distinguish object-level and property-level authorization.</li><li>You can describe mass-assignment prevention.</li><li>You can write a professional, safe API security review.</li></ul>
+<h3>Safety rules</h3><ul><li>Use only local toy code.</li><li>Do not change object IDs in requests to real websites, apps, or APIs.</li><li>Do not test rate limits on real systems.</li><li>Do not use real tokens, cookies, credentials, or personal data.</li><li>Do not publish vulnerability claims about real systems from this lab.</li></ul>
+</section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li><a href="https://owasp.org/API-Security/editions/2023/en/0x11-t10/">OWASP API Security Top 10 2023</a></li>
+<li><a href="https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/">OWASP API1:2023 Broken Object Level Authorization</a></li>
+<li><a href="https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/">OWASP API3:2023 Broken Object Property Level Authorization</a></li>
+<li><a href="https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/">OWASP API4:2023 Unrestricted Resource Consumption</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html">OWASP Authorization Cheat Sheet</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html">OWASP Mass Assignment Cheat Sheet</a></li>
+<li><a href="https://csrc.nist.gov/pubs/sp/800/204/a/final">NIST SP 800-204A: Building Secure Microservices-based Applications Using Service-Mesh Architecture</a></li>
+<li><a href="https://www.cisa.gov/resources-tools/resources/secure-by-design">CISA Secure by Design resources</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6750">RFC 6750: OAuth 2.0 Bearer Token Usage</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519: JSON Web Token</a></li>
+<li>Research topics: automated BOLA detection, OpenAPI authorization metadata, GraphQL authorization, service-mesh policy enforcement, API abuse detection, and safe API delegation for AI agents.</li>
+</ul></section>
+
+<div class="prev-next"><a class="btn" href="injection-xss-and-secure-output.html">← Lesson 6.3</a><a class="btn" href="index.html">Week 6 Overview</a><a class="btn btn-primary" href="web-security-testing-and-secure-deployment.html">Next: Lesson 6.5 →</a></div>
+</article><aside class="toc card"><h2 class="no-toc">On this page</h2><ol id="tocList"></ol></aside></div></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

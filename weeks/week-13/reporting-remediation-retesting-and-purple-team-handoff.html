@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 13.5: Reporting, Remediation, Retesting, and Purple-Team Handoff | MS Cybersecurity</title>
+  <meta name="description" content="Learn how to write actionable assessment reports, track remediation, define retest criteria, and hand validated findings to defenders through purple-team workflows.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-13/reporting-remediation-retesting-and-purple-team-handoff" data-title="Lesson 13.5: Reporting, Remediation, Retesting, and Purple-Team Handoff">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 13</a> / Lesson 13.5</div>
+      <header class="hero">
+        <div class="eyebrow">Week 13 · Lesson 13.5 · Offensive Security Methodology</div>
+        <h1>Reporting, Remediation, Retesting, and Purple-Team Handoff</h1>
+        <p class="lead">A professional assessment does not end when testing stops. It ends when findings are clear, owners can act, fixes are validated, residual risk is explicit, and defenders receive useful detection and response lessons.</p>
+        <div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>100 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Lessons 13.1–13.4, Week 11 SOC, Week 12 IR and evidence handling</div><div class="meta-item"><strong>Practice time</strong>90–120 minutes</div></div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+
+<section id="introduction"><h2>1. Introduction</h2>
+<p>Offensive-security reporting is often weaker than the testing that produced it. A tester may discover a real issue, but if the report is vague, exaggerated, missing evidence, missing an owner, or missing retest criteria, the organization still cannot reduce risk reliably.</p>
+<p>This lesson treats reporting as an operational control. A good report converts authorized assessment observations into decisions: what must be fixed, by whom, by when, how closure will be verified, what risk remains, and what defenders should improve.</p>
+<p>The lesson also introduces purple-team handoff. The handoff is not a ceremonial meeting after a penetration test. It is the process of converting validated offensive observations into stronger logging, detections, response playbooks, threat models, control requirements, and engineering tests.</p>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2>
+<ul><li>Write findings that separate fact, inference, uncertainty, and business impact.</li><li>Convert validated findings into remediation tickets with owners, due dates, dependencies, and acceptance criteria.</li><li>Define safe retest criteria that verify the fix without repeating unnecessary or unsafe testing.</li><li>Explain how severity, likelihood, exploit activity, asset criticality, compensating controls, and business context affect prioritization.</li><li>Create a purple-team handoff that maps findings to telemetry, detections, playbooks, and ATT&amp;CK-style behavior only when evidence supports the mapping.</li><li>Use a safe local Python lab to generate fictional report artifacts, remediation tickets, retest cases, and defensive handoff notes.</li></ul>
+</section>
+
+<section id="research-basis"><h2>3. Research Basis</h2>
+<p>This lesson is grounded in assessment and vulnerability-management guidance, not tool folklore. NIST SP 800-115 frames testing as a process that includes planning, execution, analysis, reporting, and mitigation strategy development. NIST SP 800-40 Rev. 4 treats patching as enterprise preventive maintenance that must account for technology diversity, prioritization, risk, and operational constraints.</p>
+<p>CVSS v4.0 is used here as a severity communication framework, not as a complete business-risk answer. EPSS adds exploitation-likelihood context. CISA KEV adds evidence that a vulnerability is known to be exploited. SSVC-style thinking helps stakeholders decide response actions based on mission impact, exposure, exploitation status, and organizational priorities. MITRE ATT&amp;CK is used as a vocabulary for observed adversary behavior and detection opportunities; unsupported mappings are explicitly discouraged.</p>
+<div class="callout"><strong>Important:</strong> none of these frameworks replaces judgment. A low CVSS issue on a critical identity path can matter. A high CVSS issue on a decommissioned asset may need asset cleanup rather than emergency patching. The report must explain the local context.</div>
+</section>
+
+<section id="reporting-is-risk-transfer"><h2>4. Reporting Is Risk Transfer</h2>
+<p>When the assessment team sends a finding to an engineering, operations, product, vendor, or risk owner, it transfers a decision problem. The owner needs enough evidence to believe the issue, enough context to prioritize it, enough detail to fix it, and enough retest criteria to know when the risk has changed.</p>
+<p>A weak report says, “Critical vulnerability found; fix ASAP.” A stronger report says which asset is affected, how it was validated within scope, what was not done, why the condition matters, who owns remediation, what exact change is expected, what compensating controls exist, and what evidence will close the issue.</p>
+</section>
+
+<section id="finding-anatomy"><h2>5. Anatomy of a Strong Finding</h2>
+<table>
+<thead><tr><th>Finding element</th><th>Purpose</th><th>Weak version</th></tr></thead>
+<tbody>
+<tr><td>Title</td><td>Names the affected condition clearly.</td><td>“Critical issue.”</td></tr>
+<tr><td>Affected asset</td><td>Identifies the system, service, component, version, tenant, or application path.</td><td>“The app.”</td></tr>
+<tr><td>Scope traceability</td><td>Shows that the observation came from approved testing.</td><td>No reference to ROE or test window.</td></tr>
+<tr><td>Evidence</td><td>Gives minimal proof: screenshots, logs, configuration exports, synthetic test records, owner statements, timestamps.</td><td>Scanner output only.</td></tr>
+<tr><td>Impact</td><td>Explains realistic business consequence without theatrical claims.</td><td>“Attacker owns everything.”</td></tr>
+<tr><td>Likelihood/prioritization</td><td>Combines exploit activity, exposure, asset criticality, controls, and environmental context.</td><td>CVSS copied without explanation.</td></tr>
+<tr><td>Remediation</td><td>States what must change and who should own it.</td><td>“Patch security.”</td></tr>
+<tr><td>Retest criteria</td><td>Defines exactly how closure will be validated safely.</td><td>“Verify later.”</td></tr>
+<tr><td>Residual risk</td><td>States what remains if the fix is partial, delayed, or constrained.</td><td>No risk-owner decision path.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="fact-inference-uncertainty"><h2>6. Separate Fact, Inference, and Uncertainty</h2>
+<p>Many reports overstate confidence. The easiest way to improve quality is to label facts, inferences, and unknowns.</p>
+<table>
+<thead><tr><th>Category</th><th>Example</th><th>How to write it</th></tr></thead>
+<tbody>
+<tr><td>Fact</td><td>Owner-provided export shows version 9.1.2 on the appliance.</td><td>“Observed: owner export dated 2026-06-18 shows version 9.1.2.”</td></tr>
+<tr><td>Inference</td><td>That version appears affected by a vendor advisory.</td><td>“Inference: this version appears to match vendor advisory conditions.”</td></tr>
+<tr><td>Uncertainty</td><td>Exploit reproduction was prohibited.</td><td>“Not tested: exploit execution was out of scope; validation used version and exposure evidence.”</td></tr>
+<tr><td>Decision</td><td>Remediate urgently.</td><td>“Recommendation: remediate urgently because the asset is internet-facing and the weakness is known exploited.”</td></tr>
+</tbody>
+</table>
+<p>This separation protects both the organization and the tester. It prevents unsupported claims while still allowing action when safer evidence is sufficient.</p>
+</section>
+
+<section id="executive-summary"><h2>7. Executive Summary Without Hype</h2>
+<p>Executives do not need payload details. They need risk, business impact, trend, required decisions, and blockers. A good executive summary should answer:</p>
+<ul><li>What was assessed and under what authorization?</li><li>Which risks require urgent decisions?</li><li>Which owners must act?</li><li>Which fixes are blocked by architecture, vendors, change windows, or business constraints?</li><li>Which risks indicate systemic problems, not just one-off bugs?</li><li>What detection, response, or governance improvements are recommended?</li></ul>
+<div class="warning"><strong>Bad executive reporting:</strong> counting findings without context. Ten low-risk issues on retired assets are not automatically worse than one high-risk issue on an identity provider.</div>
+</section>
+
+<section id="technical-detail"><h2>8. Technical Detail for Builders and Defenders</h2>
+<p>The technical section should be precise enough for remediation and retesting, but it should not include dangerous excess. For example, a report can show that a configuration permits a risky condition without including weaponized exploit steps or data-exfiltration instructions.</p>
+<p>Useful technical detail includes affected route, component, version, configuration key, identity condition, security-control gap, log reference, timestamp, test account, expected behavior, observed behavior, and exact retest condition.</p>
+<p>Unnecessary detail includes payloads that enable unauthorized reuse, credentials, personal data, customer records, persistent access methods, stealth steps, or instructions for attacking unrelated systems.</p>
+</section>
+
+<section id="severity-priority"><h2>9. Severity Is Not Priority</h2>
+<p>Severity describes technical characteristics. Priority describes what the organization should do next. They overlap, but they are not identical.</p>
+<table>
+<thead><tr><th>Input</th><th>Question it answers</th><th>Limitation</th></tr></thead>
+<tbody>
+<tr><td>CVSS</td><td>How severe are the technical characteristics?</td><td>May not reflect local asset criticality or business context.</td></tr>
+<tr><td>EPSS</td><td>How likely is exploitation in the wild over a short horizon?</td><td>Applies to CVEs and is probabilistic, not proof of compromise.</td></tr>
+<tr><td>CISA KEV</td><td>Is there evidence this vulnerability is known exploited?</td><td>Not every risky issue appears in KEV; custom app flaws may not have CVEs.</td></tr>
+<tr><td>SSVC-style decisioning</td><td>What response action fits stakeholder context?</td><td>Requires local decisions and agreed criteria.</td></tr>
+<tr><td>Business criticality</td><td>How important is the affected process or data?</td><td>Often missing or stale in inventories.</td></tr>
+<tr><td>Compensating controls</td><td>What reduces likelihood or impact until the fix lands?</td><td>Controls must be verified, not assumed.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="remediation-planning"><h2>10. Remediation Planning</h2>
+<p>A remediation recommendation must be specific enough to become work. It should name the owner, affected assets, expected change, dependencies, risk of change, rollback needs, and due date logic.</p>
+<table>
+<thead><tr><th>Finding type</th><th>Better remediation language</th></tr></thead>
+<tbody>
+<tr><td>Known vulnerable software</td><td>Upgrade to fixed vendor version X or apply supported mitigation Y, then confirm the affected component is no longer exposed.</td></tr>
+<tr><td>Authorization flaw</td><td>Enforce object-level authorization server-side for every access path and add negative tests for cross-object access.</td></tr>
+<tr><td>Weak configuration</td><td>Disable deprecated configuration after compatibility testing; document remaining exceptions with owners and expiration dates.</td></tr>
+<tr><td>Exposed admin surface</td><td>Restrict management access to approved networks, require MFA, verify logs, and confirm provider responsibility.</td></tr>
+<tr><td>Detection gap</td><td>Enable required telemetry, create detection logic, test alert routing, and add triage steps to the playbook.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="tracking"><h2>11. Remediation Tracking and Ownership</h2>
+<p>Findings should not disappear into a PDF. Each material issue should become a trackable item in the organization’s normal work system. At minimum, it needs an owner, asset, severity, priority, evidence package, remediation action, due date, exception path, retest method, and closure evidence.</p>
+<p>Ownership must match the actual ability to fix. Assigning a cloud IAM finding to the SOC may create visibility but not remediation. Assigning a vendor-managed exposure to an internal engineer may create frustration but not authority. The report should distinguish technical owner, business risk owner, vendor owner, and accountable approver when needed.</p>
+</section>
+
+<section id="retesting"><h2>12. Retesting Is Narrow Validation</h2>
+<p>Retesting verifies whether the specific reported condition changed. It is not a second full penetration test unless explicitly scoped that way.</p>
+<ul><li><strong>Retest scope:</strong> the exact assets and conditions being rechecked.</li><li><strong>Retest method:</strong> the least-invasive method that confirms closure.</li><li><strong>Pass condition:</strong> what evidence proves remediation is effective.</li><li><strong>Fail condition:</strong> what evidence shows the issue remains or the fix is incomplete.</li><li><strong>Regression concern:</strong> what related control should prevent recurrence.</li><li><strong>Residual risk:</strong> what still needs risk-owner acceptance.</li></ul>
+<div class="callout"><strong>Retest rule:</strong> do not repeat unsafe validation just because it happened before. A retest can often use configuration export, version evidence, synthetic records, logs, or owner-supervised proof.</div>
+</section>
+
+<section id="exceptions"><h2>13. Exceptions, Risk Acceptance, and Residual Risk</h2>
+<p>Not every finding is fixed immediately. Some require vendor timelines, legacy-system migration, architecture redesign, contract changes, or business acceptance. That does not mean the finding is closed. It means the risk needs explicit treatment.</p>
+<p>A defensible exception records the reason, affected assets, compensating controls, expiration date, approver, monitoring requirements, and trigger conditions that reopen the decision. “Accepted forever” is usually a governance failure, not mature risk management.</p>
+</section>
+
+<section id="purple-team-handoff"><h2>14. Purple-Team Handoff</h2>
+<p>Purple-team handoff asks: what should defenders learn from the assessment? Every validated finding should be reviewed for prevention, detection, response, and recovery implications.</p>
+<pre class="mermaid">flowchart LR
+  A[Validated finding] --> B[Remediation ticket]
+  A --> C[Detection opportunity]
+  A --> D[Telemetry gap]
+  A --> E[Playbook update]
+  A --> F[Threat model update]
+  B --> G[Retest]
+  C --> H[Purple-team validation]
+  D --> H
+  E --> H
+  F --> H
+  H --> I[Control improvement evidence]
+</pre>
+<p>A handoff should include only supported mappings. If the assessment proved an exposed vulnerable service, it may justify detections for exposed-service inventory drift and exploit attempts. It does not prove a full adversary kill chain unless that evidence exists.</p>
+</section>
+
+<section id="mapping"><h2>15. ATT&amp;CK Mapping Without Overclaiming</h2>
+<p>ATT&amp;CK is valuable because it provides a shared vocabulary for tactics and techniques based on observed adversary behavior. It is also easy to misuse. Mapping a finding to a technique should require evidence of behavior, not just imagination.</p>
+<table>
+<thead><tr><th>Evidence</th><th>Reasonable mapping use</th><th>Overclaim</th></tr></thead>
+<tbody>
+<tr><td>Public remote-access appliance exposure</td><td>Initial-access hypothesis and monitoring requirement.</td><td>Claiming a specific threat group used it.</td></tr>
+<tr><td>Repeated denied object-access attempts in logs</td><td>Application authorization abuse detection opportunity.</td><td>Claiming data theft without evidence.</td></tr>
+<tr><td>Weak backup admin exposure</td><td>Impact and recovery-risk discussion.</td><td>Claiming ransomware staging occurred.</td></tr>
+<tr><td>Legacy protocol usage logs</td><td>Visibility into downgrade or policy exceptions.</td><td>Claiming active interception.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="stakeholder-views"><h2>16. Same Finding, Different Stakeholder Views</h2>
+<table>
+<thead><tr><th>Stakeholder</th><th>Needs from the report</th></tr></thead>
+<tbody>
+<tr><td>Executive/risk owner</td><td>Business impact, decision required, deadline, residual risk, blockers.</td></tr>
+<tr><td>Engineering owner</td><td>Affected component, root cause, expected fix, test cases, compatibility concerns.</td></tr>
+<tr><td>SOC/detection team</td><td>Observable behavior, telemetry sources, alert logic, triage context, false-positive concerns.</td></tr>
+<tr><td>Incident response</td><td>Whether evidence suggests compromise, preservation needs, escalation criteria.</td></tr>
+<tr><td>Compliance/audit</td><td>Scope, evidence, policy/control mapping, closure evidence, exception records.</td></tr>
+<tr><td>Vendor management</td><td>Provider responsibility, contract language, evidence request, remediation commitment.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="report-template"><h2>17. Finding Template</h2>
+<p>Use a consistent template. Consistency makes it easier to review, remediate, retest, and measure the assessment’s value.</p>
+<pre><code>Finding ID:
+Title:
+Affected asset/component:
+Scope reference and test window:
+Status: validated / suspected / needs more evidence / owner coordination required
+Severity and priority:
+Evidence summary:
+What was not tested:
+Business impact:
+Technical explanation:
+Root cause or likely cause:
+Remediation recommendation:
+Remediation owner:
+Target date:
+Compensating controls:
+Retest method:
+Pass/fail closure criteria:
+Residual risk or exception path:
+Purple-team handoff:
+References:</code></pre>
+</section>
+
+<section id="quality-review"><h2>18. Quality Review Before Delivery</h2>
+<p>Before delivery, review the report for unsupported claims, sensitive data, unsafe detail, missing ownership, missing retest criteria, and inconsistent severity. A second reviewer should be able to trace every major claim to evidence.</p>
+<ul><li>Does every finding have a named asset and owner?</li><li>Does every material claim have evidence?</li><li>Are uncertainty and testing limits explicit?</li><li>Are screenshots and artifacts redacted?</li><li>Are remediation steps specific enough to become tickets?</li><li>Are retest criteria safe and precise?</li><li>Are ATT&amp;CK or control mappings supported by evidence?</li><li>Are urgent items communicated before the final report if they need immediate action?</li></ul>
+</section>
+
+<section id="case-study"><h2>19. Case Study: The Useful Report</h2>
+<p>A fictional clinic receives a penetration-test report. The old version of the report lists twenty findings by scanner severity. Engineers argue about false positives, executives ask which systems affect patient operations, and the SOC cannot tell what to monitor.</p>
+<p>The improved report groups findings by business process, identifies owners, separates validated issues from suspected issues, states what testing was prohibited, maps urgent items to known exploitation and exposure, converts fixes into tickets, and gives the SOC a short list of detection and telemetry improvements.</p>
+<p>The difference is not cosmetic. The improved report reduces ambiguity, shortens remediation time, improves retest confidence, and gives defenders new ways to see similar weaknesses earlier.</p>
+</section>
+
+<section id="lab"><h2>20. Safe Local Lab: Reporting and Purple-Team Handoff Builder</h2>
+<div class="callout"><strong>Safety:</strong> this lab uses only fictional JSON. It performs no scanning, crawling, DNS lookup, web request, authentication, exploitation, credential use, or network activity.</div>
+<p>Create a folder named <code>lesson-13-5-lab</code>. Save this as <code>assessment_findings.json</code>.</p>
+<pre><code>{
+  &quot;engagement&quot;: {
+    &quot;name&quot;: &quot;Fictional Northstar Clinic Authorized Assessment&quot;,
+    &quot;report_date&quot;: &quot;2026-06-30&quot;,
+    &quot;scope_id&quot;: &quot;ROE-NSC-2026-Q2&quot;,
+    &quot;assessment_window&quot;: &quot;2026-06-15T09:00:00Z to 2026-06-20T17:00:00Z&quot;,
+    &quot;authorized_methods&quot;: [
+      &quot;passive evidence review&quot;,
+      &quot;safe marker validation in staging&quot;,
+      &quot;owner-confirmed configuration review&quot;
+    ],
+    &quot;prohibited_methods&quot;: [
+      &quot;credential harvesting&quot;,
+      &quot;persistence&quot;,
+      &quot;destructive testing&quot;,
+      &quot;production data access&quot;,
+      &quot;denial of service&quot;
+    ],
+    &quot;report_audience&quot;: [
+      &quot;CISO&quot;,
+      &quot;engineering managers&quot;,
+      &quot;SOC lead&quot;,
+      &quot;system owners&quot;,
+      &quot;risk owner&quot;
+    ]
+  },
+  &quot;findings&quot;: [
+    {
+      &quot;id&quot;: &quot;RPT-1305-001&quot;,
+      &quot;title&quot;: &quot;Internet-facing remote access appliance running affected software&quot;,
+      &quot;asset&quot;: &quot;vpn.training.example&quot;,
+      &quot;owner&quot;: &quot;Infrastructure Operations&quot;,
+      &quot;status&quot;: &quot;validated&quot;,
+      &quot;severity&quot;: &quot;critical&quot;,
+      &quot;business_impact&quot;: &quot;Unauthorized remote access could create an initial foothold into internal systems that support clinical operations.&quot;,
+      &quot;evidence_strength&quot;: &quot;strong&quot;,
+      &quot;evidence&quot;: [
+        &quot;owner-confirmed version export&quot;,
+        &quot;approved exposure screenshot&quot;,
+        &quot;vendor advisory reference&quot;,
+        &quot;asset inventory match&quot;
+      ],
+      &quot;unsafe_actions_avoided&quot;: [
+        &quot;public exploit execution&quot;,
+        &quot;credential capture&quot;,
+        &quot;production service disruption&quot;
+      ],
+      &quot;remediation&quot;: &quot;Upgrade to the vendor-fixed release or apply vendor-supported mitigation, then restrict management and remote-access exposure where possible.&quot;,
+      &quot;remediation_owner&quot;: &quot;Infrastructure Operations&quot;,
+      &quot;target_days&quot;: 3,
+      &quot;retest_method&quot;: &quot;Confirm fixed version from owner export and verify exposure controls using approved evidence only.&quot;,
+      &quot;detection_handoff&quot;: [
+        &quot;alert on remote-access appliance administrative login anomalies&quot;,
+        &quot;monitor version inventory drift&quot;,
+        &quot;add KEV watchlist tag&quot;
+      ],
+      &quot;attack_mapping&quot;: [
+        &quot;Initial Access&quot;,
+        &quot;Valid Accounts risk if credentials are exposed&quot;
+      ],
+      &quot;residual_risk_question&quot;: &quot;If patching is delayed, what compensating controls reduce external reachability and credential risk?&quot;
+    },
+    {
+      &quot;id&quot;: &quot;RPT-1305-002&quot;,
+      &quot;title&quot;: &quot;Object-level authorization weakness in staging API path&quot;,
+      &quot;asset&quot;: &quot;api-staging.training.example/documents&quot;,
+      &quot;owner&quot;: &quot;Application Engineering&quot;,
+      &quot;status&quot;: &quot;validated_with_synthetic_data&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;business_impact&quot;: &quot;If this pattern exists in production, a user could access records outside their authorization boundary.&quot;,
+      &quot;evidence_strength&quot;: &quot;moderate&quot;,
+      &quot;evidence&quot;: [
+        &quot;synthetic user A test record&quot;,
+        &quot;synthetic user B denied/allowed comparison&quot;,
+        &quot;application owner confirmation&quot;
+      ],
+      &quot;unsafe_actions_avoided&quot;: [
+        &quot;production customer data access&quot;,
+        &quot;real user impersonation&quot;,
+        &quot;broad enumeration&quot;
+      ],
+      &quot;remediation&quot;: &quot;Enforce object-level authorization checks on every document retrieval path and add negative authorization tests to CI.&quot;,
+      &quot;remediation_owner&quot;: &quot;Application Engineering&quot;,
+      &quot;target_days&quot;: 14,
+      &quot;retest_method&quot;: &quot;Use approved synthetic users to verify cross-object access is denied and regression tests are present.&quot;,
+      &quot;detection_handoff&quot;: [
+        &quot;log denied cross-object requests&quot;,
+        &quot;alert on repeated object-id access failures&quot;,
+        &quot;dashboard API authorization errors&quot;
+      ],
+      &quot;attack_mapping&quot;: [
+        &quot;Credential Access is not shown&quot;,
+        &quot;Defense Evasion is not shown&quot;,
+        &quot;Application authorization abuse hypothesis&quot;
+      ],
+      &quot;residual_risk_question&quot;: &quot;How will production parity be confirmed without touching real customer records?&quot;
+    },
+    {
+      &quot;id&quot;: &quot;RPT-1305-003&quot;,
+      &quot;title&quot;: &quot;Administrative panel exposed on vendor-managed backup system&quot;,
+      &quot;asset&quot;: &quot;backup.vendor-edge.example&quot;,
+      &quot;owner&quot;: &quot;Vendor Management and Backup Operations&quot;,
+      &quot;status&quot;: &quot;owner_coordination_required&quot;,
+      &quot;severity&quot;: &quot;high&quot;,
+      &quot;business_impact&quot;: &quot;Exposure of backup administration could affect recovery capability during ransomware or destructive incidents.&quot;,
+      &quot;evidence_strength&quot;: &quot;limited&quot;,
+      &quot;evidence&quot;: [
+        &quot;passive exposure note&quot;,
+        &quot;contract inventory record&quot;,
+        &quot;business owner statement&quot;
+      ],
+      &quot;unsafe_actions_avoided&quot;: [
+        &quot;direct probing of third-party system&quot;,
+        &quot;authentication attempts&quot;,
+        &quot;configuration changes&quot;
+      ],
+      &quot;remediation&quot;: &quot;Require vendor confirmation of management-plane access controls, MFA, logging, and supported exposure reduction.&quot;,
+      &quot;remediation_owner&quot;: &quot;Vendor Management&quot;,
+      &quot;target_days&quot;: 7,
+      &quot;retest_method&quot;: &quot;Review vendor attestation and owner-provided configuration evidence; do not directly test without amended authorization.&quot;,
+      &quot;detection_handoff&quot;: [
+        &quot;track vendor access logs&quot;,
+        &quot;request backup admin login telemetry&quot;,
+        &quot;add third-party exposure review item&quot;
+      ],
+      &quot;attack_mapping&quot;: [
+        &quot;Impact risk through backup disruption&quot;,
+        &quot;Third-party boundary risk&quot;
+      ],
+      &quot;residual_risk_question&quot;: &quot;Does the contract permit evidence sharing and emergency remediation commitments?&quot;
+    },
+    {
+      &quot;id&quot;: &quot;RPT-1305-004&quot;,
+      &quot;title&quot;: &quot;Deprecated TLS accepted by archival internal reporting service&quot;,
+      &quot;asset&quot;: &quot;archive-reports.internal.example&quot;,
+      &quot;owner&quot;: &quot;Data Services&quot;,
+      &quot;status&quot;: &quot;validated&quot;,
+      &quot;severity&quot;: &quot;medium&quot;,
+      &quot;business_impact&quot;: &quot;Legacy protocol support increases exposure to downgrade and compliance findings, but compensating network controls reduce immediate likelihood.&quot;,
+      &quot;evidence_strength&quot;: &quot;strong&quot;,
+      &quot;evidence&quot;: [
+        &quot;scanner finding&quot;,
+        &quot;configuration export&quot;,
+        &quot;network zone record&quot;,
+        &quot;owner confirmation&quot;
+      ],
+      &quot;unsafe_actions_avoided&quot;: [
+        &quot;aggressive protocol fuzzing&quot;,
+        &quot;service interruption&quot;
+      ],
+      &quot;remediation&quot;: &quot;Disable deprecated protocol support after validating client compatibility and change-window rollback.&quot;,
+      &quot;remediation_owner&quot;: &quot;Data Services&quot;,
+      &quot;target_days&quot;: 45,
+      &quot;retest_method&quot;: &quot;Review configuration export and approved protocol evidence after change implementation.&quot;,
+      &quot;detection_handoff&quot;: [
+        &quot;log legacy TLS negotiation attempts&quot;,
+        &quot;identify clients still using deprecated protocols&quot;
+      ],
+      &quot;attack_mapping&quot;: [
+        &quot;Weak configuration exposure&quot;
+      ],
+      &quot;residual_risk_question&quot;: &quot;Which clients still depend on the deprecated protocol, and who owns their upgrade?&quot;
+    },
+    {
+      &quot;id&quot;: &quot;RPT-1305-005&quot;,
+      &quot;title&quot;: &quot;Low-confidence reflected input observation in retired training portal&quot;,
+      &quot;asset&quot;: &quot;training-retired.internal.example&quot;,
+      &quot;owner&quot;: &quot;Learning Systems&quot;,
+      &quot;status&quot;: &quot;needs_more_evidence&quot;,
+      &quot;severity&quot;: &quot;low&quot;,
+      &quot;business_impact&quot;: &quot;Current evidence does not show executable script behavior, sensitive data exposure, or active user traffic.&quot;,
+      &quot;evidence_strength&quot;: &quot;weak&quot;,
+      &quot;evidence&quot;: [
+        &quot;scanner line item&quot;,
+        &quot;retirement ticket reference&quot;
+      ],
+      &quot;unsafe_actions_avoided&quot;: [
+        &quot;script execution&quot;,
+        &quot;user-session testing&quot;
+      ],
+      &quot;remediation&quot;: &quot;Confirm decommission timeline; if the service remains active, validate with harmless marker input in an approved window.&quot;,
+      &quot;remediation_owner&quot;: &quot;Learning Systems&quot;,
+      &quot;target_days&quot;: 60,
+      &quot;retest_method&quot;: &quot;Either confirm decommission completion or validate harmless marker handling in staging/approved context.&quot;,
+      &quot;detection_handoff&quot;: [
+        &quot;remove retired asset from active inventory after shutdown&quot;,
+        &quot;flag zombie services&quot;
+      ],
+      &quot;attack_mapping&quot;: [
+        &quot;Insufficient evidence for ATT&amp;CK mapping&quot;
+      ],
+      &quot;residual_risk_question&quot;: &quot;Is the service truly retired, or is it an unmanaged zombie asset?&quot;
+    }
+  ]
+}</code></pre>
+<p>Save this as <code>reporting_handoff_builder.py</code>.</p>
+<pre><code>import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+DATA_FILE = Path(&quot;assessment_findings.json&quot;)
+
+
+@dataclass
+class ReportArtifact:
+    finding_id: str
+    executive_line: str
+    action_priority: str
+    remediation_ticket: dict[str, Any]
+    retest_case: dict[str, Any]
+    purple_team_handoff: dict[str, Any]
+    quality_warnings: list[str]
+
+
+def load_data(path: Path = DATA_FILE) -&gt; dict[str, Any]:
+    return json.loads(path.read_text())
+
+
+def action_priority(finding: dict[str, Any]) -&gt; str:
+    severity_order = {&quot;critical&quot;: 4, &quot;high&quot;: 3, &quot;medium&quot;: 2, &quot;low&quot;: 1}
+    severity = severity_order.get(finding.get(&quot;severity&quot;, &quot;low&quot;), 1)
+    target_days = finding.get(&quot;target_days&quot;, 60)
+    status = finding.get(&quot;status&quot;, &quot;needs_more_evidence&quot;)
+
+    if status == &quot;owner_coordination_required&quot;:
+        return &quot;coordinate_owner_before_testing&quot;
+    if severity &gt;= 4 or target_days &lt;= 3:
+        return &quot;urgent_remediation&quot;
+    if severity &gt;= 3 or target_days &lt;= 14:
+        return &quot;high_priority_remediation&quot;
+    if status == &quot;needs_more_evidence&quot;:
+        return &quot;evidence_improvement_first&quot;
+    if severity == 2:
+        return &quot;scheduled_remediation&quot;
+    return &quot;track_or_decommission&quot;
+
+
+def evidence_quality_warnings(finding: dict[str, Any]) -&gt; list[str]:
+    warnings: list[str] = []
+    evidence = finding.get(&quot;evidence&quot;, [])
+    if len(evidence) &lt; 3:
+        warnings.append(&quot;evidence package has fewer than three supporting artifacts&quot;)
+    if finding.get(&quot;evidence_strength&quot;) == &quot;weak&quot;:
+        warnings.append(&quot;do not present weak evidence as validated impact&quot;)
+    if &quot;production customer data access&quot; in finding.get(&quot;unsafe_actions_avoided&quot;, []):
+        warnings.append(&quot;state explicitly that production customer data was not accessed&quot;)
+    if finding.get(&quot;status&quot;) == &quot;owner_coordination_required&quot;:
+        warnings.append(&quot;third-party or owner coordination is required before direct validation&quot;)
+    if not finding.get(&quot;retest_method&quot;):
+        warnings.append(&quot;finding lacks retest criteria&quot;)
+    if not finding.get(&quot;remediation_owner&quot;):
+        warnings.append(&quot;finding lacks a named remediation owner&quot;)
+    return warnings
+
+
+def build_executive_line(finding: dict[str, Any]) -&gt; str:
+    return (
+        f&quot;{finding[&#x27;severity&#x27;].title()} risk on {finding[&#x27;asset&#x27;]}: {finding[&#x27;title&#x27;]}. &quot;
+        f&quot;Business impact: {finding[&#x27;business_impact&#x27;]}&quot;
+    )
+
+
+def build_remediation_ticket(finding: dict[str, Any]) -&gt; dict[str, Any]:
+    return {
+        &quot;owner&quot;: finding[&quot;remediation_owner&quot;],
+        &quot;asset&quot;: finding[&quot;asset&quot;],
+        &quot;due_in_days&quot;: finding[&quot;target_days&quot;],
+        &quot;required_action&quot;: finding[&quot;remediation&quot;],
+        &quot;risk_owner_question&quot;: finding[&quot;residual_risk_question&quot;],
+        &quot;closure_requires_retest&quot;: True,
+    }
+
+
+def build_retest_case(finding: dict[str, Any]) -&gt; dict[str, Any]:
+    return {
+        &quot;asset&quot;: finding[&quot;asset&quot;],
+        &quot;allowed_method&quot;: finding[&quot;retest_method&quot;],
+        &quot;must_not_repeat&quot;: finding.get(&quot;unsafe_actions_avoided&quot;, []),
+        &quot;pass_condition&quot;: &quot;remediation evidence matches the stated retest method and no prohibited action is needed&quot;,
+        &quot;fail_condition&quot;: &quot;affected condition remains, evidence is missing, or retest would require unauthorized activity&quot;,
+    }
+
+
+def build_purple_team_handoff(finding: dict[str, Any]) -&gt; dict[str, Any]:
+    return {
+        &quot;soc_questions&quot;: [
+            &quot;Would existing telemetry show this condition or attempted abuse?&quot;,
+            &quot;Which log source, rule, dashboard, or playbook should change?&quot;,
+            &quot;What signal would prove the remediation reduced detection or response risk?&quot;,
+        ],
+        &quot;detection_opportunities&quot;: finding.get(&quot;detection_handoff&quot;, []),
+        &quot;attack_or_behavior_mapping&quot;: finding.get(&quot;attack_mapping&quot;, []),
+        &quot;notes&quot;: &quot;Map only what evidence supports; do not over-map unsupported attacker behavior.&quot;,
+    }
+
+
+def build_artifact(finding: dict[str, Any]) -&gt; ReportArtifact:
+    return ReportArtifact(
+        finding_id=finding[&quot;id&quot;],
+        executive_line=build_executive_line(finding),
+        action_priority=action_priority(finding),
+        remediation_ticket=build_remediation_ticket(finding),
+        retest_case=build_retest_case(finding),
+        purple_team_handoff=build_purple_team_handoff(finding),
+        quality_warnings=evidence_quality_warnings(finding),
+    )
+
+
+def main() -&gt; None:
+    data = load_data()
+    artifacts = [build_artifact(f).__dict__ for f in data[&quot;findings&quot;]]
+    print(json.dumps({&quot;engagement&quot;: data[&quot;engagement&quot;], &quot;artifacts&quot;: artifacts}, indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<p>Run the lab:</p>
+<pre><code>python3 reporting_handoff_builder.py
+# or
+python reporting_handoff_builder.py</code></pre>
+<p>Optional: save this as <code>test_reporting_handoff_builder.py</code> and run it with <code>pytest</code>.</p>
+<pre><code>from reporting_handoff_builder import action_priority, build_artifact, load_data
+
+
+def by_id(finding_id):
+    return next(item for item in load_data()[&quot;findings&quot;] if item[&quot;id&quot;] == finding_id)
+
+
+def test_critical_item_is_urgent():
+    artifact = build_artifact(by_id(&quot;RPT-1305-001&quot;))
+    assert artifact.action_priority == &quot;urgent_remediation&quot;
+    assert &quot;public exploit execution&quot; in artifact.retest_case[&quot;must_not_repeat&quot;]
+
+
+def test_third_party_item_requires_coordination():
+    artifact = build_artifact(by_id(&quot;RPT-1305-003&quot;))
+    assert artifact.action_priority == &quot;coordinate_owner_before_testing&quot;
+    assert any(&quot;coordination&quot; in warning for warning in artifact.quality_warnings)
+
+
+def test_low_confidence_item_is_not_overstated():
+    artifact = build_artifact(by_id(&quot;RPT-1305-005&quot;))
+    assert artifact.action_priority == &quot;evidence_improvement_first&quot;
+    assert any(&quot;weak evidence&quot; in warning for warning in artifact.quality_warnings)
+
+
+def test_every_artifact_has_owner_and_retest():
+    for finding in load_data()[&quot;findings&quot;]:
+        artifact = build_artifact(finding)
+        assert artifact.remediation_ticket[&quot;owner&quot;]
+        assert artifact.retest_case[&quot;allowed_method&quot;]
+        assert artifact.purple_team_handoff[&quot;detection_opportunities&quot;]</code></pre>
+<p>The output is not a perfect report. It is a decision aid. Your job is to review whether each artifact has enough evidence, a responsible owner, a safe retest method, and a useful defensive handoff.</p>
+</section>
+
+<section id="assessment"><h2>21. Self-Assessment Questions</h2>
+<ol><li>Why is severity different from remediation priority?</li><li>What belongs in a finding’s evidence package?</li><li>Why should a report state what was not tested?</li><li>What makes a retest pass condition precise?</li><li>When should a finding become a risk exception rather than a closed issue?</li><li>Why can a scanner result be useful but insufficient?</li><li>What makes a purple-team handoff actionable?</li><li>When is ATT&amp;CK mapping unsupported?</li><li>Why should production data be avoided in report evidence?</li><li>How can a report improve SOC monitoring and not only engineering fixes?</li><li>What is the difference between remediation owner and risk owner?</li><li>Why are due dates without compensating controls weak?</li><li>What should happen if retesting requires an unauthorized method?</li><li>How can residual risk be documented without hiding it?</li><li>What is one sign that a report overclaims impact?</li></ol>
+</section>
+
+<section id="deliverables"><h2>22. Portfolio Deliverables</h2>
+<ul><li>A finding template suitable for authorized assessments.</li><li>A sample executive summary for a fictional assessment.</li><li>Three remediation tickets generated from fictional findings.</li><li>Three retest cases with pass/fail criteria and prohibited repeat actions.</li><li>A purple-team handoff checklist mapping findings to telemetry, detections, and playbooks.</li><li>Output from the safe local reporting and handoff lab.</li></ul>
+</section>
+
+<section id="further-reading"><h2>23. Further Reading</h2>
+<ul><li><a href="https://csrc.nist.gov/pubs/sp/800/115/final">NIST SP 800-115 — Technical Guide to Information Security Testing and Assessment.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/40/r4/final">NIST SP 800-40 Rev. 4 — Guide to Enterprise Patch Management Planning.</a></li><li><a href="https://www.first.org/cvss/v4.0/specification-document">FIRST — CVSS v4.0 Specification Document.</a></li><li><a href="https://www.first.org/epss/">FIRST — Exploit Prediction Scoring System.</a></li><li><a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog">CISA — Known Exploited Vulnerabilities Catalog.</a></li><li><a href="https://www.cisa.gov/stakeholder-specific-vulnerability-categorization-ssvc">CISA — Stakeholder-Specific Vulnerability Categorization.</a></li><li><a href="https://attack.mitre.org/resources/">MITRE ATT&amp;CK — Getting Started and defender resources.</a></li><li><a href="https://owasp.org/www-project-web-security-testing-guide/">OWASP Web Security Testing Guide.</a></li></ul>
+</section>
+
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="vulnerability-validation-exploit-safety-and-evidence.html">← Lesson 13.4</a><a class="btn btn-primary" href="../week-14/index.html">Week 14 Overview →</a></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

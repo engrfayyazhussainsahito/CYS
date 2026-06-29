@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 1.4: Threat Modeling from First Principles | MS Cybersecurity</title>
+  <meta name="description" content="Beginner-to-graduate lesson teaching threat modeling from first principles: assets, data flows, trust boundaries, STRIDE, abuse cases, mitigations, and safe lab practice.">
+  <meta property="og:title" content="Lesson 1.4: Threat Modeling from First Principles">
+  <meta property="og:description" content="Learn how to model threats before systems are attacked, from plain-English diagrams to STRIDE, abuse cases, risk, and mitigations.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Threat Modeling from First Principles","educationalLevel":"Graduate","learningResourceType":"Lesson","teaches":["Threat modeling","Data flow diagrams","Trust boundaries","STRIDE","Abuse cases","Attack trees","Mitigations","Security requirements","Risk prioritization"]}</script>
+</head>
+<body data-root="../../" data-page-id="week-01/lesson-01-04" data-title="Lesson 1.4: Threat Modeling from First Principles">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 1</a> / Lesson 1.4</div>
+      <header class="hero">
+        <div class="eyebrow">Week 1 · Security Mindset</div>
+        <h1>Lesson 1.4: Threat Modeling from First Principles</h1>
+        <p class="lead">Threat modeling is the practice of looking at a system before or during design and asking: <strong>what are we protecting, from whom, where can things go wrong, how bad would it be, and what should we change?</strong> This lesson teaches threat modeling from zero knowledge, then builds toward graduate-level reasoning about data flows, trust boundaries, attacker goals, abuse cases, STRIDE, mitigations, assumptions, and uncertainty.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>180–260 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → Graduate foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 1.1–1.3 recommended</div>
+          <div class="meta-item"><strong>Practice time</strong>5–9 hours</div>
+        </div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview-box" class="card">
+            <h2>Week 1 Context</h2>
+            <p><strong>Overview:</strong> Lesson 1.1 explained what cybersecurity protects. Lesson 1.2 introduced security goals. Lesson 1.3 separated threats, vulnerabilities, exploits, and risk. Lesson 1.4 turns those ideas into a repeatable design method: threat modeling.</p>
+            <p><strong>Learning objectives:</strong> after this lesson you should be able to create a simple threat model, draw a data-flow diagram, identify trust boundaries, ask STRIDE-style threat questions, write abuse cases, propose mitigations, and document assumptions.</p>
+            <p><strong>Required background:</strong> no prior threat-modeling knowledge is required. Helpful ideas: asset, confidentiality, integrity, availability, threat, vulnerability, risk, and control.</p>
+            <p><strong>Estimated reading time:</strong> 180–260 minutes. <strong>Difficulty:</strong> starts at beginner level and ends with structured design review and research-level limitations.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p><strong>Plain-English idea:</strong> threat modeling is security planning before damage happens. Instead of waiting for a breach, you inspect the design, imagine realistic ways it could fail, and improve it before attackers or accidents expose the weakness.</p>
+            <p>Think about designing a house. Before building, an architect asks where doors go, which walls need locks, where fire exits belong, and how people will move safely. Threat modeling does the same for software, networks, data, cloud systems, hospitals, banks, and universities.</p>
+            <p><strong>Why the topic exists:</strong> many serious security problems are design problems. A scanner may find missing patches, but it may not find that the wrong employee role can approve payments, that audit logs can be edited by administrators, or that password-reset messages leak sensitive information. Threat modeling exists to find these problems while the design is still changeable.</p>
+            <p><strong>Why it matters:</strong> fixing security late is usually more expensive and disruptive than fixing it during design. Threat modeling helps teams spend limited effort on meaningful risks instead of random fear or tool output.</p>
+            <p><strong>Where it is used:</strong> software development, cloud architecture, banking platforms, identity systems, healthcare workflows, defense systems, industrial control systems, university portals, research platforms, and incident-preparedness exercises.</p>
+            <p><strong>Who uses it:</strong> developers, security engineers, architects, product managers, privacy engineers, compliance teams, incident responders, red teams, blue teams, auditors, researchers, and executives.</p>
+            <details class="callout warning"><summary>Safety boundary</summary><p>This lesson is about modeling and defending systems. Do not use it to plan unauthorized activity against real systems. All examples use fictional systems, local files, and authorized classroom scenarios.</p></details>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <ul>
+              <li>Define threat modeling in simple and technical language.</li>
+              <li>Explain why threat modeling belongs early in design and throughout system life.</li>
+              <li>Identify assets, users, components, external dependencies, data stores, data flows, entry points, exits, and trust boundaries.</li>
+              <li>Create a beginner-level data-flow diagram for a small system.</li>
+              <li>Explain STRIDE: spoofing, tampering, repudiation, information disclosure, denial of service, and elevation of privilege.</li>
+              <li>Use STRIDE as a question set, not as a magic checklist.</li>
+              <li>Write abuse cases and misuse cases safely.</li>
+              <li>Build a simple attack tree without giving real-world attack instructions.</li>
+              <li>Connect threats to security goals, controls, risk, and requirements.</li>
+              <li>Prioritize threats using impact, likelihood, exploitability, exposure, asset value, and uncertainty.</li>
+              <li>Document assumptions, non-goals, unresolved questions, and accepted risks.</li>
+              <li>Explain how threat modeling changes across web, network, cloud, identity, healthcare, banking, defense, and research systems.</li>
+              <li>Discuss open research problems in scalable, automated, AI-assisted, and socio-technical threat modeling.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <h3>3.1 System</h3>
+            <p>A <strong>system</strong> is a group of parts that work together. In cybersecurity, a system may include people, software, servers, networks, cloud services, databases, mobile apps, documents, business processes, and third-party providers.</p>
+            <h3>3.2 Asset</h3>
+            <p>An <strong>asset</strong> is something valuable. Examples include student records, bank balances, identity tokens, source code, patient history, electricity service, research data, and human safety.</p>
+            <h3>3.3 Data</h3>
+            <p><strong>Data</strong> is information a system stores, processes, or transmits. Threat modeling often starts with data because data usually explains why attackers, insiders, accidents, and failures matter.</p>
+            <h3>3.4 Component</h3>
+            <p>A <strong>component</strong> is one part of a system. Examples: browser, web server, application server, database, identity provider, payment gateway, logging service, and administrator console.</p>
+            <h3>3.5 Control</h3>
+            <p>A <strong>control</strong> is a safeguard that prevents, detects, corrects, deters, or helps recover from unwanted events. Examples: multi-factor authentication, input validation, encryption, rate limiting, monitoring, backups, segregation of duties, and incident response procedures.</p>
+            <h3>3.6 Assumption</h3>
+            <p>An <strong>assumption</strong> is something you believe is true but have not fully proven. Example: “Only employees can reach the admin portal.” Good threat models label assumptions because hidden assumptions often become real vulnerabilities.</p>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 What is a threat model?</h3>
+            <p>A <strong>threat model</strong> is a structured explanation of what could go wrong with a system and what should be done about it. It is not just a diagram. It includes assets, architecture, assumptions, trust boundaries, threats, risks, mitigations, owners, and open questions.</p>
+            <p><strong>Intuition:</strong> a threat model is like a map for defensive thinking. Without a map, a team may install tools randomly. With a map, the team can see where the valuable assets are, how data moves, where attackers might interact, and where controls are needed.</p>
+            <h3>4.2 The four basic questions</h3>
+            <ol>
+              <li><strong>What are we building or protecting?</strong> Define scope, assets, users, components, and data flows.</li>
+              <li><strong>What can go wrong?</strong> Identify threats, abuse cases, trust-boundary violations, and failure modes.</li>
+              <li><strong>What are we doing about it?</strong> Choose mitigations, controls, requirements, design changes, monitoring, and response plans.</li>
+              <li><strong>Did we do a good enough job?</strong> Review coverage, test assumptions, track residual risk, and update the model when the system changes.</li>
+            </ol>
+            <h3>4.3 Scope</h3>
+            <p><strong>Scope</strong> defines what the threat model covers and what it does not cover. A threat model for “the whole internet” is useless. A threat model for “the password-reset flow of the fictional CampusOne portal” is manageable.</p>
+            <p><strong>Good scope example:</strong> “Student login, password reset, session management, and grade viewing in CampusOne.”</p>
+            <p><strong>Bad scope example:</strong> “Make CampusOne secure.” This is too vague.</p>
+            <h3>4.4 Assets and security objectives</h3>
+            <p>Assets answer “what matters?” Security objectives answer “what kind of protection matters?”</p>
+            <table>
+              <thead><tr><th>Asset</th><th>Security objective</th><th>Example harm</th></tr></thead>
+              <tbody>
+                <tr><td>Student grades</td><td>Integrity</td><td>Unauthorized grade changes harm fairness and trust.</td></tr>
+                <tr><td>Password-reset token</td><td>Confidentiality and integrity</td><td>Token theft can lead to account takeover.</td></tr>
+                <tr><td>Registration service</td><td>Availability</td><td>Students may fail to enroll on time.</td></tr>
+                <tr><td>Audit logs</td><td>Integrity and accountability</td><td>Attackers or insiders may hide actions.</td></tr>
+              </tbody>
+            </table>
+            <h3>4.5 Data-flow diagram</h3>
+            <p>A <strong>data-flow diagram</strong>, often shortened to <strong>DFD</strong>, is a simple picture of how data moves through a system. It usually shows users, processes, data stores, external systems, and flows between them.</p>
+            <p><strong>Analogy:</strong> a DFD is like a plumbing diagram. It does not show every screw in the building. It shows where important material flows and where leaks could matter.</p>
+            <h3>4.6 Trust boundary</h3>
+            <p>A <strong>trust boundary</strong> is a line where the level of trust changes. Crossing a trust boundary should make you ask stronger security questions.</p>
+            <p>Examples:</p>
+            <ul>
+              <li>Internet user → web application.</li>
+              <li>Student role → administrator role.</li>
+              <li>Application server → database.</li>
+              <li>University network → cloud provider.</li>
+              <li>Unauthenticated request → authenticated session.</li>
+            </ul>
+            <p><strong>Intuition:</strong> when data crosses a trust boundary, do not assume it is safe. Validate it, authenticate it, authorize it, log it, and protect it as needed.</p>
+            <h3>4.7 Entry points and exit points</h3>
+            <p>An <strong>entry point</strong> is where something enters the system: login form, API endpoint, file upload, email, USB device, admin panel, support request, or network connection. An <strong>exit point</strong> is where data leaves: report export, email notification, API response, log stream, backup, dashboard, or third-party integration.</p>
+            <h3>4.8 Threat source, threat event, and abuse case</h3>
+            <p>A <strong>threat source</strong> is the origin of possible harm: external attacker, malicious insider, careless user, compromised vendor, software bug, natural disaster, or system failure.</p>
+            <p>A <strong>threat event</strong> is something that happens: a stolen credential is used, data is modified, service is overwhelmed, a backup fails, or a user is tricked into approving a request.</p>
+            <p>An <strong>abuse case</strong> describes how a system could be misused. Safe abuse case example: “A person with stolen credentials tries to view another student’s grade record.” It describes the security concern without giving operational steps for attacking a real target.</p>
+            <h3>4.9 STRIDE</h3>
+            <p><strong>STRIDE</strong> is a threat-category model commonly associated with Microsoft threat modeling. It helps teams ask structured questions instead of relying on random brainstorming.</p>
+            <table>
+              <thead><tr><th>STRIDE category</th><th>Plain-English meaning</th><th>Security goal affected</th><th>Example question</th></tr></thead>
+              <tbody>
+                <tr><td>Spoofing</td><td>Pretending to be someone or something else.</td><td>Authenticity</td><td>Can someone impersonate a student, admin, server, or service?</td></tr>
+                <tr><td>Tampering</td><td>Unauthorized modification.</td><td>Integrity</td><td>Can someone change grades, requests, logs, tokens, or configuration?</td></tr>
+                <tr><td>Repudiation</td><td>Denying an action without enough evidence.</td><td>Accountability</td><td>Can a user deny approving a transaction because logging is weak?</td></tr>
+                <tr><td>Information disclosure</td><td>Unauthorized reading or exposure.</td><td>Confidentiality and privacy</td><td>Can sensitive records leak through responses, logs, backups, or analytics?</td></tr>
+                <tr><td>Denial of service</td><td>Making something unavailable.</td><td>Availability</td><td>Can a service be overwhelmed or disabled?</td></tr>
+                <tr><td>Elevation of privilege</td><td>Gaining more access than allowed.</td><td>Authorization</td><td>Can a student perform instructor or administrator actions?</td></tr>
+              </tbody>
+            </table>
+            <p><strong>Important:</strong> STRIDE is a thinking aid, not proof of security. A complete threat model also needs context, likelihood, impact, assumptions, controls, and review.</p>
+            <h3>4.10 Attack trees</h3>
+            <p>An <strong>attack tree</strong> is a diagram that starts with an unwanted goal and breaks it into possible paths. In this course, attack trees must stay conceptual and defensive. They should help defenders see what controls are needed, not provide real-world instructions.</p>
+            <h3>4.11 Mitigation</h3>
+            <p>A <strong>mitigation</strong> is an action that reduces risk. A mitigation can change design, add a control, remove an unsafe feature, add monitoring, improve recovery, or transfer responsibility through a contract.</p>
+            <h3>4.12 Security requirement</h3>
+            <p>A <strong>security requirement</strong> is a clear rule the system must satisfy. Example: “All administrator actions that modify grades must require multi-factor authentication and must create tamper-resistant audit records.”</p>
+            <h3>4.13 Residual risk and decision ownership</h3>
+            <p><strong>Residual risk</strong> is the risk left after controls are applied. A technical team can describe residual risk, but business or institutional leadership usually owns the decision to accept it.</p>
+            <h3>4.14 Threat modeling lifecycle</h3>
+            <p>Threat models become stale. They should be updated when architecture changes, new data is collected, authentication changes, third-party services are added, cloud permissions change, incidents occur, or new threat intelligence becomes relevant.</p>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>5.1 Threat modeling process</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+    A[Define scope] --> B[Identify assets]
+    B --> C[Draw architecture and data flows]
+    C --> D[Mark trust boundaries]
+    D --> E[Identify threats]
+    E --> F[Rank and prioritize]
+    F --> G[Choose mitigations]
+    G --> H[Document residual risk]
+    H --> I[Review when system changes]
+    I --> C
+</pre></div>
+
+            <h3>5.2 CampusOne data-flow diagram</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+    Student[Student Browser] -->|Login request| Web[Web App]
+    Web -->|Authenticate| IdP[Identity Provider]
+    Web -->|Read grades| DB[(Grade Database)]
+    Web -->|Write audit event| Logs[(Audit Log Store)]
+    Admin[Admin Browser] -->|Grade update request| Web
+    Web -->|Send notification| Email[Email Service]
+
+    subgraph Internet[Lower-trust Internet]
+      Student
+      Admin
+    end
+
+    subgraph UniversityCloud[University Cloud Environment]
+      Web
+      DB
+      Logs
+      IdP
+      Email
+    end
+</pre></div>
+
+            <h3>5.3 Login sequence diagram</h3>
+            <div class="diagram"><pre class="mermaid">sequenceDiagram
+    participant U as User Browser
+    participant W as Web App
+    participant I as Identity Provider
+    participant D as Database
+    participant L as Log Store
+    U->>W: Submit username and password
+    W->>I: Validate credentials
+    I-->>W: Authentication result
+    W->>L: Record login event
+    alt Success
+        W->>D: Load authorized user profile
+        D-->>W: Profile data
+        W-->>U: Session cookie and dashboard
+    else Failure
+        W-->>U: Generic error message
+    end
+</pre></div>
+
+            <h3>5.4 STRIDE decision tree</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+    X[Review component or data flow] --> A{Can identity be faked?}
+    A -- Yes --> S[Spoofing]
+    A -- No --> B{Can data or state be changed?}
+    B -- Yes --> T[Tampering]
+    B -- No --> C{Can actions be denied?}
+    C -- Yes --> R[Repudiation]
+    C -- No --> D{Can data be exposed?}
+    D -- Yes --> I[Information disclosure]
+    D -- No --> E{Can service be disrupted?}
+    E -- Yes --> DOS[Denial of service]
+    E -- No --> F{Can privileges increase?}
+    F -- Yes --> EP[Elevation of privilege]
+    F -- No --> G[Record assumption and continue]
+</pre></div>
+
+            <h3>5.5 Threat-to-control architecture</h3>
+            <div class="diagram"><pre class="mermaid">flowchart LR
+    Threat[Threat] --> Weakness[Design weakness]
+    Weakness --> Risk[Risk]
+    Risk --> Req[Security requirement]
+    Req --> Control[Control]
+    Control --> Evidence[Evidence of effectiveness]
+    Evidence --> Review[Review and update model]
+</pre></div>
+
+            <h3>5.6 Attack-tree example, kept defensive</h3>
+            <div class="diagram"><pre class="mermaid">flowchart TD
+    G[Unwanted goal: unauthorized grade change]
+    G --> A[Use an account with grade privileges]
+    G --> B[Abuse weak authorization logic]
+    G --> C[Modify database outside normal workflow]
+    A --> A1[Control: MFA]
+    A --> A2[Control: impossible-travel alert]
+    B --> B1[Control: server-side authorization check]
+    B --> B2[Control: access-control tests]
+    C --> C1[Control: database least privilege]
+    C --> C2[Control: tamper-resistant audit logs]
+</pre></div>
+
+            <h3>5.7 ASCII view of trust boundaries</h3>
+            <pre><code>Lower trust zone                         Higher trust zone
++------------------+        HTTPS        +------------------+
+| Student Browser  | ------------------> | Web Application  |
++------------------+                     +------------------+
+                                             |        |
+                                             | SQL    | audit event
+                                             v        v
+                                      +----------+ +-----------+
+                                      | Database | | Log Store |
+                                      +----------+ +-----------+
+
+Questions at the boundary:
+- Is the user authenticated?
+- Is the action authorized?
+- Is input validated?
+- Is sensitive data protected?
+- Is the event logged?</code></pre>
+          </section>
+
+          <section id="mind-maps">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">mindmap
+  root((Threat Modeling))
+    Scope
+      In scope
+      Out of scope
+      Assumptions
+      Non-goals
+    System Understanding
+      Assets
+      Components
+      Data flows
+      Data stores
+      External services
+      Trust boundaries
+    Threat Discovery
+      STRIDE
+      Abuse cases
+      Attack trees
+      Failure modes
+      Insider misuse
+    Risk Reasoning
+      Impact
+      Likelihood
+      Exposure
+      Exploitability
+      Uncertainty
+      Residual risk
+    Mitigation
+      Preventive controls
+      Detective controls
+      Corrective controls
+      Recovery controls
+      Security requirements
+    Review
+      Evidence
+      Ownership
+      Updates
+      Open questions
+      Accepted risk
+</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>7.1 Risk as an expected loss idea</h3>
+            <p>At a basic level, risk can be approximated as:</p>
+            <pre><code>Risk ≈ Likelihood × Impact</code></pre>
+            <p>If likelihood is 0.20 per year and estimated impact is $100,000, then:</p>
+            <pre><code>Expected annual loss ≈ 0.20 × 100,000 = 20,000</code></pre>
+            <p>This does not mean exactly $20,000 will be lost. It means that under the assumptions, the average loss over many comparable periods would be about $20,000 per year.</p>
+            <h3>7.2 Ordinal scoring</h3>
+            <p>Beginner risk matrices often use 1–5 scales:</p>
+            <pre><code>Risk score = Likelihood score × Impact score</code></pre>
+            <p>Example:</p>
+            <pre><code>Likelihood = 4
+Impact = 5
+Risk score = 4 × 5 = 20</code></pre>
+            <p><strong>Warning:</strong> 1–5 scores are ordinal approximations. A score of 4 is not necessarily exactly twice a score of 2. Use them for discussion and prioritization, not false precision.</p>
+            <h3>7.3 Control effectiveness</h3>
+            <p>A simple teaching model for residual risk is:</p>
+            <pre><code>Residual risk = Inherent risk × (1 - Control effectiveness)</code></pre>
+            <p>If inherent risk is 20 and controls reduce estimated risk by 60%:</p>
+            <pre><code>Residual risk = 20 × (1 - 0.60) = 8</code></pre>
+            <p>This is a simplification. Real control effectiveness is uncertain and may fail under stress, misconfiguration, or human error.</p>
+            <h3>7.4 Coverage ratio</h3>
+            <p>Threat model coverage can be roughly tracked as:</p>
+            <pre><code>Coverage = Reviewed components / Total known components</code></pre>
+            <p>If a design has 12 known components and the team reviewed 9:</p>
+            <pre><code>Coverage = 9 / 12 = 0.75 = 75%</code></pre>
+            <p>This does not prove security. It only shows how much of the known design has been reviewed.</p>
+            <h3>7.5 Worked prioritization example</h3>
+            <table>
+              <thead><tr><th>Threat</th><th>Likelihood</th><th>Impact</th><th>Score</th><th>Priority note</th></tr></thead>
+              <tbody>
+                <tr><td>Admin account misuse without MFA</td><td>4</td><td>5</td><td>20</td><td>High priority because privileged access affects grade integrity.</td></tr>
+                <tr><td>Public announcements unavailable</td><td>3</td><td>2</td><td>6</td><td>Lower priority unless announcements are used for emergency alerts.</td></tr>
+                <tr><td>Audit logs editable by admins</td><td>3</td><td>5</td><td>15</td><td>High because it weakens investigation and accountability.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>8.1 Linux example: identify local components</h3>
+            <p>This safe command lists listening services on your own machine only. It helps you understand what components expose entry points.</p>
+            <pre><code class="language-bash">ss -tulpen</code></pre>
+            <p>Questions for the threat model:</p>
+            <ul>
+              <li>Which services are listening?</li>
+              <li>Which users own those services?</li>
+              <li>Which services are necessary?</li>
+              <li>Which logs show access attempts?</li>
+            </ul>
+            <h3>8.2 Windows example: identify local services</h3>
+            <pre><code class="language-powershell">Get-Service | Sort-Object Status, Name | Select-Object -First 20</code></pre>
+            <p>Threat-modeling questions:</p>
+            <ul>
+              <li>Which services are running?</li>
+              <li>Which services start automatically?</li>
+              <li>Which services are security-critical?</li>
+              <li>Who can change service configuration?</li>
+            </ul>
+            <h3>8.3 Python example: safe risk-register helper</h3>
+            <pre><code class="language-python"># Safe local script: it does not connect to any network.
+# It helps students rank fictional threat-model items.
+
+risks = [
+    {"id": "T1", "name": "Admin account misuse", "likelihood": 4, "impact": 5},
+    {"id": "T2", "name": "Announcement page outage", "likelihood": 3, "impact": 2},
+    {"id": "T3", "name": "Editable audit logs", "likelihood": 3, "impact": 5},
+]
+
+for risk in risks:
+    # Multiply likelihood and impact for a simple teaching score.
+    risk["score"] = risk["likelihood"] * risk["impact"]
+
+# Sort highest score first so the most serious teaching examples appear first.
+ranked = sorted(risks, key=lambda item: item["score"], reverse=True)
+
+for risk in ranked:
+    print(f"{risk['id']}: {risk['name']} -> score {risk['score']}")</code></pre>
+            <p><strong>Line-by-line explanation:</strong></p>
+            <ul>
+              <li><code>risks = [...]</code> creates a list of fictional risk items.</li>
+              <li>Each item is a dictionary with an identifier, name, likelihood, and impact.</li>
+              <li>The loop calculates a simple teaching score.</li>
+              <li><code>sorted(..., reverse=True)</code> orders the results from highest score to lowest score.</li>
+              <li>The final loop prints a readable ranking.</li>
+            </ul>
+            <p><strong>Common mistake:</strong> treating the score as truth. The score is a conversation starter. Evidence, exposure, controls, and uncertainty still matter.</p>
+            <h3>8.4 Network example: trust boundary review</h3>
+            <p>For a fictional web application, draw three zones:</p>
+            <ul>
+              <li>Public internet.</li>
+              <li>Application network.</li>
+              <li>Database network.</li>
+            </ul>
+            <p>Then ask: what data crosses each boundary, which identity is used, what is authenticated, what is authorized, what is logged, and what happens if the request is malformed?</p>
+            <h3>8.5 Web example: password-reset flow</h3>
+            <p>Threat-model the password-reset flow without attacking anything:</p>
+            <ol>
+              <li>User requests reset.</li>
+              <li>System creates reset token.</li>
+              <li>System sends email.</li>
+              <li>User clicks link.</li>
+              <li>System validates token.</li>
+              <li>User sets new password.</li>
+            </ol>
+            <p>Questions:</p>
+            <ul>
+              <li>Can the token be guessed?</li>
+              <li>Can the token be reused?</li>
+              <li>Can the token leak into logs or browser history?</li>
+              <li>Can a support employee reset accounts without oversight?</li>
+              <li>Is the user notified after a password change?</li>
+            </ul>
+            <h3>8.6 Cloud example: storage bucket review</h3>
+            <p>For a fictional cloud bucket storing course files:</p>
+            <ul>
+              <li>Asset: course submissions and feedback files.</li>
+              <li>Threat: unauthorized reading or deletion.</li>
+              <li>Trust boundary: university identity provider to cloud storage permission.</li>
+              <li>Control: least-privilege access, logging, versioning, encryption, backup, and review of public access settings.</li>
+            </ul>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Commented Python data-flow model</h3>
+            <pre><code class="language-python"># This script models a tiny fictional system for learning purposes.
+# It does not scan, attack, or connect to anything.
+
+components = [
+    "Student Browser",
+    "Web Application",
+    "Identity Provider",
+    "Grade Database",
+    "Audit Log Store",
+]
+
+flows = [
+    ("Student Browser", "Web Application", "Login request"),
+    ("Web Application", "Identity Provider", "Credential validation"),
+    ("Web Application", "Grade Database", "Read grade records"),
+    ("Web Application", "Audit Log Store", "Write audit event"),
+]
+
+trust_boundaries = [
+    ("Student Browser", "Web Application", "Internet to application boundary"),
+    ("Web Application", "Grade Database", "Application to data boundary"),
+]
+
+print("Components:")
+for component in components:
+    print("-", component)
+
+print("\nData flows:")
+for source, destination, description in flows:
+    print(f"- {source} -> {destination}: {description}")
+
+print("\nTrust boundaries:")
+for source, destination, boundary in trust_boundaries:
+    print(f"- {boundary}: {source} -> {destination}")</code></pre>
+            <h3>9.2 Why this code is safe</h3>
+            <ul>
+              <li>It uses hardcoded fictional data.</li>
+              <li>It does not perform network requests.</li>
+              <li>It does not read sensitive files.</li>
+              <li>It does not test real systems.</li>
+            </ul>
+            <h3>9.3 Secure coding connection</h3>
+            <p>Threat modeling improves secure coding because it tells developers which code paths are sensitive. For example, if the model says “grade updates must be tamper-resistant,” developers know to enforce server-side authorization, validate inputs, log events, protect logs, and test unauthorized role attempts.</p>
+            <h3>9.4 Common coding mistakes discovered by threat modeling</h3>
+            <ul>
+              <li>Authorization checked only in the browser instead of on the server.</li>
+              <li>Tokens stored in logs or URLs.</li>
+              <li>Administrator actions missing audit logs.</li>
+              <li>Service accounts given broad permissions.</li>
+              <li>File uploads trusted because they came from logged-in users.</li>
+              <li>Error messages leaking system details.</li>
+            </ul>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>10.1 Common attacks considered during threat modeling</h3>
+            <ul>
+              <li>Credential theft and account takeover.</li>
+              <li>Unauthorized data access.</li>
+              <li>Privilege escalation.</li>
+              <li>Data tampering.</li>
+              <li>Business-logic abuse.</li>
+              <li>Denial of service.</li>
+              <li>Supply-chain compromise.</li>
+              <li>Insider misuse.</li>
+              <li>Logging and monitoring bypass.</li>
+              <li>Data leakage through backups, exports, analytics, or support tools.</li>
+            </ul>
+            <h3>10.2 Common vulnerabilities discovered</h3>
+            <ul>
+              <li>Missing authorization checks.</li>
+              <li>Weak authentication flows.</li>
+              <li>Unclear ownership of sensitive data.</li>
+              <li>Over-permissive cloud roles.</li>
+              <li>No rate limiting on sensitive actions.</li>
+              <li>Secrets stored in code or configuration files.</li>
+              <li>Unencrypted sensitive data at rest or in transit.</li>
+              <li>Logs that are missing, incomplete, or editable.</li>
+              <li>No backup restore testing.</li>
+              <li>Third-party dependencies trusted without review.</li>
+            </ul>
+            <h3>10.3 Defensive strategies</h3>
+            <ul>
+              <li>Use least privilege for users, services, databases, and cloud roles.</li>
+              <li>Require multi-factor authentication for privileged actions.</li>
+              <li>Enforce server-side authorization.</li>
+              <li>Validate inputs at trust boundaries.</li>
+              <li>Use secure session management.</li>
+              <li>Protect sensitive data with encryption and access controls.</li>
+              <li>Make audit logs tamper-resistant.</li>
+              <li>Monitor high-risk actions.</li>
+              <li>Test recovery procedures.</li>
+              <li>Review architecture after meaningful changes.</li>
+            </ul>
+            <h3>10.4 Detection methods</h3>
+            <ul>
+              <li>Authentication anomaly alerts.</li>
+              <li>Administrative action logging.</li>
+              <li>Unexpected role-change alerts.</li>
+              <li>Unusual data export volume alerts.</li>
+              <li>Database access monitoring.</li>
+              <li>Configuration drift detection.</li>
+              <li>Cloud permission-change alerts.</li>
+              <li>Integrity checks for logs and critical files.</li>
+            </ul>
+            <h3>10.5 Mitigation and best practices</h3>
+            <ul>
+              <li>Start small. Threat-model one flow before modeling the whole organization.</li>
+              <li>Use diagrams but do not stop at diagrams.</li>
+              <li>Write threats as complete sentences.</li>
+              <li>Record assumptions and unresolved questions.</li>
+              <li>Assign owners and due dates to mitigations.</li>
+              <li>Review the model after design changes and incidents.</li>
+              <li>Connect threat-model outputs to tickets, tests, monitoring, and documentation.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <h3>11.1 Banks</h3>
+            <p>Banks threat-model payment flows, customer authentication, fraud workflows, transaction approval, mobile banking, insider misuse, and third-party integrations. They care strongly about integrity, non-repudiation, availability, fraud detection, and regulatory evidence.</p>
+            <h3>11.2 Governments</h3>
+            <p>Government systems threat-model citizen data, identity services, public-service availability, election-support systems, records integrity, insider risk, and nation-state threats. They also need strong auditability and procurement controls.</p>
+            <h3>11.3 Cloud providers</h3>
+            <p>Cloud providers threat-model isolation between tenants, identity and access management, control planes, data-plane permissions, hardware trust boundaries, logging, abuse prevention, and customer misconfiguration patterns.</p>
+            <h3>11.4 Healthcare</h3>
+            <p>Healthcare threat modeling includes patient confidentiality, clinical workflow availability, medical-device safety, ransomware resilience, emergency access, audit logs, and third-party billing or laboratory systems.</p>
+            <h3>11.5 Defense</h3>
+            <p>Defense systems threat-model mission impact, communications integrity, supply-chain trust, insider threats, hardware assurance, operational security, and cyber-physical effects.</p>
+            <h3>11.6 Universities</h3>
+            <p>Universities threat-model student records, research data, learning platforms, identity systems, open networks, public websites, laboratories, grants, and collaboration with external researchers.</p>
+            <h3>11.7 Large enterprises</h3>
+            <p>Large enterprises use threat modeling for new products, mergers, cloud migration, software development, data pipelines, internal applications, AI systems, and vendor integrations.</p>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Threat modeling remains an active research area because modern systems are too large, dynamic, and interconnected for manual diagrams alone.</p>
+            <h3>12.1 Current research directions</h3>
+            <ul>
+              <li><strong>Scalable threat modeling:</strong> methods for large cloud-native and microservice systems.</li>
+              <li><strong>Automated model extraction:</strong> deriving partial models from code, infrastructure-as-code, logs, cloud configuration, and API descriptions.</li>
+              <li><strong>AI-assisted threat modeling:</strong> using language models to suggest threats while controlling hallucination and unsupported claims.</li>
+              <li><strong>Security of AI systems:</strong> adapting threat modeling to prompt injection, data poisoning, model extraction, unsafe tool use, and autonomous agents.</li>
+              <li><strong>Socio-technical modeling:</strong> including humans, incentives, procedures, organizations, and usability failures.</li>
+              <li><strong>Risk quantification:</strong> connecting threat models to measurable loss, uncertainty, and decision theory.</li>
+              <li><strong>Continuous threat modeling:</strong> updating models as systems and dependencies change.</li>
+            </ul>
+            <h3>12.2 Open problems</h3>
+            <ul>
+              <li>How can teams know whether a threat model is complete enough?</li>
+              <li>How can models remain current in fast-moving DevOps environments?</li>
+              <li>How can tools avoid overwhelming engineers with low-value threats?</li>
+              <li>How can security teams measure mitigation effectiveness?</li>
+              <li>How should threat models represent privacy, safety, and human harm?</li>
+              <li>How can AI-generated threat suggestions be verified?</li>
+            </ul>
+            <h3>12.3 Notable reading directions</h3>
+            <p>Students should explore STRIDE, attack trees, PASTA, LINDDUN for privacy threat modeling, data-centric threat modeling, adversarial machine learning threat models, secure software design, and empirical studies of how teams actually perform threat modeling.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>13.1 SolarWinds supply-chain compromise</h3>
+            <p><strong>What happened:</strong> attackers compromised a software build/update pathway and distributed maliciously modified software to many downstream organizations.</p>
+            <p><strong>Threat-modeling lesson:</strong> a system boundary cannot stop at the application runtime. Build systems, signing infrastructure, update channels, vendor dependencies, and administrative access are also part of the security model.</p>
+            <p><strong>Root cause pattern:</strong> trusted software supply-chain paths can become high-impact attack paths.</p>
+            <p><strong>Impact:</strong> widespread compromise risk across organizations using the affected software.</p>
+            <p><strong>Lessons learned:</strong> threat models should include build pipelines, update mechanisms, vendor trust, monitoring, and blast-radius limits.</p>
+            <h3>13.2 Equifax breach</h3>
+            <p><strong>What happened:</strong> attackers exploited a known vulnerability in a public-facing application component, leading to exposure of sensitive personal information.</p>
+            <p><strong>Threat-modeling lesson:</strong> public-facing components connected to high-value personal data deserve strong inventory, patching, segmentation, monitoring, and escalation processes.</p>
+            <p><strong>Root cause pattern:</strong> asset sensitivity, internet exposure, patch management, and detection gaps combined into high risk.</p>
+            <p><strong>Impact:</strong> large-scale exposure of personal data and major organizational, legal, and reputational consequences.</p>
+            <h3>13.3 Capital One cloud breach</h3>
+            <p><strong>What happened:</strong> a cloud-related misconfiguration and access path enabled unauthorized access to sensitive data.</p>
+            <p><strong>Threat-modeling lesson:</strong> cloud identity, metadata services, network paths, and storage permissions must be part of architecture threat modeling.</p>
+            <p><strong>Root cause pattern:</strong> trust boundaries and cloud permissions were not sufficiently constrained for the risk.</p>
+            <h3>13.4 Colonial Pipeline ransomware incident</h3>
+            <p><strong>What happened:</strong> ransomware disruption affected business operations connected to fuel distribution.</p>
+            <p><strong>Threat-modeling lesson:</strong> threat models should include availability, business continuity, identity security, incident response, and operational impact, not only data confidentiality.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <div class="misconception"><h3>Misconception 1: Threat modeling is only for experts.</h3><p>Wrong. Beginners can start by asking what is valuable, who can interact with it, what can go wrong, and what controls exist. Expert review improves depth, but basic modeling is accessible.</p></div>
+            <div class="misconception"><h3>Misconception 2: A diagram is the threat model.</h3><p>Incomplete. The diagram is only one artifact. The model also needs threats, assumptions, mitigations, owners, and residual risk.</p></div>
+            <div class="misconception"><h3>Misconception 3: STRIDE finds everything.</h3><p>Wrong. STRIDE is useful, but no checklist finds every threat. Business logic, privacy harm, safety, insider misuse, and supply-chain risk may need additional methods.</p></div>
+            <div class="misconception"><h3>Misconception 4: Threat modeling happens once.</h3><p>Wrong. Systems change. New features, cloud roles, integrations, incidents, and attacker behavior require updates.</p></div>
+            <div class="misconception"><h3>Misconception 5: Threat modeling requires exploit details.</h3><p>Wrong. Defensive threat modeling can describe abuse and controls without operational attack instructions.</p></div>
+            <div class="misconception"><h3>Misconception 6: Low likelihood means ignore it.</h3><p>Not always. A low-likelihood event with catastrophic safety, legal, or mission impact may still require strong controls.</p></div>
+            <div class="misconception"><h3>Misconception 7: Security team owns every mitigation.</h3><p>Wrong. Product, engineering, operations, legal, privacy, compliance, and leadership often own different parts of mitigation and risk acceptance.</p></div>
+            <div class="misconception"><h3>Misconception 8: Tool-generated threats are automatically correct.</h3><p>Wrong. Tools can help, but human review is needed to remove irrelevant items, add missing context, and validate assumptions.</p></div>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Threat modeling is a structured way to reason about what could go wrong before harm occurs. It starts with scope, assets, components, data flows, and trust boundaries. It uses methods such as STRIDE, abuse cases, and attack trees to identify threats. It then connects threats to risks, controls, requirements, owners, and residual risk decisions.</p>
+            <p>The most important lesson is not memorizing a framework. The most important lesson is learning to ask disciplined questions: what matters, who can interact with it, where trust changes, what can go wrong, how would we know, and what should we change?</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <dl>
+              <dt>Abuse Case</dt><dd>A description of how a system could be misused to cause harm.</dd>
+              <dt>Attack Tree</dt><dd>A diagram that starts with an unwanted goal and breaks it into possible paths.</dd>
+              <dt>Component</dt><dd>A part of a system, such as a browser, server, database, API, or identity provider.</dd>
+              <dt>Data Flow</dt><dd>Movement of data from one component, user, or system to another.</dd>
+              <dt>Data-Flow Diagram</dt><dd>A diagram showing components, data stores, external entities, and data movement.</dd>
+              <dt>Entry Point</dt><dd>A place where input, requests, people, devices, or data enter a system.</dd>
+              <dt>Exit Point</dt><dd>A place where data or output leaves a system.</dd>
+              <dt>Mitigation</dt><dd>An action or control that reduces risk.</dd>
+              <dt>Non-goal</dt><dd>Something intentionally outside the current scope.</dd>
+              <dt>Security Requirement</dt><dd>A clear rule that a system must satisfy to protect security objectives.</dd>
+              <dt>Spoofing</dt><dd>Pretending to be another identity, system, service, or user.</dd>
+              <dt>STRIDE</dt><dd>A threat-category model: spoofing, tampering, repudiation, information disclosure, denial of service, and elevation of privilege.</dd>
+              <dt>Threat Model</dt><dd>A structured representation of threats, assumptions, architecture, risks, and mitigations for a system.</dd>
+              <dt>Trust Boundary</dt><dd>A point where the level of trust changes between users, components, networks, services, or roles.</dd>
+            </dl>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>17.1 Multiple-choice questions</h3>
+            <div class="quiz-card" data-answer="B"><p><strong>1. What is the main purpose of threat modeling?</strong></p><div class="quiz-options"><label><input type="radio" name="q1" value="A"> A. To attack public systems</label><label><input type="radio" name="q1" value="B"> B. To identify what could go wrong and choose mitigations</label><label><input type="radio" name="q1" value="C"> C. To replace all security testing</label><label><input type="radio" name="q1" value="D"> D. To create decorative diagrams</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="A"><p><strong>2. What is a trust boundary?</strong></p><div class="quiz-options"><label><input type="radio" name="q2" value="A"> A. A place where the level of trust changes</label><label><input type="radio" name="q2" value="B"> B. A password length rule</label><label><input type="radio" name="q2" value="C"> C. A public exploit</label><label><input type="radio" name="q2" value="D"> D. A backup schedule only</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="C"><p><strong>3. What does STRIDE stand for?</strong></p><div class="quiz-options"><label><input type="radio" name="q3" value="A"> A. Scan, Test, Run, Install, Delete, Encrypt</label><label><input type="radio" name="q3" value="B"> B. Secure, Trusted, Reliable, Integrated, Durable, Efficient</label><label><input type="radio" name="q3" value="C"> C. Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege</label><label><input type="radio" name="q3" value="D"> D. Software, Tables, Reports, Incidents, Devices, Events</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="D"><p><strong>4. Which item is most likely an asset?</strong></p><div class="quiz-options"><label><input type="radio" name="q4" value="A"> A. A random color</label><label><input type="radio" name="q4" value="B"> B. A vague idea</label><label><input type="radio" name="q4" value="C"> C. A font choice</label><label><input type="radio" name="q4" value="D"> D. A grade database</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="B"><p><strong>5. What is a data-flow diagram used for?</strong></p><div class="quiz-options"><label><input type="radio" name="q5" value="A"> A. Hiding system design</label><label><input type="radio" name="q5" value="B"> B. Showing how data moves through components</label><label><input type="radio" name="q5" value="C"> C. Encrypting passwords</label><label><input type="radio" name="q5" value="D"> D. Deleting logs</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="A"><p><strong>6. Spoofing mainly threatens which goal?</strong></p><div class="quiz-options"><label><input type="radio" name="q6" value="A"> A. Authenticity</label><label><input type="radio" name="q6" value="B"> B. Disk size</label><label><input type="radio" name="q6" value="C"> C. Font readability</label><label><input type="radio" name="q6" value="D"> D. Electricity cost only</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="C"><p><strong>7. Tampering mainly means:</strong></p><div class="quiz-options"><label><input type="radio" name="q7" value="A"> A. Reading public documentation</label><label><input type="radio" name="q7" value="B"> B. Forgetting a password</label><label><input type="radio" name="q7" value="C"> C. Unauthorized modification</label><label><input type="radio" name="q7" value="D"> D. Turning on dark mode</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="D"><p><strong>8. Repudiation is a concern when:</strong></p><div class="quiz-options"><label><input type="radio" name="q8" value="A"> A. A user changes page color</label><label><input type="radio" name="q8" value="B"> B. A system has too many icons</label><label><input type="radio" name="q8" value="C"> C. A diagram is too small</label><label><input type="radio" name="q8" value="D"> D. A user can deny an action because evidence is weak</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="B"><p><strong>9. Which is an example of information disclosure?</strong></p><div class="quiz-options"><label><input type="radio" name="q9" value="A"> A. A backup works correctly</label><label><input type="radio" name="q9" value="B"> B. Sensitive records appear in an error message</label><label><input type="radio" name="q9" value="C"> C. A password is changed by the owner</label><label><input type="radio" name="q9" value="D"> D. A login page loads normally</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="A"><p><strong>10. Denial of service affects mainly:</strong></p><div class="quiz-options"><label><input type="radio" name="q10" value="A"> A. Availability</label><label><input type="radio" name="q10" value="B"> B. Spelling</label><label><input type="radio" name="q10" value="C"> C. Color contrast only</label><label><input type="radio" name="q10" value="D"> D. Keyboard layout</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="C"><p><strong>11. Elevation of privilege means:</strong></p><div class="quiz-options"><label><input type="radio" name="q11" value="A"> A. Making a report longer</label><label><input type="radio" name="q11" value="B"> B. Updating software with permission</label><label><input type="radio" name="q11" value="C"> C. Gaining more access than allowed</label><label><input type="radio" name="q11" value="D"> D. Turning off a monitor</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="B"><p><strong>12. Which is a good threat-modeling scope?</strong></p><div class="quiz-options"><label><input type="radio" name="q12" value="A"> A. Secure everything everywhere</label><label><input type="radio" name="q12" value="B"> B. Password-reset flow for the fictional CampusOne portal</label><label><input type="radio" name="q12" value="C"> C. The whole internet</label><label><input type="radio" name="q12" value="D"> D. All software ever written</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="D"><p><strong>13. What should be documented when it cannot yet be proven?</strong></p><div class="quiz-options"><label><input type="radio" name="q13" value="A"> A. It should be hidden</label><label><input type="radio" name="q13" value="B"> B. It should be treated as fact</label><label><input type="radio" name="q13" value="C"> C. It should be deleted</label><label><input type="radio" name="q13" value="D"> D. It should be documented as an assumption or open question</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="A"><p><strong>14. Which is a mitigation?</strong></p><div class="quiz-options"><label><input type="radio" name="q14" value="A"> A. Adding MFA for administrator grade changes</label><label><input type="radio" name="q14" value="B"> B. Ignoring all findings</label><label><input type="radio" name="q14" value="C"> C. Removing all logs</label><label><input type="radio" name="q14" value="D"> D. Sharing passwords</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="C"><p><strong>15. What is an abuse case?</strong></p><div class="quiz-options"><label><input type="radio" name="q15" value="A"> A. A software license</label><label><input type="radio" name="q15" value="B"> B. A backup type</label><label><input type="radio" name="q15" value="C"> C. A description of how a system could be misused</label><label><input type="radio" name="q15" value="D"> D. A public attack instruction</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="B"><p><strong>16. Why should threat models be updated?</strong></p><div class="quiz-options"><label><input type="radio" name="q16" value="A"> A. Because old diagrams expire daily by law</label><label><input type="radio" name="q16" value="B"> B. Because systems, dependencies, threats, and controls change</label><label><input type="radio" name="q16" value="C"> C. Because all models are useless</label><label><input type="radio" name="q16" value="D"> D. Because updates replace all testing</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="D"><p><strong>17. Which control helps with repudiation?</strong></p><div class="quiz-options"><label><input type="radio" name="q17" value="A"> A. No records</label><label><input type="radio" name="q17" value="B"> B. Shared administrator accounts</label><label><input type="radio" name="q17" value="C"> C. Editable logs only</label><label><input type="radio" name="q17" value="D"> D. Tamper-resistant audit logging</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="A"><p><strong>18. Which is a sign of a weak threat model?</strong></p><div class="quiz-options"><label><input type="radio" name="q18" value="A"> A. It has no assumptions, owners, or mitigations</label><label><input type="radio" name="q18" value="B"> B. It documents scope</label><label><input type="radio" name="q18" value="C"> C. It lists assets</label><label><input type="radio" name="q18" value="D"> D. It records open questions</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="C"><p><strong>19. Who may own residual-risk acceptance?</strong></p><div class="quiz-options"><label><input type="radio" name="q19" value="A"> A. Nobody</label><label><input type="radio" name="q19" value="B"> B. A random student</label><label><input type="radio" name="q19" value="C"> C. The responsible business, institutional, or system owner</label><label><input type="radio" name="q19" value="D"> D. Only a diagramming tool</label></div><button class="check-quiz">Check answer</button></div>
+            <div class="quiz-card" data-answer="B"><p><strong>20. Which statement is most accurate?</strong></p><div class="quiz-options"><label><input type="radio" name="q20" value="A"> A. Threat modeling proves a system is secure</label><label><input type="radio" name="q20" value="B"> B. Threat modeling improves security reasoning but does not prove perfect security</label><label><input type="radio" name="q20" value="C"> C. Threat modeling is illegal</label><label><input type="radio" name="q20" value="D"> D. Threat modeling replaces authentication</label></div><button class="check-quiz">Check answer</button></div>
+
+            <h3>17.2 Short questions</h3>
+            <ol>
+              <li>Define threat modeling in your own words.</li>
+              <li>What is a trust boundary?</li>
+              <li>Why is scope important?</li>
+              <li>What is the difference between a component and a data flow?</li>
+              <li>Name the six STRIDE categories.</li>
+              <li>Give one example of spoofing in a fictional university portal.</li>
+              <li>Why are assumptions dangerous if they are not documented?</li>
+              <li>What is residual risk?</li>
+              <li>Why should threat models be updated after architecture changes?</li>
+              <li>What is one safe way to write an abuse case?</li>
+            </ol>
+            <h3>17.3 Long questions</h3>
+            <ol>
+              <li>Create a threat model for a fictional password-reset flow. Include assets, data flows, trust boundaries, threats, controls, and open questions.</li>
+              <li>Explain how STRIDE helps beginners and where it can fail.</li>
+              <li>Compare threat modeling for a banking app and a hospital scheduling system.</li>
+              <li>Discuss why threat modeling should include people and procedures, not only code.</li>
+              <li>Explain how a threat model can feed into secure coding, testing, monitoring, and incident response.</li>
+            </ol>
+            <h3>17.4 Scenario-based questions</h3>
+            <ol>
+              <li>A fictional university wants to add single sign-on to its portal. What new trust boundaries should be reviewed?</li>
+              <li>A cloud database is moved to a managed provider. What assumptions changed?</li>
+              <li>An administrator can edit grades and delete logs. What threats and controls should be considered?</li>
+              <li>A system sends password-reset links by email. What abuse cases should be reviewed?</li>
+              <li>A hospital system must remain available during emergencies. How does that change threat prioritization?</li>
+            </ol>
+            <h3>17.5 Interview questions</h3>
+            <ol>
+              <li>Walk me through how you would threat-model a new web application.</li>
+              <li>How do you identify trust boundaries?</li>
+              <li>How do you decide which threats deserve mitigation first?</li>
+              <li>How do you document assumptions and residual risks?</li>
+              <li>What is the difference between threat modeling and penetration testing?</li>
+            </ol>
+            <h3>17.6 Critical thinking questions</h3>
+            <ol>
+              <li>Can threat modeling create false confidence? How?</li>
+              <li>Should every feature require a full threat model?</li>
+              <li>Who should attend a threat-modeling session?</li>
+              <li>How can organizations prevent threat modeling from becoming checkbox compliance?</li>
+              <li>How should threat models represent harm to people, not just harm to systems?</li>
+            </ol>
+            <h3>17.7 Research questions</h3>
+            <ol>
+              <li>Can AI-assisted threat modeling be reliable without fabricating threats or mitigations?</li>
+              <li>How can threat models stay current in systems that change daily?</li>
+              <li>Can formal methods prove properties derived from threat models?</li>
+              <li>How should privacy threat modeling integrate with security threat modeling?</li>
+              <li>How can threat models include supply-chain and third-party risk at scale?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <h3>Lab title</h3>
+            <p><strong>Create a Threat Model for a Fictional University Password-Reset System</strong></p>
+            <h3>Safety rules</h3>
+            <ul>
+              <li>Use only the fictional CampusOne scenario.</li>
+              <li>Do not test, scan, probe, or log into any real system.</li>
+              <li>Do not use real student, employee, customer, or patient data.</li>
+              <li>Do not search for or use real exploit instructions.</li>
+            </ul>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Lessons 1.1–1.3.</li>
+              <li>Basic drawing tool, text editor, or Markdown.</li>
+              <li>Optional: Mermaid preview support.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Define scope and non-goals.</li>
+              <li>Identify assets and security objectives.</li>
+              <li>Draw a data-flow diagram.</li>
+              <li>Mark trust boundaries.</li>
+              <li>Use STRIDE to identify threats.</li>
+              <li>Write mitigations and residual-risk notes.</li>
+            </ul>
+            <h3>Scenario</h3>
+            <p>CampusOne is a fictional university portal. Students can request a password reset by entering their university email address. The system sends a reset link. The link expires after a period of time. The student opens the link, sets a new password, and receives a confirmation email.</p>
+            <h3>Step 1: Define scope</h3>
+            <pre><code>In scope:
+- Password-reset request page
+- Reset-token generation
+- Reset email delivery
+- Reset-link validation
+- Password change
+- Audit logging
+
+Out of scope:
+- Real university systems
+- Real email accounts
+- Public scanning
+- Exploit testing</code></pre>
+            <h3>Step 2: Identify assets</h3>
+            <pre><code>| Asset | Main goal | Why it matters |
+|---|---|---|
+| Reset token | Confidentiality, integrity | Token misuse can lead to account takeover. |
+| Student account | Confidentiality, integrity | Account access exposes personal and academic data. |
+| Audit log | Integrity, accountability | Investigation depends on trustworthy records. |
+| Email delivery | Availability | Users need reset messages to arrive. |</code></pre>
+            <h3>Step 3: Draw a data-flow diagram</h3>
+            <pre><code class="language-mermaid">flowchart LR
+    User[Student Browser] -->|Reset request| Web[CampusOne Web App]
+    Web -->|Create token| TokenDB[(Reset Token Store)]
+    Web -->|Send reset link| Email[Email Service]
+    User -->|Open reset link| Web
+    Web -->|Validate token| TokenDB
+    Web -->|Update password| AccountDB[(Account Database)]
+    Web -->|Write event| Logs[(Audit Logs)]</code></pre>
+            <h3>Step 4: Mark trust boundaries</h3>
+            <ul>
+              <li>Student browser to web app: untrusted internet input enters the application.</li>
+              <li>Web app to token store: application logic accesses sensitive reset state.</li>
+              <li>Web app to email service: data leaves to a third-party or separate service.</li>
+              <li>Web app to audit logs: security evidence is created.</li>
+            </ul>
+            <h3>Step 5: Use STRIDE prompts</h3>
+            <pre><code>| STRIDE | Example question | Possible control |
+|---|---|---|
+| Spoofing | Can someone pretend to be the account owner? | MFA or secondary verification for high-risk changes. |
+| Tampering | Can a token be modified or reused? | Signed tokens, server-side token state, one-time use. |
+| Repudiation | Can a user or admin deny reset activity? | Tamper-resistant audit logs. |
+| Information disclosure | Can reset tokens leak in logs or URLs? | Avoid logging tokens; limit token lifetime. |
+| Denial of service | Can repeated requests flood email or lock accounts? | Rate limiting and abuse monitoring. |
+| Elevation of privilege | Can reset flow grant access to another role? | Server-side authorization and role checks. |</code></pre>
+            <h3>Step 6: Create mitigation tickets</h3>
+            <pre><code>| ID | Threat | Mitigation | Owner | Status |
+|---|---|---|---|---|
+| TM-1 | Reset tokens may leak into logs | Redact reset-token values from logs | App team | Open |
+| TM-2 | Repeated reset requests may flood users | Add rate limiting and alerting | Platform team | Open |
+| TM-3 | Weak audit logging may prevent investigation | Log reset requested, token used, password changed | Security team | Open |</code></pre>
+            <h3>Step 7: Document assumptions and open questions</h3>
+            <pre><code>Assumptions:
+- Email service supports secure transport.
+- Reset links expire.
+- Password changes are logged.
+
+Open questions:
+- Are reset tokens stored hashed?
+- Who can view reset logs?
+- Are support staff allowed to trigger resets?
+- How are suspicious reset spikes detected?</code></pre>
+            <h3>Expected outcome</h3>
+            <p>You should submit a short threat-model report with scope, diagram, trust boundaries, STRIDE table, mitigations, assumptions, and open questions. The report should be defensive and should not include operational attack instructions against real systems.</p>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li>OWASP Threat Modeling Cheat Sheet and OWASP Threat Modeling Project.</li>
+              <li>Microsoft Security Development Lifecycle threat modeling documentation and STRIDE categories.</li>
+              <li>NIST SP 800-154 draft, <em>Guide to Data-Centric System Threat Modeling</em>.</li>
+              <li>MITRE ATT&amp;CK Enterprise Matrix for adversary tactics and techniques.</li>
+              <li>Adam Shostack, <em>Threat Modeling: Designing for Security</em>.</li>
+              <li>LINDDUN privacy threat modeling.</li>
+              <li>Research on AI-assisted threat modeling, continuous threat modeling, cloud-native security, and privacy engineering.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="threats-vulnerabilities-exploits-and-risk.html">← Lesson 1.3</a><a class="btn" href="index.html">Week 1 Overview</a><a class="btn btn-primary" href="ethics-law-and-responsible-disclosure.html">Next: Lesson 1.5 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><script>hljs.highlightAll();</script>
+</body>
+</html>

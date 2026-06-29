@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0.4: Python for Security Learners | MS Cybersecurity</title>
+  <meta name="description" content="Beginner-to-graduate bridge lesson teaching Python from first principles for cybersecurity: variables, functions, files, logs, JSON, regular expressions, safe subprocess use, localhost networking, and defensive automation.">
+  <meta property="og:title" content="Lesson 0.4: Python for Security Learners">
+  <meta property="og:description" content="Learn Python safely from zero knowledge for cybersecurity analysis and automation.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"LearningResource","name":"Python for Security Learners","educationalLevel":"Graduate","learningResourceType":"Lesson","teaches":["Python basics","Security automation","Log parsing","Input validation","Regular expressions","JSON","Safe subprocess usage","Localhost networking","Defensive scripting","Secure coding habits"]}</script>
+</head>
+<body data-root="../../" data-page-id="week-00/lesson-00-04" data-title="Lesson 0.4: Python for Security Learners">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 0</a> / Lesson 0.4</div>
+      <header class="hero">
+        <div class="eyebrow">Week 0 · Bridge Module</div>
+        <h1>Lesson 0.4: Python for Security Learners</h1>
+        <p class="lead">Python is a general-purpose programming language used heavily in cybersecurity for automation, data parsing, safe lab tooling, detection engineering, cloud scripting, and research prototypes. This lesson starts at zero and builds toward secure, ethical security automation.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>120–170 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → Intermediate bridge</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 0.1–0.3 recommended</div>
+          <div class="meta-item"><strong>Practice time</strong>5–7 hours</div>
+        </div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+          <section id="overview-box" class="card">
+            <h2>Week 0 Context</h2>
+            <p><strong>Overview:</strong> Week 0 builds the technical foundation needed before the formal cybersecurity course begins. This lesson teaches Python from first principles and connects it to safe cybersecurity tasks: reading files, parsing logs, validating input, writing scripts, handling errors, making localhost web requests, and recording evidence.</p>
+            <p><strong>Learning objectives:</strong> after this lesson you should be able to write small Python scripts, explain each line, avoid common security mistakes, analyze toy logs, create safe command-line tools, and understand why scripting is powerful but dangerous when pointed at unauthorized targets.</p>
+            <p><strong>Required background:</strong> no prior programming experience is required. Linux terminal basics from Lesson 0.2 and networking ideas from Lesson 0.3 make the examples easier.</p>
+            <p><strong>Estimated reading time:</strong> 120–170 minutes. <strong>Difficulty:</strong> starts beginner, ends with intermediate defensive automation concepts.</p>
+          </section>
+
+          <section id="introduction">
+            <h2>1. Introduction</h2>
+            <p><strong>Plain-English idea:</strong> Python lets you give precise instructions to a computer. A Python program can read files, count events, check configuration text, call local tools, process network data, and produce repeatable evidence.</p>
+            <p>Python exists because humans need a readable way to tell computers what to do. Low-level languages are powerful but require more detail about memory and hardware. Python hides much of that detail so learners and professionals can focus on the task: read this log, transform this data, compare these values, generate this report, or test this local lab service.</p>
+            <p>Python matters in cybersecurity because security work is full of repeated, structured tasks. Analysts parse logs. Incident responders extract indicators from evidence. Cloud security engineers audit configuration files. Researchers prototype algorithms. Developers write test cases. Penetration testers use scripts inside authorized assessments. The same language can help defenders and attackers, so ethics and authorization must control how it is used.</p>
+            <p>Python is used by students, software engineers, security operations center analysts, incident responders, malware analysts, digital forensic investigators, cloud engineers, researchers, banks, governments, hospitals, universities, and large enterprises.</p>
+            <details class="callout warning"><summary>Safety boundary</summary><p>This lesson does not teach unauthorized scanning, exploitation, credential guessing, malware development, evasion, or public-target automation. Every network example is localhost-only or uses static sample data. Treat every script as a tool that must remain inside an authorized scope.</p></details>
+          </section>
+
+          <section id="learning-outcomes">
+            <h2>2. Learning Outcomes</h2>
+            <ul>
+              <li>Define program, interpreter, script, variable, data type, expression, statement, function, module, package, exception, file, log, JSON, regular expression, and virtual environment.</li>
+              <li>Install or verify Python safely on Linux and Windows.</li>
+              <li>Write and run a basic Python script from the terminal.</li>
+              <li>Use strings, integers, booleans, lists, dictionaries, loops, conditionals, and functions.</li>
+              <li>Read text files and parse simple security logs.</li>
+              <li>Validate user input before using it.</li>
+              <li>Handle errors without hiding evidence.</li>
+              <li>Use regular expressions cautiously for structured text extraction.</li>
+              <li>Parse JSON data commonly used by APIs, logs, and cloud tools.</li>
+              <li>Use safe subprocess patterns for local commands.</li>
+              <li>Build a localhost-only client/server demonstration.</li>
+              <li>Explain common Python security mistakes and safer alternatives.</li>
+              <li>Describe how Python supports defensive operations, incident response, cloud security, and research.</li>
+            </ul>
+          </section>
+
+          <section id="prerequisites">
+            <h2>3. Prerequisites</h2>
+            <h3>Computer instructions</h3>
+            <p>A computer follows instructions exactly. Programming is the act of writing those instructions in a language the computer can execute through software called an interpreter or compiler.</p>
+            <h3>Text files</h3>
+            <p>A text file stores characters such as letters, numbers, spaces, and punctuation. Logs, configuration files, source code, and many security reports are text files.</p>
+            <h3>Terminal</h3>
+            <p>A terminal is a text interface where you type commands. In this lesson, you use it to run Python scripts and inspect their output.</p>
+            <h3>Network safety</h3>
+            <p>A script can send many requests quickly. That makes automation useful and risky. This lesson uses only <code>127.0.0.1</code>, also called loopback, which points back to your own machine.</p>
+            <h3>Evidence mindset</h3>
+            <p>Security scripts should produce clear, reproducible evidence. A script that prints confusing output, changes data silently, or hides errors is weak security engineering.</p>
+          </section>
+
+          <section id="core-concepts">
+            <h2>4. Core Concepts</h2>
+            <h3>4.1 What is Python?</h3>
+            <p><strong>Definition:</strong> Python is a high-level programming language. <strong>High-level</strong> means it lets you write instructions closer to human reasoning than raw machine instructions.</p>
+            <p><strong>Intuition:</strong> Python is like a clear recipe. The recipe says what to do step by step. The Python interpreter is like the cook who reads each instruction and carries it out.</p>
+            <p><strong>Security example:</strong> instead of manually counting failed login messages in a log file, you can write a Python script that reads every line and counts the matching events.</p>
+
+            <h3>4.2 Program, script, and interpreter</h3>
+            <ul>
+              <li>A <strong>program</strong> is a set of instructions.</li>
+              <li>A <strong>script</strong> is usually a small program used to automate a task.</li>
+              <li>An <strong>interpreter</strong> reads and runs source code. Python code is commonly run by the Python interpreter.</li>
+            </ul>
+            <p>Cybersecurity learners often begin with scripts because scripts solve concrete tasks: rename evidence files, parse logs, compare hashes, check configuration values, or generate reports.</p>
+
+            <h3>4.3 Variables</h3>
+            <p>A <strong>variable</strong> is a name attached to a value. Think of it as a labeled box.</p>
+            <pre><code class="language-python">username = &quot;alice&quot;
+failed_logins = 3
+is_admin = False</code></pre>
+            <ul>
+              <li><code>username</code> stores text.</li>
+              <li><code>failed_logins</code> stores a number.</li>
+              <li><code>is_admin</code> stores a true/false value.</li>
+            </ul>
+
+            <h3>4.4 Data types</h3>
+            <table>
+              <thead><tr><th>Type</th><th>Plain-English meaning</th><th>Security example</th></tr></thead>
+              <tbody>
+                <tr><td><code>str</code></td><td>Text</td><td>Username, IP address written as text, log line</td></tr>
+                <tr><td><code>int</code></td><td>Whole number</td><td>Failed login count, port number</td></tr>
+                <tr><td><code>float</code></td><td>Decimal number</td><td>Risk score, time duration</td></tr>
+                <tr><td><code>bool</code></td><td>True or false</td><td>Whether a finding is confirmed</td></tr>
+                <tr><td><code>list</code></td><td>Ordered collection</td><td>All log lines from a file</td></tr>
+                <tr><td><code>dict</code></td><td>Key-value collection</td><td>Counts by username or IP address</td></tr>
+              </tbody>
+            </table>
+
+            <h3>4.5 Expressions and statements</h3>
+            <p>An <strong>expression</strong> produces a value. <code>2 + 3</code> produces <code>5</code>. A <strong>statement</strong> performs an action, such as assigning a value, starting a loop, or printing output.</p>
+
+            <h3>4.6 Conditionals</h3>
+            <p>A <strong>conditional</strong> lets code choose a path. It answers: “If this is true, do this; otherwise, do that.”</p>
+            <pre><code class="language-python">failed_logins = 7
+
+if failed_logins &gt;= 5:
+    print(&quot;Investigate this account&quot;)
+else:
+    print(&quot;Continue monitoring&quot;)</code></pre>
+            <p>Security intuition: conditionals are how scripts turn observations into decisions. The decision must be explainable; a threshold of five failed logins is a teaching example, not a universal rule.</p>
+
+            <h3>4.7 Loops</h3>
+            <p>A <strong>loop</strong> repeats work. Security logs often contain thousands or millions of lines, so loops are essential.</p>
+            <pre><code class="language-python">users = [&quot;alice&quot;, &quot;bob&quot;, &quot;carol&quot;]
+
+for user in users:
+    print(&quot;Checking user:&quot;, user)</code></pre>
+            <p>The loop runs once for each item in the list.</p>
+
+            <h3>4.8 Functions</h3>
+            <p>A <strong>function</strong> is a reusable block of code with a name. Functions make scripts easier to test and explain.</p>
+            <pre><code class="language-python">def is_suspicious_login_count(count):
+    return count &gt;= 5
+
+print(is_suspicious_login_count(7))</code></pre>
+            <p>The function receives <code>count</code> as input and returns <code>True</code> or <code>False</code>.</p>
+
+            <h3>4.9 Modules and packages</h3>
+            <p>A <strong>module</strong> is a Python file containing reusable code. A <strong>package</strong> is a collection of modules. Python includes a large standard library for files, dates, JSON, logging, regular expressions, networking, cryptography support interfaces, and process management.</p>
+            <p>Use trusted, maintained packages. Installing random packages is a supply-chain risk because code you install can run on your computer.</p>
+
+            <h3>4.10 Files and paths</h3>
+            <p>A <strong>path</strong> points to a file or directory. Python’s <code>pathlib</code> module gives an object-oriented way to work with paths.</p>
+            <pre><code class="language-python">from pathlib import Path
+
+            folder = Path(&quot;lab-data&quot;)
+            folder.mkdir(exist_ok=True)
+
+            note = folder / &quot;notes.txt&quot;
+            note.write_text(&quot;First Python security lab
+&quot;, encoding=&quot;utf-8&quot;)
+
+            print(note.read_text(encoding=&quot;utf-8&quot;))</code></pre>
+
+            <h3>4.11 Logs</h3>
+            <p>A <strong>log</strong> is a record of events. Security work often begins with logs: login attempts, web requests, process starts, firewall decisions, cloud API calls, and alerts.</p>
+            <p>Logs are not perfect truth. They can be incomplete, misconfigured, deleted, delayed, or ambiguous. A mature analyst combines multiple evidence sources.</p>
+
+            <h3>4.12 JSON</h3>
+            <p><strong>JSON</strong> means JavaScript Object Notation. It is a text format for structured data. APIs, cloud services, configuration tools, and logs commonly use JSON.</p>
+            <pre><code class="language-json">{
+  &quot;user&quot;: &quot;alice&quot;,
+  &quot;action&quot;: &quot;login_failed&quot;,
+  &quot;source_ip&quot;: &quot;192.0.2.10&quot;,
+  &quot;count&quot;: 3
+}</code></pre>
+            <p>Python can convert JSON text into dictionaries and lists.</p>
+            <pre><code class="language-python">import json
+
+event_text = &#x27;{&quot;user&quot;: &quot;alice&quot;, &quot;action&quot;: &quot;login_failed&quot;, &quot;count&quot;: 3}&#x27;
+event = json.loads(event_text)
+
+print(event[&quot;user&quot;])
+print(event[&quot;count&quot;])</code></pre>
+
+            <h3>4.13 Regular expressions</h3>
+            <p>A <strong>regular expression</strong>, often shortened to regex, is a pattern for matching text. Regex is useful for extracting values from logs, but complex regex can become unreadable and error-prone.</p>
+            <pre><code class="language-python">import re
+
+line = &quot;Failed password for alice from 192.0.2.10 port 55123&quot;
+match = re.search(r&quot;for (\w+) from ([0-9.]+)&quot;, line)
+
+if match:
+    user = match.group(1)
+    ip = match.group(2)
+    print(user, ip)</code></pre>
+            <p>Use regex for well-understood patterns. Do not use fragile regex as a replacement for real parsers when structured formats such as JSON are available.</p>
+
+            <h3>4.14 Exceptions</h3>
+            <p>An <strong>exception</strong> is a runtime problem. Good scripts handle expected failures clearly instead of crashing silently.</p>
+            <pre><code class="language-python">from pathlib import Path
+
+try:
+    text = Path(&quot;missing.log&quot;).read_text(encoding=&quot;utf-8&quot;)
+except FileNotFoundError:
+    print(&quot;The log file was not found. Check the file path.&quot;)</code></pre>
+            <p>Security perspective: hiding exceptions can destroy evidence quality. Handle errors, record context, and avoid misleading output.</p>
+
+            <h3>4.15 Virtual environments</h3>
+            <p>A <strong>virtual environment</strong> is an isolated Python workspace for one project’s packages. It reduces conflicts between projects and avoids installing every package globally.</p>
+            <pre><code class="language-bash">python3 -m venv .venv
+source .venv/bin/activate
+python --version
+deactivate</code></pre>
+            <p>On Windows PowerShell, activation commonly looks like:</p>
+            <pre><code class="language-powershell">py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python --version
+deactivate</code></pre>
+
+            <h3>4.16 Safe subprocess use</h3>
+            <p>The <code>subprocess</code> module lets Python run external programs. This is useful and dangerous. A common mistake is building command strings from untrusted input.</p>
+            <div class="callout danger"><strong>Unsafe pattern:</strong> combining user input into a shell command can create command-injection risk. Beginner scripts should avoid <code>shell=True</code> unless there is a specific, reviewed reason.</div>
+            <pre><code class="language-python">import subprocess
+
+result = subprocess.run(
+    [&quot;python&quot;, &quot;--version&quot;],
+    capture_output=True,
+    text=True,
+    check=False
+)
+
+print(result.stdout or result.stderr)</code></pre>
+            <p>This example passes arguments as a list. It does not concatenate untrusted input into a shell command.</p>
+
+            <h3>4.17 Localhost networking with Python</h3>
+            <p>Python can create simple network programs. In this bridge lesson, networking must stay on <code>127.0.0.1</code>, the local loopback address.</p>
+            <p>Localhost examples teach sockets, clients, servers, ports, and messages without touching real external systems.</p>
+
+            <h3>4.18 Defensive automation mindset</h3>
+            <p>Good security scripts should be:</p>
+            <ul>
+              <li><strong>Authorized:</strong> limited to allowed systems and data.</li>
+              <li><strong>Repeatable:</strong> same input gives explainable output.</li>
+              <li><strong>Logged:</strong> important decisions and errors are visible.</li>
+              <li><strong>Conservative:</strong> avoid destructive changes unless explicitly approved.</li>
+              <li><strong>Tested:</strong> run on sample data before production data.</li>
+              <li><strong>Readable:</strong> another analyst can inspect the logic.</li>
+            </ul>
+          </section>
+
+          <section id="visual-learning">
+            <h2>5. Visual Learning</h2>
+            <h3>Python execution flow</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart TD
+  A[Student writes script.py] --> B[Python interpreter reads file]
+  B --> C[Interpreter executes statements]
+  C --> D{Error occurs?}
+  D -- No --> E[Output results]
+  D -- Yes --> F[Raise exception]
+  F --> G{Handled?}
+  G -- Yes --> H[Print clear message or log evidence]
+  G -- No --> I[Program stops with traceback]
+</pre></div>
+
+            <h3>Defensive log parsing pipeline</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Sample log file] --> B[Read lines]
+  B --> C[Normalize text]
+  C --> D[Extract fields]
+  D --> E[Count events]
+  E --> F[Apply threshold]
+  F --> G[Write report]
+  F --> H[Record uncertainty]
+</pre></div>
+
+            <h3>Safe localhost client/server sequence</h3>
+            <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant Student
+  participant Client as Python Client
+  participant Server as Localhost Server
+  Student->>Server: Start server bound to 127.0.0.1
+  Student->>Client: Run client script
+  Client->>Server: Send educational message
+  Server-->>Client: Return educational response
+  Client-->>Student: Print response
+  Note over Client,Server: No public target is contacted
+</pre></div>
+
+            <h3>Python security automation architecture</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Inputs
+    A[Logs]
+    B[JSON events]
+    C[Configuration files]
+    D[Authorized API data]
+  end
+  subgraph PythonScript[Python security script]
+    E[Validate input]
+    F[Parse data]
+    G[Apply rules]
+    H[Handle errors]
+    I[Log actions]
+  end
+  subgraph Outputs
+    J[Analyst report]
+    K[CSV summary]
+    L[Detection idea]
+    M[Evidence notes]
+  end
+  A --> E
+  B --> E
+  C --> E
+  D --> E
+  E --> F --> G --> H --> I
+  I --> J
+  I --> K
+  I --> L
+  I --> M
+</pre></div>
+
+            <h3>Decision tree: Should a script touch a target?</h3>
+            <div class="diagram"><pre class="mermaid">
+flowchart TD
+  A[Do you want to run a script against a target?] --> B{Do you own it or have explicit written authorization?}
+  B -- No --> C[Do not run it]
+  B -- Yes --> D{Is the action in scope?}
+  D -- No --> C
+  D -- Yes --> E{Could it change data or generate heavy traffic?}
+  E -- Yes --> F[Get approval and use rate limits/backups]
+  E -- No --> G[Run in controlled way and record evidence]
+</pre></div>
+
+            <h3>State diagram: script maturity</h3>
+            <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+  [*] --> Idea
+  Idea --> ToyScript
+  ToyScript --> TestedOnSampleData
+  TestedOnSampleData --> Reviewed
+  Reviewed --> AuthorizedRun
+  AuthorizedRun --> Reported
+  Reported --> Improved
+  Improved --> TestedOnSampleData
+</pre></div>
+          </section>
+
+          <section id="mind-map">
+            <h2>6. Mind Maps</h2>
+            <div class="diagram"><pre class="mermaid">
+mindmap
+  root((Python for Security Learners))
+    Foundations
+      Variables
+      Types
+      Conditionals
+      Loops
+      Functions
+    Data
+      Files
+      Logs
+      JSON
+      CSV
+      Regular expressions
+    Safety
+      Authorization
+      Localhost only
+      Input validation
+      Error handling
+      No hardcoded secrets
+    Automation
+      Log parsing
+      Reports
+      Configuration checks
+      Local commands
+      API clients
+    Security Perspective
+      Attack surface
+      Defensive scripts
+      Detection engineering
+      Incident response
+      Research prototypes
+</pre></div>
+          </section>
+
+          <section id="mathematical-foundations">
+            <h2>7. Mathematical Foundations</h2>
+            <h3>7.1 Counting events</h3>
+            <p>Many beginner security scripts count events. If a log has events <code>e1, e2, ..., en</code>, and we want events that satisfy a condition <code>C</code>, then:</p>
+            <p><strong>count = number of events where C(event) is true</strong></p>
+            <p>Example: if 10 log lines contain 3 failed-login messages, the failed-login count is 3.</p>
+            <pre><code class="language-python">events = [&quot;ok&quot;, &quot;failed&quot;, &quot;ok&quot;, &quot;failed&quot;, &quot;failed&quot;]
+count = 0
+
+for event in events:
+    if event == &quot;failed&quot;:
+        count += 1
+
+print(count)  # 3</code></pre>
+
+            <h3>7.2 Boolean logic</h3>
+            <p>Security decisions often combine conditions. Boolean values are <code>True</code> or <code>False</code>.</p>
+            <table>
+              <thead><tr><th>Operator</th><th>Meaning</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td><code>and</code></td><td>Both conditions must be true</td><td>failed logins high and account is privileged</td></tr>
+                <tr><td><code>or</code></td><td>At least one condition must be true</td><td>source is blocked or user is disabled</td></tr>
+                <tr><td><code>not</code></td><td>Reverses truth</td><td>not authorized</td></tr>
+              </tbody>
+            </table>
+
+            <h3>7.3 Thresholds</h3>
+            <p>A <strong>threshold</strong> is a chosen boundary. Example: alert when failed logins are greater than or equal to 5. Thresholds are simple but imperfect.</p>
+            <pre><code class="language-python">failed_logins = 5
+threshold = 5
+
+alert = failed_logins &gt;= threshold
+print(alert)  # True</code></pre>
+            <p>Too low a threshold creates many false positives. Too high a threshold misses real attacks. Choosing thresholds requires context.</p>
+
+            <h3>7.4 Time windows and rates</h3>
+            <p>A rate measures events per unit time.</p>
+            <p><strong>rate = number of events / time window</strong></p>
+            <p>Worked example: 120 failed logins in 10 minutes gives:</p>
+            <p><strong>rate = 120 / 10 = 12 failed logins per minute</strong></p>
+
+            <h3>7.5 Entropy intuition</h3>
+            <p><strong>Entropy</strong> roughly measures uncertainty. For a random string of length <code>L</code> where each character is chosen from <code>N</code> equally likely options:</p>
+            <p><strong>H = L × log₂(N)</strong></p>
+            <p>Worked example: a 16-character token using 62 possible characters has:</p>
+            <p><strong>H = 16 × log₂(62) ≈ 16 × 5.95 ≈ 95.2 bits</strong></p>
+            <p>Security point: random tokens should be generated with secure randomness, not predictable functions.</p>
+            <pre><code class="language-python">import secrets
+import string
+
+alphabet = string.ascii_letters + string.digits
+token = &quot;&quot;.join(secrets.choice(alphabet) for _ in range(16))
+print(token)</code></pre>
+
+            <h3>7.6 Complexity intuition</h3>
+            <p>If a script checks each line in a log once, its work grows linearly with the number of lines. This is often written as <code>O(n)</code>. For beginner security automation, clear <code>O(n)</code> scripts are usually acceptable for small labs and moderate files.</p>
+          </section>
+
+          <section id="practical-examples">
+            <h2>8. Practical Examples</h2>
+            <h3>Linux example: verify Python and create a lab folder</h3>
+            <pre><code class="language-bash">python3 --version
+mkdir -p ~/ms-cybersecurity-labs/week-00/python
+cd ~/ms-cybersecurity-labs/week-00/python
+pwd</code></pre>
+            <p>This checks Python, creates a controlled lab directory, enters it, and prints the current path.</p>
+
+            <h3>Windows example: verify Python and create a lab folder</h3>
+            <pre><code class="language-powershell">py --version
+New-Item -ItemType Directory -Force -Path &quot;$HOME\ms-cybersecurity-labs\week-00\python&quot;
+Set-Location &quot;$HOME\ms-cybersecurity-labs\week-00\python&quot;
+Get-Location</code></pre>
+
+            <h3>Python example: first script</h3>
+            <pre><code class="language-python">print(&quot;Hello, cybersecurity learner&quot;)
+print(&quot;This script runs only on my own machine.&quot;)</code></pre>
+            <p>Save it as <code>hello_security.py</code> and run <code>python3 hello_security.py</code> on Linux or <code>py hello_security.py</code> on Windows.</p>
+
+            <h3>Network example: localhost-only connection</h3>
+            <p>Start a local web server in a lab folder:</p>
+            <pre><code class="language-bash">echo &quot;Local Python web lab&quot; &gt; index.html
+python3 -m http.server 8000 --bind 127.0.0.1</code></pre>
+            <p>Then open another terminal and request your own local server:</p>
+            <pre><code class="language-python">from urllib.request import urlopen
+
+with urlopen(&quot;http://127.0.0.1:8000&quot;, timeout=3) as response:
+    body = response.read().decode(&quot;utf-8&quot;)
+
+print(body)</code></pre>
+            <p>This contacts only your own computer. Do not modify this example to target public systems.</p>
+
+            <h3>Web example: parse a safe sample HTTP log</h3>
+            <pre><code class="language-python">log_lines = [
+    &#x27;GET /index.html 200&#x27;,
+    &#x27;GET /admin 403&#x27;,
+    &#x27;POST /login 401&#x27;,
+    &#x27;GET /dashboard 200&#x27;,
+]
+
+for line in log_lines:
+    method, path, status = line.split()
+    if status.startswith(&quot;4&quot;):
+        print(&quot;Client-side error observed:&quot;, method, path, status)</code></pre>
+
+            <h3>Cloud example: inspect a mock cloud configuration</h3>
+            <pre><code class="language-python">import json
+
+policy_text = &#x27;&#x27;&#x27;
+{
+  &quot;resource&quot;: &quot;training-bucket&quot;,
+  &quot;public&quot;: false,
+  &quot;encryption&quot;: &quot;enabled&quot;,
+  &quot;owner&quot;: &quot;security-lab&quot;
+}
+&#x27;&#x27;&#x27;
+
+policy = json.loads(policy_text)
+
+if policy[&quot;public&quot;]:
+    print(&quot;Risk: storage is public&quot;)
+else:
+    print(&quot;OK: storage is not public&quot;)
+
+print(&quot;Encryption:&quot;, policy[&quot;encryption&quot;])</code></pre>
+            <p>This uses mock data only. Later cloud lessons will teach real cloud concepts and strict authorization rules.</p>
+          </section>
+
+          <section id="code-examples">
+            <h2>9. Code Examples</h2>
+            <h3>9.1 Line-by-line log counter</h3>
+            <pre><code class="language-python">from pathlib import Path
+
+lab_file = Path(&quot;auth.log&quot;)
+failed = 0
+
+for line in lab_file.read_text(encoding=&quot;utf-8&quot;).splitlines():
+    if &quot;Failed password&quot; in line:
+        failed += 1
+
+print(f&quot;Failed login events: {failed}&quot;)</code></pre>
+            <h4>Line-by-line explanation</h4>
+            <ol>
+              <li><code>from pathlib import Path</code> imports a safer, readable way to work with file paths.</li>
+              <li><code>lab_file = Path("auth.log")</code> creates a path object for a file named <code>auth.log</code> in the current folder.</li>
+              <li><code>failed = 0</code> starts a counter at zero.</li>
+              <li><code>read_text(...)</code> reads the whole file as text using UTF-8 encoding.</li>
+              <li><code>splitlines()</code> breaks the text into separate lines.</li>
+              <li><code>for line in ...</code> loops over each log line.</li>
+              <li><code>if "Failed password" in line</code> checks whether the line contains the phrase.</li>
+              <li><code>failed += 1</code> adds one to the counter.</li>
+              <li><code>print(...)</code> displays the final count.</li>
+            </ol>
+            <h4>Common mistakes</h4>
+            <ul>
+              <li>Running the script in the wrong folder, so <code>auth.log</code> is not found.</li>
+              <li>Assuming all operating systems use the same log format.</li>
+              <li>Treating a simple phrase match as perfect detection.</li>
+              <li>Not recording what file was analyzed.</li>
+            </ul>
+
+            <h3>9.2 Safer input validation</h3>
+            <pre><code class="language-python">def is_valid_username(name):
+    if not isinstance(name, str):
+        return False
+    if len(name) &lt; 1 or len(name) &gt; 32:
+        return False
+    return name.replace(&quot;_&quot;, &quot;&quot;).isalnum()
+
+candidates = [&quot;alice&quot;, &quot;bob_2&quot;, &quot;../../etc/passwd&quot;, &quot;&quot;, &quot;verylong&quot; * 10]
+
+for candidate in candidates:
+    print(candidate, is_valid_username(candidate))</code></pre>
+            <p>This does not prove a username exists. It only checks whether the input fits a simple allowed pattern. Security code should validate before using input in file paths, commands, databases, URLs, or access-control decisions.</p>
+
+            <h3>9.3 Counting events by source IP</h3>
+            <pre><code class="language-python">import re
+from collections import Counter
+
+sample = [
+    &quot;Failed password for alice from 192.0.2.10 port 55123&quot;,
+    &quot;Failed password for bob from 192.0.2.10 port 55124&quot;,
+    &quot;Accepted password for carol from 198.51.100.20 port 44444&quot;,
+    &quot;Failed password for dave from 203.0.113.8 port 53000&quot;,
+]
+
+counts = Counter()
+
+for line in sample:
+    match = re.search(r&quot;Failed password .* from ([0-9.]+) port&quot;, line)
+    if match:
+        ip = match.group(1)
+        counts[ip] += 1
+
+for ip, count in counts.items():
+    print(ip, count)</code></pre>
+            <p>The example uses documentation-reserved IP address ranges for education. It does not query or scan those addresses.</p>
+
+            <h3>9.4 Structured output for reports</h3>
+            <pre><code class="language-python">import json
+
+report = {
+    &quot;lesson&quot;: &quot;0.4&quot;,
+    &quot;task&quot;: &quot;log_counting&quot;,
+    &quot;failed_login_events&quot;: 3,
+    &quot;analyst_note&quot;: &quot;Sample data only; no real system analyzed.&quot;
+}
+
+print(json.dumps(report, indent=2))</code></pre>
+            <p>Structured output is easier to store, compare, and review than unstructured text.</p>
+          </section>
+
+          <section id="security-perspective">
+            <h2>10. Security Perspective</h2>
+            <h3>Common attacks involving Python or scripting</h3>
+            <ul>
+              <li><strong>Command injection:</strong> unsafe scripts pass attacker-controlled text to a shell.</li>
+              <li><strong>Hardcoded secret leakage:</strong> passwords, API keys, or tokens are committed into code repositories.</li>
+              <li><strong>Insecure dependency installation:</strong> malicious or typosquatted packages are installed from package repositories.</li>
+              <li><strong>Unsafe deserialization:</strong> code loads complex data formats in ways that can execute unexpected behavior.</li>
+              <li><strong>Overbroad automation:</strong> a script changes or queries more systems than intended.</li>
+              <li><strong>Excessive request rate:</strong> automation unintentionally overwhelms a service.</li>
+            </ul>
+            <h3>Common vulnerabilities</h3>
+            <ul>
+              <li>Using <code>shell=True</code> with untrusted input.</li>
+              <li>Not validating file names, paths, URLs, or usernames.</li>
+              <li>Logging secrets.</li>
+              <li>Suppressing exceptions with bare <code>except:</code>.</li>
+              <li>Trusting all package names and install commands found online.</li>
+              <li>Ignoring authorization boundaries.</li>
+            </ul>
+            <h3>Defensive strategies</h3>
+            <ul>
+              <li>Use allow-lists for expected input.</li>
+              <li>Use virtual environments for project isolation.</li>
+              <li>Pin and review dependencies when possible.</li>
+              <li>Avoid storing secrets in source code.</li>
+              <li>Prefer structured data formats such as JSON over fragile text scraping when available.</li>
+              <li>Log actions and errors clearly.</li>
+              <li>Test scripts on small sample data before using larger authorized datasets.</li>
+            </ul>
+            <h3>Detection methods</h3>
+            <ul>
+              <li>Monitor unusual Python interpreter execution on production endpoints.</li>
+              <li>Review command-line arguments for suspicious behavior.</li>
+              <li>Detect unexpected network connections from scripts.</li>
+              <li>Track new package installations in controlled environments.</li>
+              <li>Alert on secrets committed to repositories.</li>
+            </ul>
+            <h3>Mitigation and best practices</h3>
+            <ul>
+              <li>Run scripts with least privilege.</li>
+              <li>Use read-only mode unless modification is necessary and approved.</li>
+              <li>Keep scripts small, reviewed, and documented.</li>
+              <li>Use rate limits and timeouts for network operations.</li>
+              <li>Keep a lab notebook showing commands, inputs, outputs, and conclusions.</li>
+            </ul>
+          </section>
+
+          <section id="industry-perspective">
+            <h2>11. Industry Perspective</h2>
+            <table>
+              <thead><tr><th>Sector</th><th>How Python is used</th><th>Security concern</th></tr></thead>
+              <tbody>
+                <tr><td>Banks</td><td>Fraud analytics, log processing, compliance evidence, internal automation.</td><td>Scripts must protect sensitive financial data and preserve auditability.</td></tr>
+                <tr><td>Governments</td><td>Cyber defense automation, threat intelligence processing, digital services support.</td><td>Authorization, classification, and chain-of-custody rules are strict.</td></tr>
+                <tr><td>Cloud providers</td><td>API automation, telemetry processing, configuration validation, security tooling.</td><td>Misconfigured automation can affect many tenants or resources.</td></tr>
+                <tr><td>Healthcare</td><td>Log review, device inventory, report generation, compliance tasks.</td><td>Patient privacy and availability of clinical systems are critical.</td></tr>
+                <tr><td>Defense</td><td>Mission-system testing, controlled analysis, data transformation, research prototypes.</td><td>Scripts must be controlled, reviewed, and isolated according to mission sensitivity.</td></tr>
+                <tr><td>Universities</td><td>Teaching labs, research prototypes, campus IT automation, data science.</td><td>Labs must prevent accidental testing against real campus systems.</td></tr>
+                <tr><td>Large enterprises</td><td>SOC automation, vulnerability data enrichment, identity reports, cloud checks.</td><td>Scripts need change management, ownership, logging, and maintenance.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="research-perspective">
+            <h2>12. Research Perspective</h2>
+            <p>Python is widely used for security research prototypes because it is readable, has mature libraries, and connects easily to data sources. Researchers use it to analyze malware metadata, study network traffic datasets, evaluate detection algorithms, process vulnerability data, and build proof-of-concept defensive tools.</p>
+            <h3>Current research directions</h3>
+            <ul>
+              <li><strong>Security-aware code generation:</strong> how AI coding assistants can generate safer Python and how reviewers can detect insecure suggestions.</li>
+              <li><strong>Software supply-chain security:</strong> detecting malicious packages, typosquatting, dependency confusion, and risky maintainership patterns.</li>
+              <li><strong>Detection engineering:</strong> turning logs and telemetry into high-quality alerts with fewer false positives.</li>
+              <li><strong>Reproducible security experiments:</strong> packaging code, data, and environment details so results can be verified.</li>
+              <li><strong>Privacy-preserving analytics:</strong> analyzing logs while minimizing exposure of personal data.</li>
+            </ul>
+            <h3>Open problems</h3>
+            <ul>
+              <li>How can package repositories detect malicious uploads quickly without blocking legitimate developers?</li>
+              <li>How can security tools explain their Python-generated findings to non-expert analysts?</li>
+              <li>How can AI-generated scripts be automatically checked for unsafe patterns?</li>
+              <li>How can organizations share useful detection code without leaking sensitive environment details?</li>
+            </ul>
+            <p>Notable research directions include empirical studies of malicious package ecosystems, automated vulnerability detection, secure code generation, program analysis, and human factors in security automation.</p>
+          </section>
+
+          <section id="case-studies">
+            <h2>13. Case Studies</h2>
+            <h3>Case Study 1: Malicious packages in open-source ecosystems</h3>
+            <p><strong>What happened:</strong> attackers have repeatedly uploaded malicious packages to public package repositories, sometimes using names similar to legitimate packages. Developers who install the wrong package can execute attacker-controlled code.</p>
+            <p><strong>Root cause:</strong> trust in package names, weak review habits, dependency confusion, typosquatting, and automatic execution during package installation or import.</p>
+            <p><strong>Impact:</strong> possible credential theft, environment compromise, source-code exposure, or supply-chain spread.</p>
+            <p><strong>Lessons learned:</strong> verify package names, prefer official documentation, use virtual environments, review dependencies, avoid copying install commands blindly, and monitor dependency changes.</p>
+
+            <h3>Case Study 2: Automation script with excessive permissions</h3>
+            <p><strong>What happened:</strong> an internal maintenance script was intended to clean temporary files but ran with broad privileges and deleted more data than expected.</p>
+            <p><strong>Root cause:</strong> weak input validation, no dry-run mode, insufficient path checking, and excessive permissions.</p>
+            <p><strong>Impact:</strong> service disruption and recovery work from backups.</p>
+            <p><strong>Lessons learned:</strong> use least privilege, add dry-run mode, validate paths, log planned changes, and require review for destructive automation.</p>
+
+            <h3>Case Study 3: Security log parser that missed events</h3>
+            <p><strong>What happened:</strong> a team relied on a script that searched for one exact failure phrase. A software update changed the log wording, so the script stopped counting relevant events.</p>
+            <p><strong>Root cause:</strong> brittle text matching and no validation against known test cases.</p>
+            <p><strong>Impact:</strong> missed detections and delayed investigation.</p>
+            <p><strong>Lessons learned:</strong> write test cases, prefer structured logs, monitor parser failures, and document assumptions.</p>
+          </section>
+
+          <section id="common-misconceptions">
+            <h2>14. Common Misconceptions</h2>
+            <ul>
+              <li><strong>“Python is easy, so Python security does not matter.”</strong> Easy syntax does not remove security risk. A short script can delete data, leak secrets, or overwhelm a service.</li>
+              <li><strong>“If a script works once, it is good enough.”</strong> Security scripts need repeatability, error handling, and clear evidence.</li>
+              <li><strong>“Regex can parse everything.”</strong> Regex is useful, but structured formats should be parsed with appropriate parsers.</li>
+              <li><strong>“Automation gives permission.”</strong> Technical ability is not authorization.</li>
+              <li><strong>“Public code is automatically safe.”</strong> Open-source code can be excellent, abandoned, vulnerable, or malicious. Review still matters.</li>
+              <li><strong>“Suppressing errors makes scripts cleaner.”</strong> Hidden errors create false confidence and damage investigations.</li>
+              <li><strong>“Hardcoded secrets are okay in private repositories.”</strong> Private repositories can be shared, leaked, forked, backed up, or misconfigured.</li>
+              <li><strong>“Security automation should always make changes automatically.”</strong> Early scripts should usually report first and change later only with review and approval.</li>
+            </ul>
+          </section>
+
+          <section id="summary">
+            <h2>15. Summary</h2>
+            <p>Python is a practical bridge between cybersecurity theory and repeatable work. You learned what programs, scripts, variables, data types, conditionals, loops, functions, modules, files, logs, JSON, regex, exceptions, virtual environments, subprocesses, and localhost networking mean. You also learned why safe scope matters: a script that reads a local sample log is educational; the same automation aimed at unauthorized systems is unacceptable.</p>
+            <p>The most important habits are simple: validate input, handle errors, avoid hardcoded secrets, keep scripts readable, test on sample data, document evidence, and run only inside authorized boundaries.</p>
+          </section>
+
+          <section id="glossary">
+            <h2>16. Glossary</h2>
+            <table>
+              <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+              <tbody>
+                <tr><td>Argument</td><td>A value passed to a function or command.</td></tr>
+                <tr><td>Boolean</td><td>A true-or-false value.</td></tr>
+                <tr><td>Command injection</td><td>A vulnerability where untrusted input becomes part of a command.</td></tr>
+                <tr><td>Dictionary</td><td>A Python key-value collection.</td></tr>
+                <tr><td>Exception</td><td>A runtime problem that interrupts normal program flow unless handled.</td></tr>
+                <tr><td>Function</td><td>A reusable named block of code.</td></tr>
+                <tr><td>Interpreter</td><td>Software that reads and executes code.</td></tr>
+                <tr><td>JSON</td><td>A text format for structured data.</td></tr>
+                <tr><td>List</td><td>An ordered Python collection.</td></tr>
+                <tr><td>Log</td><td>A record of events generated by a system or application.</td></tr>
+                <tr><td>Module</td><td>A Python file containing reusable code.</td></tr>
+                <tr><td>Package</td><td>A collection of modules that can be installed or imported.</td></tr>
+                <tr><td>Path</td><td>A location pointing to a file or directory.</td></tr>
+                <tr><td>Regular expression</td><td>A pattern used to match or extract text.</td></tr>
+                <tr><td>Script</td><td>A small program often used for automation.</td></tr>
+                <tr><td>Subprocess</td><td>A child process started by a program.</td></tr>
+                <tr><td>Variable</td><td>A name that stores a value.</td></tr>
+                <tr><td>Virtual environment</td><td>An isolated Python workspace for project packages.</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section id="self-assessment">
+            <h2>17. Self-Assessment</h2>
+            <h3>20 MCQs</h3>
+            <div class="quiz-card" data-answer="B"><p>1. What is Python best used for in beginner cybersecurity learning?</p><label class="quiz-option"><input type="radio" name="q1" value="A"> A. Unauthorized testing of public systems</label><label class="quiz-option"><input type="radio" name="q1" value="B"> B. Safe automation, parsing, and lab scripting</label><label class="quiz-option"><input type="radio" name="q1" value="C"> C. Replacing all security tools</label><label class="quiz-option"><input type="radio" name="q1" value="D"> D. Avoiding documentation</label><button class="check-quiz">Check</button><span class="answer">Answer: B</span></div>
+<div class="quiz-card" data-answer="A"><p>2. Which file extension is commonly used for Python source files?</p><label class="quiz-option"><input type="radio" name="q2" value="A"> A. .py</label><label class="quiz-option"><input type="radio" name="q2" value="B"> B. .exe</label><label class="quiz-option"><input type="radio" name="q2" value="C"> C. .png</label><label class="quiz-option"><input type="radio" name="q2" value="D"> D. .tcp</label><button class="check-quiz">Check</button><span class="answer">Answer: A</span></div>
+<div class="quiz-card" data-answer="C"><p>3. What does a variable do?</p><label class="quiz-option"><input type="radio" name="q3" value="A"> A. Deletes files automatically</label><label class="quiz-option"><input type="radio" name="q3" value="B"> B. Encrypts the network</label><label class="quiz-option"><input type="radio" name="q3" value="C"> C. Stores a value under a name</label><label class="quiz-option"><input type="radio" name="q3" value="D"> D. Opens all ports</label><button class="check-quiz">Check</button><span class="answer">Answer: C</span></div>
+<div class="quiz-card" data-answer="D"><p>4. Which data type is best for an ordered list of log lines?</p><label class="quiz-option"><input type="radio" name="q4" value="A"> A. Boolean</label><label class="quiz-option"><input type="radio" name="q4" value="B"> B. Socket</label><label class="quiz-option"><input type="radio" name="q4" value="C"> C. Exception</label><label class="quiz-option"><input type="radio" name="q4" value="D"> D. List</label><button class="check-quiz">Check</button><span class="answer">Answer: D</span></div>
+<div class="quiz-card" data-answer="A"><p>5. What does a function help you do?</p><label class="quiz-option"><input type="radio" name="q5" value="A"> A. Package reusable steps under a name</label><label class="quiz-option"><input type="radio" name="q5" value="B"> B. Bypass authorization</label><label class="quiz-option"><input type="radio" name="q5" value="C"> C. Hide all errors</label><label class="quiz-option"><input type="radio" name="q5" value="D"> D. Change operating systems</label><button class="check-quiz">Check</button><span class="answer">Answer: A</span></div>
+<div class="quiz-card" data-answer="B"><p>6. Why is input validation important?</p><label class="quiz-option"><input type="radio" name="q6" value="A"> A. It makes code slower only</label><label class="quiz-option"><input type="radio" name="q6" value="B"> B. It checks that data is acceptable before use</label><label class="quiz-option"><input type="radio" name="q6" value="C"> C. It disables logging</label><label class="quiz-option"><input type="radio" name="q6" value="D"> D. It removes the need for permissions</label><button class="check-quiz">Check</button><span class="answer">Answer: B</span></div>
+<div class="quiz-card" data-answer="C"><p>7. Which Python module is commonly used for regular expressions?</p><label class="quiz-option"><input type="radio" name="q7" value="A"> A. syslog</label><label class="quiz-option"><input type="radio" name="q7" value="B"> B. ipconfig</label><label class="quiz-option"><input type="radio" name="q7" value="C"> C. re</label><label class="quiz-option"><input type="radio" name="q7" value="D"> D. dns-root</label><button class="check-quiz">Check</button><span class="answer">Answer: C</span></div>
+<div class="quiz-card" data-answer="D"><p>8. Which practice is safer when running external commands from Python?</p><label class="quiz-option"><input type="radio" name="q8" value="A"> A. Use shell=True with untrusted input</label><label class="quiz-option"><input type="radio" name="q8" value="B"> B. Concatenate user input into commands</label><label class="quiz-option"><input type="radio" name="q8" value="C"> C. Ignore return codes</label><label class="quiz-option"><input type="radio" name="q8" value="D"> D. Pass arguments as a list and avoid shell=True when possible</label><button class="check-quiz">Check</button><span class="answer">Answer: D</span></div>
+<div class="quiz-card" data-answer="A"><p>9. What does a virtual environment help isolate?</p><label class="quiz-option"><input type="radio" name="q9" value="A"> A. Python packages for a project</label><label class="quiz-option"><input type="radio" name="q9" value="B"> B. Physical network cables</label><label class="quiz-option"><input type="radio" name="q9" value="C"> C. BIOS settings</label><label class="quiz-option"><input type="radio" name="q9" value="D"> D. Monitor brightness</label><button class="check-quiz">Check</button><span class="answer">Answer: A</span></div>
+<div class="quiz-card" data-answer="C"><p>10. Which statement about requests to real websites is correct?</p><label class="quiz-option"><input type="radio" name="q10" value="A"> A. All websites are free to test</label><label class="quiz-option"><input type="radio" name="q10" value="B"> B. Public scanning is always allowed</label><label class="quiz-option"><input type="radio" name="q10" value="C"> C. Only test systems you own or are authorized to test</label><label class="quiz-option"><input type="radio" name="q10" value="D"> D. Robots.txt gives legal permission for exploitation</label><button class="check-quiz">Check</button><span class="answer">Answer: C</span></div>
+<div class="quiz-card" data-answer="B"><p>11. What is JSON?</p><label class="quiz-option"><input type="radio" name="q11" value="A"> A. A hardware chip</label><label class="quiz-option"><input type="radio" name="q11" value="B"> B. A text format for structured data</label><label class="quiz-option"><input type="radio" name="q11" value="C"> C. A firewall brand</label><label class="quiz-option"><input type="radio" name="q11" value="D"> D. A password-cracking algorithm</label><button class="check-quiz">Check</button><span class="answer">Answer: B</span></div>
+<div class="quiz-card" data-answer="D"><p>12. What is an exception?</p><label class="quiz-option"><input type="radio" name="q12" value="A"> A. A network address</label><label class="quiz-option"><input type="radio" name="q12" value="B"> B. A type of router</label><label class="quiz-option"><input type="radio" name="q12" value="C"> C. A user group only</label><label class="quiz-option"><input type="radio" name="q12" value="D"> D. A runtime problem that code can handle</label><button class="check-quiz">Check</button><span class="answer">Answer: D</span></div>
+<div class="quiz-card" data-answer="A"><p>13. Which module is useful for parsing command-line arguments?</p><label class="quiz-option"><input type="radio" name="q13" value="A"> A. argparse</label><label class="quiz-option"><input type="radio" name="q13" value="B"> B. antivirus</label><label class="quiz-option"><input type="radio" name="q13" value="C"> C. router</label><label class="quiz-option"><input type="radio" name="q13" value="D"> D. clipboard</label><button class="check-quiz">Check</button><span class="answer">Answer: A</span></div>
+<div class="quiz-card" data-answer="B"><p>14. What should security automation produce for analysts?</p><label class="quiz-option"><input type="radio" name="q14" value="A"> A. Confusing silent failures</label><label class="quiz-option"><input type="radio" name="q14" value="B"> B. Clear output and useful evidence</label><label class="quiz-option"><input type="radio" name="q14" value="C"> C. Unlogged actions</label><label class="quiz-option"><input type="radio" name="q14" value="D"> D. Random changes</label><button class="check-quiz">Check</button><span class="answer">Answer: B</span></div>
+<div class="quiz-card" data-answer="C"><p>15. What is the safest first network target for a Python client/server lab?</p><label class="quiz-option"><input type="radio" name="q15" value="A"> A. A bank website</label><label class="quiz-option"><input type="radio" name="q15" value="B"> B. A random public server</label><label class="quiz-option"><input type="radio" name="q15" value="C"> C. 127.0.0.1 on your own machine</label><label class="quiz-option"><input type="radio" name="q15" value="D"> D. A neighbor’s router</label><button class="check-quiz">Check</button><span class="answer">Answer: C</span></div>
+<div class="quiz-card" data-answer="D"><p>16. Why are secrets hardcoded in code risky?</p><label class="quiz-option"><input type="radio" name="q16" value="A"> A. They improve comments</label><label class="quiz-option"><input type="radio" name="q16" value="B"> B. They make loops faster</label><label class="quiz-option"><input type="radio" name="q16" value="C"> C. They reduce disk space</label><label class="quiz-option"><input type="radio" name="q16" value="D"> D. They can leak through repositories, logs, or sharing</label><button class="check-quiz">Check</button><span class="answer">Answer: D</span></div>
+<div class="quiz-card" data-answer="A"><p>17. Which Python feature is useful for opening files safely?</p><label class="quiz-option"><input type="radio" name="q17" value="A"> A. with open(...) as f</label><label class="quiz-option"><input type="radio" name="q17" value="B"> B. delete all</label><label class="quiz-option"><input type="radio" name="q17" value="C"> C. chmod 777</label><label class="quiz-option"><input type="radio" name="q17" value="D"> D. shell=True</label><button class="check-quiz">Check</button><span class="answer">Answer: A</span></div>
+<div class="quiz-card" data-answer="B"><p>18. What is a common security use of Python dictionaries?</p><label class="quiz-option"><input type="radio" name="q18" value="A"> A. Increasing network speed</label><label class="quiz-option"><input type="radio" name="q18" value="B"> B. Counting events by key such as username or IP</label><label class="quiz-option"><input type="radio" name="q18" value="C"> C. Replacing TLS</label><label class="quiz-option"><input type="radio" name="q18" value="D"> D. Destroying logs</label><button class="check-quiz">Check</button><span class="answer">Answer: B</span></div>
+<div class="quiz-card" data-answer="C"><p>19. What does logging help with?</p><label class="quiz-option"><input type="radio" name="q19" value="A"> A. Hiding evidence</label><label class="quiz-option"><input type="radio" name="q19" value="B"> B. Guessing passwords</label><label class="quiz-option"><input type="radio" name="q19" value="C"> C. Understanding what happened and debugging safely</label><label class="quiz-option"><input type="radio" name="q19" value="D"> D. Bypassing policy</label><button class="check-quiz">Check</button><span class="answer">Answer: C</span></div>
+<div class="quiz-card" data-answer="D"><p>20. What is the correct ethical boundary for this lesson?</p><label class="quiz-option"><input type="radio" name="q20" value="A"> A. Automate against any target</label><label class="quiz-option"><input type="radio" name="q20" value="B"> B. Collect other people’s traffic</label><label class="quiz-option"><input type="radio" name="q20" value="C"> C. Test unknown systems</label><label class="quiz-option"><input type="radio" name="q20" value="D"> D. Use only owned, local, or explicitly authorized lab systems</label><button class="check-quiz">Check</button><span class="answer">Answer: D</span></div>
+            <h3>10 Short Questions</h3>
+            <ol>
+              <li>What is the difference between a script and an interpreter?</li>
+              <li>Why are variables useful?</li>
+              <li>What is the difference between a list and a dictionary?</li>
+              <li>Why should a beginner use <code>127.0.0.1</code> for networking examples?</li>
+              <li>What is input validation?</li>
+              <li>Why can <code>shell=True</code> be risky?</li>
+              <li>What is JSON used for?</li>
+              <li>Why should security scripts handle exceptions?</li>
+              <li>What does a virtual environment isolate?</li>
+              <li>Why should scripts produce clear evidence?</li>
+            </ol>
+            <h3>5 Long Questions</h3>
+            <ol>
+              <li>Explain how a Python script can read a log file, count failed login events, and produce a simple report. Include limitations of this method.</li>
+              <li>Discuss the security risks of installing third-party Python packages and propose a beginner-safe workflow.</li>
+              <li>Compare regex-based parsing and JSON parsing for security data. When is each appropriate?</li>
+              <li>Explain why automation should follow least privilege, especially in security operations.</li>
+              <li>Design a safe Python lab that teaches localhost networking without contacting external systems.</li>
+            </ol>
+            <h3>Scenario-Based Questions</h3>
+            <ol>
+              <li>Your script works on sample logs but fails silently on real logs. What design mistakes might explain this?</li>
+              <li>A classmate wants to modify the localhost HTTP example to request a public website repeatedly. What should you say?</li>
+              <li>A script stores an API key inside a source file. What risks does this create and what safer options exist?</li>
+              <li>A team uses a Python script to delete old files. What safety features should it include before production use?</li>
+              <li>A detection script creates too many alerts. What variables could you tune or improve?</li>
+            </ol>
+            <h3>Interview Questions</h3>
+            <ol>
+              <li>Explain Python to someone who has never programmed.</li>
+              <li>How would you safely parse a log file with Python?</li>
+              <li>What is the difference between authentication data and authorization scope in a script?</li>
+              <li>How do you reduce command-injection risk in Python?</li>
+              <li>What makes a security automation script maintainable?</li>
+            </ol>
+            <h3>Critical Thinking Questions</h3>
+            <ol>
+              <li>When can automation make a security team less safe?</li>
+              <li>What evidence should a script record so another analyst can trust its output?</li>
+              <li>How should privacy concerns limit log-processing scripts?</li>
+              <li>Should beginner learners use third-party libraries early, or focus on the standard library first?</li>
+              <li>How can an organization balance fast scripting with change-management discipline?</li>
+            </ol>
+            <h3>Research Questions</h3>
+            <ol>
+              <li>How can malicious Python packages be detected before installation?</li>
+              <li>Can large language models reliably identify insecure Python code?</li>
+              <li>How can detection rules generated from Python analysis be validated against real-world data?</li>
+              <li>How can privacy-preserving methods support log analysis?</li>
+              <li>How can reproducibility be improved in cybersecurity research scripts?</li>
+            </ol>
+          </section>
+
+          <section id="practice-lab">
+            <h2>18. Practice Lab</h2>
+            <div class="callout"><strong>Lab title:</strong> Safe Python Log Analysis and Localhost Automation</div>
+            <h3>Prerequisites</h3>
+            <ul>
+              <li>Python 3 installed.</li>
+              <li>A Linux VM, Linux machine, WSL, macOS terminal, or Windows PowerShell.</li>
+              <li>Lessons 0.1–0.3 recommended.</li>
+              <li>No administrator privileges required.</li>
+            </ul>
+            <h3>Objectives</h3>
+            <ul>
+              <li>Create a Python lab folder.</li>
+              <li>Write and run a Python script.</li>
+              <li>Analyze a sample authentication log.</li>
+              <li>Produce structured JSON output.</li>
+              <li>Run a localhost-only web request.</li>
+              <li>Document evidence and limitations.</li>
+            </ul>
+            <h3>Step 1: Create the lab folder</h3>
+            <pre><code class="language-bash">mkdir -p ~/ms-cybersecurity-labs/week-00/python
+cd ~/ms-cybersecurity-labs/week-00/python
+python3 --version</code></pre>
+            <p>Windows PowerShell alternative:</p>
+            <pre><code class="language-powershell">New-Item -ItemType Directory -Force -Path &quot;$HOME\ms-cybersecurity-labs\week-00\python&quot;
+Set-Location &quot;$HOME\ms-cybersecurity-labs\week-00\python&quot;
+py --version</code></pre>
+            <h3>Step 2: Create sample log data</h3>
+            <pre><code class="language-bash">cat &gt; auth.log &lt;&lt;&#x27;EOF&#x27;
+Jan 01 10:00:01 lab sshd[100]: Failed password for alice from 192.0.2.10 port 55123
+Jan 01 10:00:05 lab sshd[101]: Failed password for bob from 192.0.2.10 port 55124
+Jan 01 10:00:10 lab sshd[102]: Accepted password for carol from 198.51.100.20 port 44444
+Jan 01 10:00:12 lab sshd[103]: Failed password for alice from 203.0.113.8 port 53000
+EOF</code></pre>
+            <p>Windows PowerShell alternative:</p>
+            <pre><code class="language-powershell">@&quot;
+Jan 01 10:00:01 lab sshd[100]: Failed password for alice from 192.0.2.10 port 55123
+Jan 01 10:00:05 lab sshd[101]: Failed password for bob from 192.0.2.10 port 55124
+Jan 01 10:00:10 lab sshd[102]: Accepted password for carol from 198.51.100.20 port 44444
+Jan 01 10:00:12 lab sshd[103]: Failed password for alice from 203.0.113.8 port 53000
+&quot;@ | Set-Content -Encoding UTF8 auth.log</code></pre>
+            <h3>Step 3: Write the analyzer</h3>
+            <pre><code class="language-python">import json
+import re
+from collections import Counter
+from pathlib import Path
+
+log_path = Path(&quot;auth.log&quot;)
+text = log_path.read_text(encoding=&quot;utf-8&quot;)
+
+failed_by_user = Counter()
+failed_by_ip = Counter()
+
+for line in text.splitlines():
+    match = re.search(r&quot;Failed password for (\w+) from ([0-9.]+) port&quot;, line)
+    if match:
+        user = match.group(1)
+        ip = match.group(2)
+        failed_by_user[user] += 1
+        failed_by_ip[ip] += 1
+
+report = {
+    &quot;source_file&quot;: str(log_path),
+    &quot;failed_by_user&quot;: dict(failed_by_user),
+    &quot;failed_by_ip&quot;: dict(failed_by_ip),
+    &quot;limitations&quot;: [
+        &quot;Sample data only&quot;,
+        &quot;Regex assumes one specific log format&quot;,
+        &quot;Counts are not proof of compromise&quot;
+    ]
+}
+
+print(json.dumps(report, indent=2))</code></pre>
+            <p>Save this as <code>analyze_auth_log.py</code>.</p>
+            <h3>Step 4: Run the analyzer</h3>
+            <pre><code class="language-bash">python3 analyze_auth_log.py</code></pre>
+            <p>Windows PowerShell alternative:</p>
+            <pre><code class="language-powershell">py analyze_auth_log.py</code></pre>
+            <h3>Step 5: Optional localhost-only web check</h3>
+            <p>In one terminal:</p>
+            <pre><code class="language-bash">echo &quot;Python localhost lab&quot; &gt; index.html
+python3 -m http.server 8000 --bind 127.0.0.1</code></pre>
+            <p>In another terminal, create <code>localhost_check.py</code>:</p>
+            <pre><code class="language-python">from urllib.request import urlopen
+
+url = &quot;http://127.0.0.1:8000&quot;
+
+with urlopen(url, timeout=3) as response:
+    print(&quot;Status:&quot;, response.status)
+    print(&quot;Body:&quot;, response.read().decode(&quot;utf-8&quot;))</code></pre>
+            <p>Run it with <code>python3 localhost_check.py</code> or <code>py localhost_check.py</code>.</p>
+            <h3>Expected outcomes</h3>
+            <ul>
+              <li>You can create and run Python scripts.</li>
+              <li>You can parse sample logs safely.</li>
+              <li>You can count events by user and IP.</li>
+              <li>You can produce structured JSON output.</li>
+              <li>You can explain why the output is evidence but not absolute proof.</li>
+              <li>You can run a localhost-only web request without contacting external systems.</li>
+            </ul>
+            <h3>Safety restrictions</h3>
+            <ul>
+              <li>Do not point scripts at public IP addresses, websites, routers, university systems, company systems, or cloud resources unless explicitly authorized.</li>
+              <li>Do not automate login attempts or credential guessing.</li>
+              <li>Do not capture other people’s traffic.</li>
+              <li>Do not install third-party packages for this lab.</li>
+              <li>Do not store real passwords, tokens, or personal data in your lab files.</li>
+            </ul>
+            <h3>Lab report checklist</h3>
+            <ul>
+              <li>Python version used.</li>
+              <li>Operating system used.</li>
+              <li>Script names.</li>
+              <li>Sample input file.</li>
+              <li>Program output.</li>
+              <li>Explanation of limitations.</li>
+              <li>Statement confirming that no external systems were contacted except optional localhost.</li>
+            </ul>
+          </section>
+
+          <section id="further-reading">
+            <h2>19. Further Reading</h2>
+            <ul>
+              <li><a href="https://docs.python.org/3/tutorial/">Python Tutorial</a> for official beginner language instruction.</li>
+              <li><a href="https://docs.python.org/3/library/index.html">Python Standard Library</a> for built-in modules.</li>
+              <li><a href="https://docs.python.org/3/library/pathlib.html">Python pathlib documentation</a> for file paths.</li>
+              <li><a href="https://docs.python.org/3/library/json.html">Python json documentation</a> for structured data parsing.</li>
+              <li><a href="https://docs.python.org/3/library/re.html">Python re documentation</a> for regular expressions.</li>
+              <li><a href="https://docs.python.org/3/library/argparse.html">Python argparse documentation</a> for command-line tools.</li>
+              <li><a href="https://docs.python.org/3/library/subprocess.html">Python subprocess documentation</a> for process management.</li>
+              <li><a href="https://docs.python.org/3/library/venv.html">Python venv documentation</a> for virtual environments.</li>
+              <li><a href="https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/stable-en/">OWASP Secure Coding Practices Quick Reference Guide</a> for secure coding habits.</li>
+              <li><a href="https://csrc.nist.gov/pubs/sp/800/115/final">NIST SP 800-115</a> for authorized security testing methodology.</li>
+              <li><a href="https://attack.mitre.org/techniques/T1059/006/">MITRE ATT&amp;CK: Command and Scripting Interpreter — Python</a> for how defenders model adversary use of Python.</li>
+              <li>Textbook direction: Automate the Boring Stuff with Python by Al Sweigart for practical beginner automation.</li>
+              <li>Textbook direction: Python Crash Course by Eric Matthes for general Python foundations.</li>
+              <li>Research directions: secure code generation, malicious package detection, reproducible security research, detection engineering, and privacy-preserving log analytics.</li>
+            </ul>
+          </section>
+
+          <div class="prev-next"><a class="btn" href="networking-from-zero-for-cybersecurity.html">← Lesson 0.3</a><a class="btn" href="index.html">Week 0 Overview</a><a class="btn btn-primary" href="git-documentation-and-evidence-handling.html">Next: Lesson 0.5 Git, Documentation, and Evidence Handling →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside>
+      </div>
+      <footer class="footer">This lesson teaches Python for authorized defensive learning, analysis, and research only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</body>
+</html>

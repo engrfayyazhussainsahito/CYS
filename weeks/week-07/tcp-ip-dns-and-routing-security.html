@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 7.2: TCP/IP, DNS, and Routing Security | MS Cybersecurity</title>
+  <meta name="description" content="TCP/IP, DNS, and routing security from first principles: packets, headers, TCP, UDP, DNS resolution, DNSSEC, routing tables, BGP risk, monitoring, and safe defensive labs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-07-02" data-title="Lesson 7.2: TCP/IP, DNS, and Routing Security">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 7</a> / Lesson 7.2</div>
+    <header class="hero"><div class="eyebrow">Week 7 · Network Security</div><h1>Lesson 7.2: TCP/IP, DNS, and Routing Security</h1><p class="lead">This lesson separates three foundational network systems: TCP/IP packet delivery, DNS name resolution, and routing path selection. You will learn how they work, why they fail, and how defenders secure and monitor them.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>390–570 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Lesson 7.1 recommended; core ideas are reintroduced</div><div class="meta-item"><strong>Practice time</strong>6–10 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="TCP/IP DNS and routing security illustration"><svg viewBox="0 0 980 520" role="img" aria-labelledby="svg-title svg-desc"><title id="svg-title">TCP IP DNS and routing security</title><desc id="svg-desc">A browser asks DNS for an address, opens a TCP connection, and packets follow routes through gateways while defenders monitor DNS and flow logs.</desc><defs><linearGradient id="netGrad72" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7aa7ff"/><stop offset="100%" stop-color="#42d6b5"/></linearGradient><marker id="arrow72" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#42d6b5"/></marker></defs><rect x="30" y="40" width="920" height="420" rx="34" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><g fill="var(--bg)" stroke="var(--border)" stroke-width="3"><rect x="70" y="115" width="145" height="92" rx="18"/><rect x="295" y="75" width="150" height="86" rx="18"/><rect x="295" y="220" width="150" height="86" rx="18"/><rect x="525" y="115" width="145" height="92" rx="18"/><rect x="760" y="115" width="145" height="92" rx="18"/><rect x="400" y="360" width="180" height="60" rx="20"/></g><g font-family="Arial" fill="var(--text)" text-anchor="middle"><text x="142" y="150" font-size="17">Client</text><text x="142" y="177" font-size="13">browser/app</text><text x="370" y="108" font-size="17">DNS</text><text x="370" y="135" font-size="13">name → address</text><text x="370" y="253" font-size="17">TCP/IP</text><text x="370" y="280" font-size="13">ports + packets</text><text x="598" y="150" font-size="17">Router</text><text x="598" y="177" font-size="13">path decision</text><text x="832" y="150" font-size="17">Service</text><text x="832" y="177" font-size="13">logs + response</text><text x="490" y="397" font-size="16">Defender telemetry: DNS logs, flow logs, route changes, alerts</text></g><g stroke="#42d6b5" stroke-width="4" marker-end="url(#arrow72)"><line x1="215" y1="150" x2="292" y2="118"/><line x1="215" y1="170" x2="292" y2="250"/><line x1="445" y1="263" x2="522" y2="170"/><line x1="670" y1="161" x2="756" y2="161"/><line x1="595" y1="207" x2="525" y2="355"/></g><rect x="72" y="330" width="836" height="3" fill="url(#netGrad72)" opacity="0.6"/><text x="490" y="330" transform="translate(0 -14)" font-family="Arial" font-size="16" fill="var(--muted)" text-anchor="middle">Security question: did the name resolve correctly, did the route make sense, and was the flow allowed intentionally?</text></svg></div></section>
+
+    <div class="content-grid"><article class="lesson-content card">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>Most network communication depends on three related systems. <strong>TCP/IP</strong> moves data between applications across networks. <strong>DNS</strong>, the Domain Name System, maps human-readable names to network information. <strong>Routing</strong> chooses where packets should go next.</p>
+<p>Plain English: DNS answers “what address should I use?”, TCP/IP carries the conversation, and routing decides the path that packets take. Security problems in any one of these can send traffic to the wrong place, expose services, hide malicious behavior, or break availability.</p>
+<p>This lesson exists because defenders cannot secure networks by memorizing port numbers. They need to reason about packet headers, connection state, name resolution, resolver behavior, routing tables, gateway choices, route changes, and logs. These foundations are used by network engineers, security engineers, cloud engineers, SOC analysts, incident responders, malware analysts, and internet infrastructure researchers.</p>
+<p><strong>Where it is used:</strong> every bank, hospital, government agency, cloud provider, university, defense network, and enterprise depends on TCP/IP, DNS, and routing. A web request, database connection, software update, VPN session, authentication redirect, and cloud API call all depend on these systems.</p>
+<div class="callout warning"><strong>Safety boundary:</strong> this lesson is defensive. Do not scan networks, spoof traffic, poison DNS, test routers, or probe public systems without written authorization. Labs use your own machine, localhost, known documentation domains, or fictional logs.</div>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Explain TCP/IP, DNS, and routing using first-principles language.</li>
+<li>Distinguish IP addresses, TCP/UDP ports, DNS names, routes, gateways, and services.</li>
+<li>Describe what happens when a browser connects to a website from DNS lookup through TCP connection and routing.</li>
+<li>Interpret basic IP headers, TCP/UDP concepts, DNS record types, TTL, caching, and routing tables.</li>
+<li>Explain DNS security risks including spoofing, cache poisoning, tunneling, malicious domains, and resolver misconfiguration.</li>
+<li>Explain routing risks including wrong default routes, route leaks, route hijacks, asymmetric paths, and BGP trust limitations.</li>
+<li>Identify useful defensive telemetry: DNS logs, flow logs, route-change logs, firewall logs, proxy logs, and endpoint network logs.</li>
+<li>Run safe local commands to inspect addresses, routes, DNS resolution, and local sockets.</li>
+<li>Write a short defensive report that connects observed network behavior to security risk.</li>
+</ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2>
+<p>No prior networking knowledge is assumed. Key concepts are reintroduced here:</p><ul>
+<li><strong>Bit:</strong> the smallest unit of digital information, either 0 or 1.</li>
+<li><strong>Byte:</strong> usually 8 bits.</li>
+<li><strong>Packet:</strong> a small unit of network data with control information.</li>
+<li><strong>Header:</strong> metadata at the beginning of a protocol unit. It tells systems how to process the data.</li>
+<li><strong>Payload:</strong> the data carried after the header.</li>
+<li><strong>Host:</strong> a device that sends or receives network traffic.</li>
+<li><strong>Client:</strong> the side that starts a request.</li>
+<li><strong>Server:</strong> the side that waits for requests.</li>
+<li><strong>Protocol:</strong> a shared communication rule, like a grammar for machines.</li>
+</ul><p>Analogy: sending a package requires a recipient name, street address, route through postal facilities, and tracking information. Networks do something similar with names, IP addresses, routes, protocol headers, and logs.</p></section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 TCP/IP is a protocol family, not one protocol</h3><p><strong>TCP/IP</strong> is a family of protocols that make internet-style networking possible. IP handles addressing and packet forwarding. TCP and UDP sit above IP and help applications exchange data. DNS, HTTP, TLS, SSH, SMTP, and many other application protocols sit above those layers.</p>
+<h3>4.2 Encapsulation</h3><p><strong>Encapsulation</strong> means one protocol wraps data from a higher layer inside its own header. An HTTP message can be carried inside TCP, which is carried inside IP, which is carried inside an Ethernet or Wi-Fi frame. Each layer adds information needed by that layer.</p>
+<h3>4.3 IP addressing</h3><p>An <strong>IP address</strong> identifies an interface or endpoint for packet forwarding. IPv4 addresses look like <code>192.0.2.10</code>. IPv6 addresses look like <code>2001:db8::10</code>. Addresses are not proof of identity; they are routing information and can change, be shared, or be translated.</p>
+<h3>4.4 Packets and headers</h3><p>An IP packet contains an IP header and payload. The header includes information such as source address, destination address, protocol number, and hop limit or time-to-live. Defenders use header metadata to understand who talked to whom, when, and through which protocol, even when payload content is encrypted.</p>
+<h3>4.5 TCP</h3><p><strong>Transmission Control Protocol</strong> provides reliable, ordered byte-stream delivery between applications. It uses sequence numbers, acknowledgments, retransmission, flow control, and congestion control. A beginner intuition: TCP is like a careful conversation where each side tracks what was sent, what arrived, and what must be resent.</p>
+<h3>4.6 TCP three-way handshake</h3><p>Before data exchange, TCP commonly begins with SYN, SYN-ACK, and ACK messages. This sets up connection state. Firewalls often use this state to allow responses to legitimate outbound connections while denying unrelated inbound traffic.</p>
+<h3>4.7 UDP</h3><p><strong>User Datagram Protocol</strong> sends datagrams without TCP-style connection setup or delivery guarantees. This does not make UDP bad. It is useful for DNS, real-time media, and protocols that implement reliability differently. Security implication: defenders must understand application behavior instead of assuming every flow has a TCP-style session.</p>
+<h3>4.8 Ports</h3><p>A <strong>port</strong> is a transport-layer number used to direct traffic to an application endpoint. TCP port 443 commonly indicates HTTPS, but port numbers alone do not prove what is running. A malicious program can use common ports, and a legitimate service can be misconfigured.</p>
+<h3>4.9 DNS from first principles</h3><p>Humans prefer names such as <code>example.com</code>. Networks forward packets using addresses. DNS bridges that gap by mapping names to records. A <strong>resolver</strong> asks questions. An <strong>authoritative server</strong> provides answers for a domain. A <strong>recursive resolver</strong> performs the lookup work on behalf of a client.</p>
+<h3>4.10 Common DNS record types</h3><ul>
+<li><strong>A:</strong> maps a name to an IPv4 address.</li><li><strong>AAAA:</strong> maps a name to an IPv6 address.</li><li><strong>CNAME:</strong> aliases one name to another name.</li><li><strong>MX:</strong> identifies mail exchangers for a domain.</li><li><strong>TXT:</strong> stores text data, often used for domain verification and email-security policies.</li><li><strong>NS:</strong> identifies name servers for a zone.</li><li><strong>SOA:</strong> stores zone authority metadata.</li><li><strong>PTR:</strong> maps an address back to a name in reverse DNS.</li><li><strong>CAA:</strong> indicates which certificate authorities may issue certificates for a domain.</li></ul>
+<h3>4.11 DNS caching and TTL</h3><p><strong>TTL</strong> means time to live. In DNS, TTL tells resolvers how long an answer may be cached. Caching improves speed and reduces load, but stale or poisoned cache entries can cause security and reliability problems.</p>
+<h3>4.12 DNSSEC</h3><p><strong>DNSSEC</strong> adds origin authentication and integrity protection to DNS data. It helps a resolver verify that a DNS answer is authentic and has not been modified. It does not provide confidentiality by itself; DNS queries may still be visible unless protected by mechanisms such as encrypted DNS transports.</p>
+<h3>4.13 DNS privacy</h3><p>Traditional DNS is often visible to networks on the path. Encrypted DNS mechanisms can improve privacy, but they also change enterprise monitoring and policy design. Security teams must balance privacy, abuse detection, resolver trust, and user expectations.</p>
+<h3>4.14 DNS abuse</h3><p>Attackers use DNS for phishing domains, command-and-control, domain generation algorithms, fast-flux hosting, tunneling, exfiltration attempts, and infrastructure hiding. Defenders monitor DNS for unusual domains, newly observed domains, abnormal query volume, high NXDOMAIN rates, and suspicious query patterns.</p>
+<h3>4.15 Routing from first principles</h3><p><strong>Routing</strong> chooses a next hop for a packet. Your device usually has a routing table. If the destination is local, the packet stays local. If not, the device sends it to a default gateway. Routers repeat forwarding decisions until the packet reaches the destination network or fails.</p>
+<h3>4.16 Longest-prefix match</h3><p>When several routes match a destination, routing usually chooses the most specific prefix. A route for <code>10.1.2.0/24</code> is more specific than <code>10.0.0.0/8</code>. This matters because a more-specific route can override a broader route.</p>
+<h3>4.17 Default route</h3><p>A <strong>default route</strong> is used when no more-specific route matches. In home networks, it often points to the router. In cloud networks, it may point to an internet gateway, NAT gateway, firewall appliance, or virtual router.</p>
+<h3>4.18 BGP and internet routing</h3><p><strong>Border Gateway Protocol</strong>, or BGP, exchanges reachability information between autonomous systems on the internet. It is essential, but historically relies heavily on trust and policy. Misconfigurations or malicious announcements can cause route leaks, outages, or traffic redirection.</p>
+<h3>4.19 Route hijacking and route leaks</h3><p>A <strong>route hijack</strong> occurs when traffic is attracted to an unintended route, often through incorrect or malicious route announcements. A <strong>route leak</strong> occurs when routing information is propagated beyond intended policy boundaries. Both can affect availability, confidentiality, and integrity at the path level.</p>
+<h3>4.20 RPKI and route-origin validation</h3><p><strong>Resource Public Key Infrastructure</strong>, or RPKI, helps networks validate whether an autonomous system is authorized to originate a route for an IP prefix. It reduces some routing risks, but deployment, policy, and operational correctness still matter.</p>
+<h3>4.21 Fragmentation and path MTU</h3><p>Networks have maximum transmission units. When packets are too large, fragmentation or path MTU discovery may be involved. Fragmentation can complicate firewalls and intrusion detection because the full meaning of traffic may only be clear after reassembly.</p>
+<h3>4.22 Security principle: control the name, path, and flow</h3><p>For an important service, defenders should know: which names resolve to it, which resolvers are trusted, which routes lead to it, which sources may connect, which ports and protocols are required, which logs prove behavior, and which alerts indicate misuse.</p>
+</section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>DNS → TCP → routing sequence</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant U as User Browser
+  participant R as Recursive Resolver
+  participant D as Authoritative DNS
+  participant G as Default Gateway
+  participant S as Web Server
+  U->>R: What address is www.example.test?
+  R->>D: Recursive lookup path
+  D-->>R: DNS answer + TTL
+  R-->>U: Address answer
+  U->>G: TCP SYN toward server IP
+  G->>S: Forward based on route
+  S-->>U: SYN-ACK through network path
+  U->>S: ACK + encrypted application data
+</pre></div>
+<h3>Encapsulation architecture</h3><div class="diagram"><pre class="mermaid">flowchart TB
+  App[Application data: HTTP request] --> TCP[TCP header: ports, sequence, ACK]
+  TCP --> IP[IP header: source and destination addresses]
+  IP --> Link[Link frame: local delivery]
+  Link --> Medium[Cable, fiber, radio, virtual network]
+</pre></div>
+<h3>DNS resolution path</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Client[Client stub resolver] --> Rec[Recursive resolver]
+  Rec --> Root[Root servers]
+  Rec --> TLD[TLD servers]
+  Rec --> Auth[Authoritative server]
+  Auth --> Rec
+  Rec --> Client
+  Rec --> Cache[(Resolver cache)]
+</pre></div>
+<h3>Routing decision tree</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  Packet[Packet destination address] --> Local{Matches local subnet?}
+  Local -- Yes --> Direct[Send directly on local link]
+  Local -- No --> Specific{Specific route exists?}
+  Specific -- Yes --> NextHop[Send to route next hop]
+  Specific -- No --> Default{Default route exists?}
+  Default -- Yes --> Gateway[Send to default gateway]
+  Default -- No --> Drop[No route: drop or error]
+</pre></div>
+<h3>DNS security controls map</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Queries[DNS queries] --> Resolver[Managed resolver]
+  Resolver --> Policy[Filtering and policy]
+  Resolver --> Validate[DNSSEC validation]
+  Resolver --> Logs[DNS logs]
+  Logs --> Detect[Detection rules]
+  Detect --> IR[Incident response]
+  Policy --> Privacy[Privacy review]
+</pre></div>
+<h3>Routing security timeline</h3><div class="diagram"><pre class="mermaid">timeline
+  title Route incident response timeline
+  09:00 : Monitoring sees unusual path or reachability loss
+  09:05 : Compare route table and external route views
+  09:15 : Identify possible leak, hijack, or misconfiguration
+  09:25 : Contact network owner/provider
+  09:40 : Apply route filtering or policy correction
+  10:00 : Confirm traffic path and service recovery
+</pre></div>
+<h3>State diagram: DNS answer lifecycle</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> QuerySent
+  QuerySent --> AnswerReceived
+  AnswerReceived --> Validating
+  Validating --> Cached: valid and within TTL
+  Validating --> Rejected: DNSSEC/policy failure
+  Cached --> Expired: TTL ends
+  Expired --> QuerySent
+  Cached --> Alerted: suspicious domain or pattern
+</pre></div>
+<h3>ASCII model</h3><pre><code>Name layer:      www.example.com  -&gt;  DNS answer
+Transport layer: TCP 443          -&gt;  application endpoint
+Internet layer:  93.184.216.34    -&gt;  routed destination
+Link layer:      next local hop   -&gt;  immediate delivery
+
+Defender view:   DNS logs + flow logs + firewall logs + route changes</code></pre></section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((TCP/IP DNS Routing Security))
+    TCP/IP
+      IP addresses
+      Headers
+      TCP reliability
+      UDP datagrams
+      Ports
+      Fragmentation
+    DNS
+      Resolvers
+      Records
+      TTL and cache
+      DNSSEC
+      DNS privacy
+      Abuse detection
+    Routing
+      Routing tables
+      Default gateway
+      Longest prefix
+      BGP
+      RPKI
+      Route leaks
+    Defense
+      Filtering
+      Monitoring
+      Validation
+      Alerting
+      Change review
+</pre></div></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Prefix length and address ranges</h3><p>In IPv4, an address has 32 bits. A CIDR prefix such as <code>/24</code> means 24 bits identify the network, leaving 8 bits for host addresses.</p><p><strong>Formula:</strong> approximate address count = 2<sup>host bits</sup>. For a /24, host bits = 32 - 24 = 8, so 2<sup>8</sup> = 256 total addresses. Some addresses may be reserved depending on the environment.</p>
+<h3>7.2 Longest-prefix example</h3><p>Suppose a router has these routes:</p><ul><li><code>10.0.0.0/8</code> via Gateway A</li><li><code>10.10.0.0/16</code> via Gateway B</li><li><code>0.0.0.0/0</code> via Gateway C</li></ul><p>A packet for <code>10.10.5.7</code> matches all three, but <code>/16</code> is most specific, so Gateway B is chosen.</p>
+<h3>7.3 TCP sequence numbers</h3><p>TCP uses sequence numbers to track byte positions in a stream. If a sender transmits 100 bytes starting at sequence number 1000, the next expected sequence number is 1100. This is part of how TCP detects missing data and supports retransmission.</p>
+<h3>7.4 DNS TTL and cache behavior</h3><p>If a DNS answer has a TTL of 300 seconds, a resolver may reuse that answer for up to about 5 minutes. Shorter TTLs can make changes propagate faster but increase query load. Longer TTLs reduce load but can keep stale data active longer.</p>
+<h3>7.5 Detection rate intuition</h3><p>A simple threshold might alert when a host produces more than 50 failed DNS lookups in 10 minutes. This is not proof of compromise. It is a signal requiring context: software updates, typo-heavy users, broken configuration, malware domain-generation behavior, or DNS tunneling could all change the interpretation.</p>
+</section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2>
+<h3>Linux examples</h3><pre><code># Show IP addresses and interfaces
+ip addr
+
+# Show the routing table
+ip route
+
+# Show DNS resolver configuration on many Linux systems
+resolvectl status 2&gt;/dev/null || cat /etc/resolv.conf
+
+# Resolve a name without scanning any target
+getent hosts example.com
+
+# Make a single safe HTTPS request to a documentation/test domain
+curl -I https://example.com
+
+# Observe local listening sockets only
+ss -tuln</code></pre>
+<h3>Windows examples</h3><pre><code>REM Show IP configuration
+ipconfig /all
+
+REM Show routing table
+route print
+
+REM Resolve a known documentation/test domain
+nslookup example.com
+
+REM Show active connections and listening sockets
+netstat -ano
+
+REM Make a single safe HTTP header request in PowerShell
+powershell -Command &quot;Invoke-WebRequest -Uri https://example.com -Method Head&quot;</code></pre>
+<h3>Python example: safe DNS lookup</h3><pre><code># Safe DNS lookup example: resolves one documentation domain only.
+# This is not a scanner and does not contact random targets.
+
+import socket
+
+def resolve_name(name: str) -&gt; None:
+    try:
+        results = socket.getaddrinfo(name, 443, type=socket.SOCK_STREAM)
+    except socket.gaierror as error:
+        print(f&quot;Resolution failed: {error}&quot;)
+        return
+
+    seen = set()
+    for family, socktype, proto, canonname, sockaddr in results:
+        address = sockaddr[0]
+        if address not in seen:
+            seen.add(address)
+            print(address)
+
+resolve_name(&quot;example.com&quot;)</code></pre>
+<h3>Python example: defensive DNS log classification</h3><pre><code># Defensive log-parsing example.
+# It classifies toy DNS log lines and does not generate network traffic.
+
+from collections import Counter
+
+logs = [
+    &quot;2026-06-29T10:00:00 client=lab1 query=example.com rcode=NOERROR&quot;,
+    &quot;2026-06-29T10:00:01 client=lab1 query=missing.invalid rcode=NXDOMAIN&quot;,
+    &quot;2026-06-29T10:00:02 client=lab2 query=docs.python.org rcode=NOERROR&quot;,
+    &quot;2026-06-29T10:00:03 client=lab1 query=random-name-842.invalid rcode=NXDOMAIN&quot;,
+]
+
+counts = Counter()
+for line in logs:
+    if &quot;rcode=NXDOMAIN&quot; in line:
+        counts[&quot;nxdomain&quot;] += 1
+    elif &quot;rcode=NOERROR&quot; in line:
+        counts[&quot;success&quot;] += 1
+    else:
+        counts[&quot;other&quot;] += 1
+
+print(counts)
+if counts[&quot;nxdomain&quot;] &gt;= 2:
+    print(&quot;Review: repeated failed DNS lookups can be normal, misconfigured, or suspicious depending on context.&quot;)</code></pre>
+<h3>Network example</h3><p>A laptop wants to load <code>https://example.com</code>. It asks a resolver for an address, receives an answer, opens a TCP connection to port 443, sends packets to its default gateway if the destination is not local, and receives encrypted HTTPS data after TLS negotiation.</p>
+<h3>Web example</h3><p>If DNS is wrong, the browser may connect to the wrong address. TLS certificate validation helps detect name-to-identity mismatch, but users and systems must not disable certificate validation.</p>
+<h3>Cloud example</h3><p>In a cloud virtual network, a private subnet might route outbound internet traffic through a NAT gateway, while inbound traffic to databases is denied. Route tables, security groups, DNS private zones, and flow logs together define and observe network behavior.</p>
+</section>
+
+<section id="code-examples"><h2>9. Code Examples</h2>
+<h3>Local-only TCP server</h3><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;
+Local-only TCP demonstration.
+Run the server in one terminal, then the client in another.
+The server binds to 127.0.0.1, so it is not exposed to the network.
+&quot;&quot;&quot;
+
+import socket
+
+HOST = &quot;127.0.0.1&quot;
+PORT = 9090
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+    server.bind((HOST, PORT))
+    server.listen(1)
+    print(f&quot;Listening safely on {HOST}:{PORT}&quot;)
+    conn, addr = server.accept()
+    with conn:
+        print(f&quot;Connection from {addr}&quot;)
+        data = conn.recv(1024)
+        print(f&quot;Received: {data!r}&quot;)
+        conn.sendall(b&quot;hello from local lab\n&quot;)</code></pre>
+<p><strong>Line-by-line explanation:</strong> the script imports Python's socket library, binds only to <code>127.0.0.1</code>, listens on port <code>9090</code>, accepts one local connection, reads a small message, and returns a short reply. Binding to loopback keeps the example local to your machine.</p>
+<h3>Local-only TCP client</h3><pre><code>#!/usr/bin/env python3
+import socket
+
+HOST = &quot;127.0.0.1&quot;
+PORT = 9090
+
+with socket.create_connection((HOST, PORT), timeout=3) as client:
+    client.sendall(b&quot;hello local server&quot;)
+    print(client.recv(1024).decode())</code></pre>
+<p><strong>Common mistakes:</strong> binding a learning server to <code>0.0.0.0</code> exposes it on all interfaces; ignoring timeouts can make scripts hang; printing sensitive network data can leak environment details; using public targets for experiments can violate law or policy.</p>
+<p><strong>Secure coding relevance:</strong> network code must validate inputs, use timeouts, handle errors, log safely, avoid unnecessary exposure, and use TLS for real sensitive communication. A working socket program is not automatically a secure service.</p>
+</section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li>DNS spoofing and cache poisoning.</li><li>Malicious domain infrastructure for phishing or command-and-control.</li><li>DNS tunneling or unusual DNS-based exfiltration attempts.</li><li>Route hijacking and route leaks.</li><li>TCP SYN floods and other denial-of-service patterns.</li><li>Fragmentation tricks that confuse inspection or reassembly.</li><li>Open recursive resolver abuse.</li><li>Man-in-the-middle attempts where routing, DNS, or certificate validation is weak.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li>Unmanaged resolvers and inconsistent DNS policy.</li><li>Missing DNSSEC validation where authenticity matters.</li><li>Overly permissive egress DNS that bypasses monitoring.</li><li>Incorrect route tables exposing private systems.</li><li>Weak BGP filtering by network operators.</li><li>Firewall rules based only on ports rather than service purpose and ownership.</li><li>Logging gaps for DNS, routing, and network flows.</li></ul>
+<h3>Defensive strategies</h3><ul><li>Use managed resolvers with logging, policy, and privacy review.</li><li>Validate DNSSEC where appropriate.</li><li>Restrict direct outbound DNS when enterprise policy requires monitored resolvers.</li><li>Review route tables and default routes in cloud and enterprise networks.</li><li>Use route filtering, RPKI/ROV awareness, and provider coordination for internet-facing networks.</li><li>Monitor DNS and flow logs for abnormal behavior.</li><li>Keep certificate validation enabled; TLS and DNS solve different problems.</li></ul>
+<h3>Detection methods</h3><ul><li>DNS logs: NXDOMAIN spikes, algorithmic-looking names, newly observed domains, unusual TXT queries.</li><li>Flow logs: unexpected destinations, new countries/ASNs, unusual ports, beacon-like timing, high-volume traffic.</li><li>Route monitoring: path changes, prefix origin changes, reachability loss, asymmetric behavior.</li><li>Firewall logs: denied flows, unexpected allowed flows, policy changes.</li></ul>
+<h3>Mitigation and best practices</h3><p>Use layered controls: correct DNS configuration, resolver logging, DNSSEC validation, TLS certificate validation, least-privilege routing, default-deny firewalls, segmentation, change review, and incident-response playbooks. Do not rely on one control to solve all path, name, and flow risks.</p>
+</section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><ul>
+<li><strong>Banks:</strong> monitor DNS and egress flows for fraud infrastructure, protect payment systems with strict route and firewall policy, and coordinate with providers for DDoS and routing incidents.</li>
+<li><strong>Governments:</strong> secure public services, citizen portals, and interagency networks; DNS and routing failures can affect national-scale availability.</li>
+<li><strong>Cloud providers:</strong> operate massive DNS, routing, load-balancing, private networking, and DDoS-protection systems.</li>
+<li><strong>Healthcare:</strong> depend on reliable routing and name resolution for clinical systems, medical devices, identity services, and emergency operations.</li>
+<li><strong>Defense:</strong> treat network paths, route control, DNS infrastructure, and traffic analysis as mission-critical security concerns.</li>
+<li><strong>Universities:</strong> manage open research networks, student networks, labs, public web services, and sensitive administrative systems.</li>
+<li><strong>Large enterprises:</strong> integrate DNS filtering, private DNS, cloud route tables, VPNs, proxies, firewalls, and flow monitoring across hybrid environments.</li>
+</ul></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2>
+<p>Current research studies how internet-scale routing fails, how DNS is abused, how encrypted DNS affects enterprise detection and user privacy, how to measure BGP hijacks, how to deploy RPKI safely, and how to detect malicious behavior using metadata without inspecting sensitive content.</p>
+<p>Open problems include privacy-preserving DNS monitoring, reducing false positives in DNS abuse detection, making route-origin validation easier to deploy correctly, detecting short-lived route hijacks, securing interdomain routing beyond origin validation, and building explainable network-detection systems.</p>
+<p>Notable research directions include internet measurement, DNS abuse analysis, formal verification of network policy, encrypted traffic analysis, routing security economics, DDoS resilience, and post-quantum implications for signed network infrastructure data.</p>
+</section>
+
+<section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Case Study 1: DNS cache poisoning research and operational risk</h3><p><strong>What happened:</strong> practical DNS cache-poisoning weaknesses showed that attackers could sometimes cause resolvers to accept false answers. <strong>Root cause:</strong> predictable or insufficiently protected DNS transaction behavior and protocol limitations. <strong>Impact:</strong> users could be sent to wrong destinations. <strong>Lessons:</strong> resolver hardening, source-port randomization, DNSSEC validation, and monitoring matter.</p>
+<h3>Case Study 2: Route leaks and internet outages</h3><p><strong>What happened:</strong> routing mistakes have repeatedly caused traffic to follow unintended paths or become unreachable. <strong>Root cause:</strong> incorrect route propagation, weak filtering, and complex provider relationships. <strong>Impact:</strong> outages, degraded performance, or unintended traffic paths. <strong>Lessons:</strong> routing policy, monitoring, provider coordination, and route validation are security controls.</p>
+<h3>Case Study 3: DNS abuse in phishing and malware operations</h3><p><strong>What happened:</strong> attackers register or compromise domains for phishing, command-and-control, payload delivery, and evasion. <strong>Root cause:</strong> the global DNS system is open and flexible, which supports both legitimate use and abuse. <strong>Impact:</strong> credential theft, malware control, and user redirection. <strong>Lessons:</strong> DNS logs, domain reputation, takedown coordination, and user protection are part of defense.</p>
+<h3>Case Study 4: Misconfigured cloud route table</h3><p><strong>What happened:</strong> a fictional enterprise attaches a private database subnet to a route table that sends traffic to an internet gateway. <strong>Root cause:</strong> copied infrastructure-as-code without review. <strong>Impact:</strong> increased exposure even before application bugs are considered. <strong>Lessons:</strong> route tables, security groups, DNS names, and firewall rules must be reviewed together.</p>
+</section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul>
+<li><strong>“DNS only matters for convenience.”</strong> DNS controls where users and systems try to connect.</li>
+<li><strong>“An IP address proves identity.”</strong> Addresses can be reassigned, translated, spoofed in some contexts, or routed incorrectly.</li>
+<li><strong>“Port 443 means safe.”</strong> It means traffic commonly uses HTTPS. The service, certificate, identity, content, and policy still matter.</li>
+<li><strong>“DNSSEC encrypts DNS.”</strong> DNSSEC authenticates and protects integrity of DNS data; it does not provide confidentiality by itself.</li>
+<li><strong>“The shortest route is always used.”</strong> Routing follows policy and prefix selection, not geographic distance.</li>
+<li><strong>“BGP problems only affect internet service providers.”</strong> Any organization with internet-facing services can be affected by routing incidents.</li>
+<li><strong>“A route table is just networking plumbing.”</strong> Route tables define reachability and therefore directly affect security exposure.</li>
+<li><strong>“Encrypted DNS means defenders cannot do anything.”</strong> Defenders still have endpoint, proxy, firewall, flow, EDR, and policy telemetry, but the architecture must be intentional.</li>
+</ul></section>
+
+<section id="summary"><h2>15. Summary</h2>
+<p>TCP/IP, DNS, and routing are the foundation of network communication. DNS maps names to network information. TCP and UDP carry application conversations over IP. Routing chooses packet paths. Security requires checking all three: the name must resolve correctly, the path must be intended, and the flow must be authorized and monitored. Strong defense combines resolver security, DNSSEC where appropriate, TLS validation, route review, route monitoring, least-privilege firewall policy, and useful telemetry.</p>
+</section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl>
+<dt>TCP/IP</dt><dd>A family of internet protocols used to move data across networks.</dd><dt>IP</dt><dd>Internet Protocol; provides addressing and packet forwarding.</dd><dt>TCP</dt><dd>Transmission Control Protocol; provides reliable ordered byte-stream delivery.</dd><dt>UDP</dt><dd>User Datagram Protocol; sends datagrams without TCP-style reliability.</dd><dt>Header</dt><dd>Protocol metadata used to process, route, or interpret data.</dd><dt>Payload</dt><dd>The carried data inside a protocol unit.</dd><dt>Encapsulation</dt><dd>Wrapping higher-layer data inside lower-layer protocol headers.</dd><dt>DNS</dt><dd>Domain Name System; maps names to network records.</dd><dt>Resolver</dt><dd>A DNS component that performs or requests name resolution.</dd><dt>Authoritative DNS Server</dt><dd>A DNS server that provides answers for a domain zone.</dd><dt>TTL</dt><dd>Time to live; cache lifetime for DNS answers or hop limit concept in packets.</dd><dt>DNSSEC</dt><dd>DNS Security Extensions; adds origin authentication and integrity to DNS data.</dd><dt>Routing Table</dt><dd>A table that maps destination prefixes to next hops or interfaces.</dd><dt>Default Route</dt><dd>The route used when no more-specific route matches.</dd><dt>Longest-Prefix Match</dt><dd>Choosing the most specific matching route for a destination.</dd><dt>BGP</dt><dd>Border Gateway Protocol; exchanges routing reachability between autonomous systems.</dd><dt>Autonomous System</dt><dd>A network or group of networks under common routing administration.</dd><dt>Route Leak</dt><dd>Unintended propagation of routing information beyond policy boundaries.</dd><dt>Route Hijack</dt><dd>Attracting traffic to an unintended network path through incorrect or malicious routing information.</dd><dt>RPKI</dt><dd>Resource Public Key Infrastructure; supports validation of route-origin authorization.</dd></dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2>
+<h3>20 MCQs</h3><ol class="quiz-list"><li><p>What is the main job of IP?</p><ol type="A"><li>Addressing and forwarding packets between networks</li><li>Encrypting every message automatically</li><li>Storing passwords</li><li>Rendering web pages</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is the main job of TCP?</p><ol type="A"><li>Reliable ordered byte-stream delivery between applications</li><li>Domain registration</li><li>Firewall rule storage</li><li>Password hashing</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is the main job of UDP?</p><ol type="A"><li>Sending datagrams without TCP-style connection setup or reliability</li><li>Guaranteeing delivery and ordering for every byte</li><li>Replacing DNSSEC</li><li>Authenticating users</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does DNS usually translate?</p><ol type="A"><li>Names into network information such as IP addresses</li><li>Passwords into usernames</li><li>Packets into electricity bills</li><li>Logs into certificates</li></ol><details><summary>Answer</summary>A</details></li><li><p>Which DNS record type commonly maps a name to an IPv4 address?</p><ol type="A"><li>A</li><li>MX only</li><li>TXT only</li><li>PTR only</li></ol><details><summary>Answer</summary>A</details></li><li><p>Which DNS record type commonly maps a name to an IPv6 address?</p><ol type="A"><li>AAAA</li><li>CAA only</li><li>SOA only</li><li>NS only</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does TTL mean in DNS?</p><ol type="A"><li>Time to live; how long a resolver may cache an answer</li><li>Transport tunnel layer</li><li>Total threat level</li><li>Trusted token login</li></ol><details><summary>Answer</summary>A</details></li><li><p>What does DNSSEC provide?</p><ol type="A"><li>Origin authentication and integrity for DNS data</li><li>Confidentiality for DNS queries by itself</li><li>Automatic web application authorization</li><li>DDoS immunity</li></ol><details><summary>Answer</summary>A</details></li><li><p>Why does DNSSEC not solve all DNS privacy problems?</p><ol type="A"><li>It authenticates data but does not encrypt queries by itself</li><li>It disables all logs</li><li>It removes domain names</li><li>It replaces TLS certificates</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a default route?</p><ol type="A"><li>The route used when no more-specific route matches a destination</li><li>The safest firewall rule by default</li><li>A public-key certificate</li><li>A browser cookie</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is longest-prefix matching?</p><ol type="A"><li>Choosing the matching route with the most specific prefix</li><li>Choosing the route with the shortest name</li><li>Always choosing Wi-Fi over Ethernet</li><li>Always choosing UDP over TCP</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is BGP mainly used for?</p><ol type="A"><li>Exchanging routing reachability information between autonomous systems</li><li>Hashing passwords</li><li>Signing software releases</li><li>Rendering HTML</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is route hijacking at a high level?</p><ol type="A"><li>Traffic being attracted to an unintended network path through incorrect or malicious routing announcements</li><li>A user forgetting a password</li><li>A DNS cache expiring normally</li><li>A browser loading CSS</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is a packet header?</p><ol type="A"><li>Control information that helps protocols deliver and interpret data</li><li>A password manager vault</li><li>A database backup</li><li>A browser theme</li></ol><details><summary>Answer</summary>A</details></li><li><p>Why can fragmentation be security-relevant?</p><ol type="A"><li>Fragmented packets can complicate filtering, inspection, and reassembly behavior</li><li>Fragments always encrypt themselves</li><li>Fragments are never routed</li><li>Fragments are only used by printers</li></ol><details><summary>Answer</summary>A</details></li><li><p>What should defenders monitor for DNS abuse?</p><ol type="A"><li>Unusual domains, high NXDOMAIN rates, newly observed domains, tunneling-like patterns, and suspicious resolver behavior</li><li>Only screen brightness</li><li>Only CPU fan speed</li><li>Only keyboard layout</li></ol><details><summary>Answer</summary>A</details></li><li><p>What is DNS cache poisoning?</p><ol type="A"><li>Causing a resolver or client to cache a false DNS answer</li><li>Encrypting a TLS session correctly</li><li>Rotating an API key</li><li>Using a password manager</li></ol><details><summary>Answer</summary>A</details></li><li><p>Which is safer for a beginner lab?</p><ol type="A"><li>Querying known documentation domains and observing your own DNS/cache behavior</li><li>Running broad scans against public IP ranges</li><li>Testing ISP routers without permission</li><li>Poisoning someone else’s DNS cache</li></ol><details><summary>Answer</summary>A</details></li><li><p>Why are routing and DNS both high-impact?</p><ol type="A"><li>They influence where traffic goes before application security controls even run</li><li>They only affect mouse movement</li><li>They are unrelated to security</li><li>They remove the need for authentication</li></ol><details><summary>Answer</summary>A</details></li><li><p>What belongs in a TCP/IP, DNS, and routing security report?</p><ol type="A"><li>Scope, diagram, observed local configuration, DNS resolution path, route reasoning, risks, and defensive recommendations</li><li>Only a list of random IPs</li><li>Only copied tool output</li><li>Only speculation without evidence</li></ol><details><summary>Answer</summary>A</details></li></ol>
+<h3>10 short questions</h3><ol><li>What is the difference between DNS and routing?</li><li>What is encapsulation?</li><li>Why does TCP use sequence numbers?</li><li>Why might UDP be selected instead of TCP?</li><li>What does a DNS TTL control?</li><li>What does DNSSEC provide and not provide?</li><li>What is a default route?</li><li>Explain longest-prefix match with a simple example.</li><li>Why is BGP security difficult?</li><li>List three useful DNS detection signals.</li></ol>
+<h3>5 long questions</h3><ol><li>Explain every major step from typing a web address to receiving the first web response.</li><li>Compare DNSSEC, TLS certificate validation, and firewall filtering. Which problem does each solve?</li><li>Design a DNS logging and privacy policy for a university network.</li><li>Explain how a cloud route-table mistake can expose a private service.</li><li>Discuss why routing security is both a technical and governance problem.</li></ol>
+<h3>Scenario-based questions</h3><ol><li>A workstation generates thousands of DNS queries to random-looking subdomains. What benign and malicious explanations are possible?</li><li>A service outage starts after a route-table update. What evidence would you collect?</li><li>A resolver returns an unexpected address for an internal service. What could have happened?</li><li>A team wants to allow direct outbound DNS to any resolver. What risks and trade-offs exist?</li><li>Users report certificate warnings after a DNS change. What should be investigated?</li></ol>
+<h3>Interview questions</h3><ol><li>Explain DNS to a non-technical executive.</li><li>What is the difference between TCP and UDP?</li><li>How would you detect DNS tunneling at a high level?</li><li>What is BGP route hijacking?</li><li>Why is TLS not a replacement for DNS security?</li></ol>
+<h3>Critical thinking questions</h3><ol><li>Should enterprises force all DNS through managed resolvers? What are the privacy and operational trade-offs?</li><li>Can too much DNS blocking harm security? Explain.</li><li>What is lost when encrypted DNS bypasses enterprise monitoring?</li><li>How can defenders monitor routing without controlling the internet?</li><li>When should a DNS anomaly become an incident?</li></ol>
+<h3>Research questions</h3><ol><li>How effective is RPKI deployment against practical route hijacking?</li><li>How can DNS abuse be detected while minimizing user privacy impact?</li><li>Can machine learning reliably detect domain-generation algorithms across organizations?</li><li>What are the limits of DNSSEC deployment in complex enterprise environments?</li><li>How can route security be measured empirically across the global internet?</li></ol>
+</section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Lab: Safe TCP/IP, DNS, and Routing Observation</h3><p><strong>Prerequisites:</strong> your own laptop or course VM. Use only your machine, localhost, and known documentation/test domains such as <code>example.com</code>. Do not scan or test third-party networks.</p>
+<h3>Objectives</h3><ul><li>Identify local addresses and routes.</li><li>Observe one safe DNS resolution.</li><li>Run a localhost-only TCP client/server example.</li><li>Write a short defensive report connecting name, path, and flow.</li></ul>
+<h3>Part A: Local route inventory</h3><ol><li>Linux: run <code>ip addr</code> and <code>ip route</code>. Windows: run <code>ipconfig /all</code> and <code>route print</code>.</li><li>Identify your local/private address range and default gateway concept. Do not publish sensitive details.</li><li>Draw a simple diagram: your device → default gateway → internet.</li></ol>
+<h3>Part B: DNS observation</h3><ol><li>Resolve <code>example.com</code> using <code>getent hosts example.com</code>, <code>nslookup example.com</code>, or your OS equivalent.</li><li>Record the resolver used if visible and the answer type if shown.</li><li>Explain how caching might change repeated results.</li></ol>
+<h3>Part C: Local TCP test</h3><ol><li>Save the local-only server script from this lesson as <code>server.py</code>.</li><li>Save the client script as <code>client.py</code>.</li><li>Run the server, then run the client.</li><li>Observe that the server listens on <code>127.0.0.1</code>, not on all network interfaces.</li></ol>
+<h3>Part D: Defensive report</h3><p>Submit a one-page report with: scope, commands used, diagram, DNS observation, routing observation, local TCP observation, security risks avoided, and two hardening recommendations. Expected outcome: you can explain how a name becomes an address, how a packet finds a path, and how a local service should avoid unnecessary exposure.</p>
+</section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li>IETF RFC 9293 — Transmission Control Protocol specification.</li><li>IETF RFC 768 — User Datagram Protocol.</li><li>IETF RFC 791 and RFC 8200 — IPv4 and IPv6 specifications.</li><li>IETF RFC 1034 and RFC 1035 — DNS concepts and implementation.</li><li>IETF RFC 4033 and RFC 9364 — DNSSEC introduction and current BCP overview.</li><li>NIST SP 800-81 Revision 3 — Secure Domain Name System Deployment Guide.</li><li>NIST SP 800-41 Rev. 1 — Firewall policy guidance.</li><li>MANRS and RPKI learning materials for routing security.</li><li>Research topics: BGP hijack detection, DNS abuse measurement, encrypted DNS policy, DNSSEC deployment, route verification, and privacy-preserving network telemetry.</li>
+</ul></section>
+
+</article><aside class="toc card"><h2>On this page</h2><nav id="toc"></nav></aside></div>
+<div class="prev-next"><a class="btn" href="network-security-from-first-principles.html">← Lesson 7.1</a><a class="btn btn-primary" href="#">Next lesson planned →</a></div></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

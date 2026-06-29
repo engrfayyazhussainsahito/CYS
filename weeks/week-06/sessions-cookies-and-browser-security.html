@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 6.2: Sessions, Cookies, and Browser Security | MS Cybersecurity</title>
+  <meta name="description" content="Sessions, cookies, browser storage, CSRF, same-origin policy, CORS, CSP, SRI, security headers, and safe local browser-security labs from first principles.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-06-02" data-title="Lesson 6.2: Sessions, Cookies, and Browser Security">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 6</a> / Lesson 6.2</div>
+    <header class="hero"><div class="eyebrow">Week 6 · Web and API Security</div><h1>Lesson 6.2: Sessions, Cookies, and Browser Security</h1><p class="lead">This lesson explains how browsers remember users, how cookies and sessions work, why browser security boundaries exist, and how defenders reduce session theft, cross-site request forgery, client-side data exposure, and unsafe browser behavior.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>320–450 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Lesson 6.1 recommended; no previous web security background required</div><div class="meta-item"><strong>Practice time</strong>5–8 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+    <section class="lesson-visual card"><div class="visual-graphic" aria-label="Session and browser security illustration"><svg viewBox="0 0 900 470" role="img" aria-labelledby="svg-title svg-desc"><title id="svg-title">Session cookie protection path</title><desc id="svg-desc">A browser receives a session identifier cookie and sends it only under controlled rules to a trusted server.</desc><defs><linearGradient id="sessionGrad62" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7aa7ff"/><stop offset="100%" stop-color="#42d6b5"/></linearGradient><marker id="arrow62" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#42d6b5"/></marker></defs><rect x="24" y="40" width="852" height="360" rx="32" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/><g fill="var(--bg)" stroke="var(--border)" stroke-width="3"><rect x="70" y="132" width="160" height="110" rx="20"/><rect x="370" y="126" width="160" height="122" rx="20"/><rect x="670" y="132" width="150" height="110" rx="20"/></g><g font-family="Arial" fill="var(--text)" text-anchor="middle"><text x="150" y="166" font-size="18">Browser</text><text x="150" y="193" font-size="14">Cookie jar</text><text x="150" y="215" font-size="14">Storage + JS</text><text x="450" y="158" font-size="18">HTTPS</text><text x="450" y="185" font-size="14">Set-Cookie</text><text x="450" y="207" font-size="14">Secure · HttpOnly</text><text x="450" y="229" font-size="14">SameSite</text><text x="745" y="166" font-size="18">Server</text><text x="745" y="193" font-size="14">Session store</text><text x="745" y="215" font-size="14">Authorization</text></g><g stroke="#42d6b5" stroke-width="4" marker-end="url(#arrow62)"><line x1="235" y1="185" x2="364" y2="185"/><line x1="535" y1="185" x2="664" y2="185"/></g><rect x="122" y="300" width="656" height="54" rx="27" fill="url(#sessionGrad62)" opacity="0.24"/><text x="450" y="333" font-family="Arial" font-size="18" fill="var(--text)" text-anchor="middle">Security goal: protect session state, enforce browser boundaries, and verify user intent</text></svg></div></section>
+
+    <div class="content-grid"><article class="lesson-content card">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>HTTP is mostly stateless: one request does not automatically remember the previous request. Yet real web applications need memory. A bank must remember that the same customer logged in. A university portal must remember which student is using the browser. A shopping site must remember a cart. That memory is called <strong>state</strong>.</p>
+<p>A <strong>session</strong> is a period of interaction between a client and an application. In many web applications, the browser stores a random <strong>session identifier</strong> in a <strong>cookie</strong>. The server uses that identifier to find server-side session data, such as the logged-in user, permissions, expiration time, and risk signals.</p>
+<p>This topic exists because the browser is both useful and dangerous. It runs code from websites, stores data, automatically sends cookies, enforces origin boundaries, and connects user identity to remote services. A mistake in session handling or browser security can expose accounts even when passwords and TLS are strong.</p>
+<h3>Why it matters</h3><ul><li>A stolen session can act like a stolen login.</li><li>Weak cookie attributes can expose session identifiers to script, network, or cross-site request risks.</li><li>Browser storage is convenient but can become a credential exposure point.</li><li>Same-origin policy, CORS, CSP, and related controls are central to modern web security.</li><li>Defenders need to read browser behavior, HTTP headers, web logs, and session events as evidence.</li></ul>
+<h3>Where it is used</h3><p>Sessions, cookies, and browser security appear in banking portals, cloud consoles, healthcare systems, government services, email, learning platforms, enterprise dashboards, single sign-on, mobile-web backends, and software-as-a-service applications.</p>
+<h3>Who uses it</h3><ul><li><strong>Web developers</strong> design login, logout, session renewal, and browser storage behavior.</li><li><strong>Security engineers</strong> review cookies, headers, session lifecycle, CSRF protections, and browser-side controls.</li><li><strong>SOC analysts</strong> investigate suspicious login, token, session, and web-request activity.</li><li><strong>Cloud and platform engineers</strong> configure edge TLS, headers, WAFs, identity providers, and session-aware proxies.</li><li><strong>Researchers</strong> study browser isolation, tracking, privacy, cross-origin data flows, and client-side integrity.</li></ul>
+<div class="callout warning"><strong>Safety boundary:</strong> all demonstrations in this lesson use localhost, fictional logs, and toy code. Do not test session handling, cookies, CSRF behavior, browser storage, or security headers on systems you do not own or have explicit written authorization to assess.</div>
+</section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul>
+<li>Explain why HTTP needs added state for login-based applications.</li>
+<li>Define session, session identifier, cookie, cookie jar, cookie attribute, browser storage, origin, same-site, same-origin, CSRF, XSS relationship to cookies, CSP, SRI, HSTS, and security headers.</li>
+<li>Describe the lifecycle of a web session from login to logout and expiration.</li>
+<li>Explain <code>Set-Cookie</code>, <code>Cookie</code>, <code>Secure</code>, <code>HttpOnly</code>, <code>SameSite</code>, <code>Domain</code>, <code>Path</code>, <code>Max-Age</code>, and <code>Expires</code>.</li>
+<li>Distinguish server-side sessions from client-side tokens at a conceptual level.</li>
+<li>Explain why cookies are automatically sent by the browser and why that creates CSRF risk.</li>
+<li>Explain why <code>HttpOnly</code> reduces script access to cookies but does not stop the browser from sending cookies in requests.</li>
+<li>Use safe local commands to inspect HTTP headers, cookies, and browser storage.</li>
+<li>Write and explain a safe Python localhost demonstration that sets educational cookies.</li>
+<li>Recommend defensive session and browser-security controls for a fictional application.</li>
+</ul></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2>
+<details open><summary>HTTP request and response</summary><p>A browser sends an HTTP request to a server. The server sends an HTTP response. Headers carry metadata. Bodies carry optional content such as HTML or JSON.</p></details>
+<details open><summary>HTTPS and TLS</summary><p>HTTPS means HTTP protected by Transport Layer Security, or TLS. TLS protects the network connection from casual reading and tampering. It does not fix application logic mistakes.</p></details>
+<details open><summary>Authentication and authorization</summary><p>Authentication asks “who are you?” Authorization asks “what are you allowed to do?” A session usually records authentication state, but every sensitive action still needs authorization checks.</p></details>
+<details open><summary>Origin</summary><p>An origin is the combination of scheme, host, and port. For example, <code>https://portal.example.edu</code> and <code>https://api.example.edu</code> are different origins because their hosts differ.</p></details>
+<details open><summary>JavaScript</summary><p>JavaScript is code that can run in the browser. Browser security controls often decide what JavaScript can read, send, load, or execute.</p></details>
+</section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2>
+<h3>4.1 State</h3><p><strong>State</strong> means remembered information. A stateless protocol treats each request independently. A stateful application connects many requests into one continuing interaction.</p>
+<p><strong>Analogy:</strong> a receptionist who forgets everyone after each sentence is stateless. A receptionist who keeps a visitor badge number linked to your appointment is maintaining state.</p>
+<h3>4.2 Session</h3><p>A <strong>session</strong> is application memory about one continuing interaction. It may include user ID, login time, last activity, multi-factor status, selected language, shopping cart, CSRF token, and risk flags.</p>
+<h3>4.3 Session identifier</h3><p>A <strong>session identifier</strong>, often called a session ID, is a random value that points to a session. It should be long, unpredictable, and transmitted only through protected channels.</p>
+<div class="callout"><strong>Important:</strong> a session ID is like a temporary badge. Whoever presents it may be treated as the session owner unless the server adds extra checks.</div>
+<h3>4.4 Cookie</h3><p>A <strong>cookie</strong> is a small name-value item stored by the browser and sent back to matching sites. Servers set cookies using the <code>Set-Cookie</code> response header. Browsers return matching cookies using the <code>Cookie</code> request header.</p>
+<pre><code class="language-http">HTTP/1.1 200 OK
+Set-Cookie: session_id=abc123; Path=/; Secure; HttpOnly; SameSite=Lax</code></pre>
+<pre><code class="language-http">GET /account HTTP/1.1
+Host: portal.example.edu
+Cookie: session_id=abc123</code></pre>
+<h3>4.5 Cookie jar</h3><p>The <strong>cookie jar</strong> is the browser's internal storage for cookies. The browser decides which cookies match a request based on domain, path, security, expiration, and same-site rules.</p>
+<h3>4.6 Cookie attributes</h3><table><thead><tr><th>Attribute</th><th>Plain-English purpose</th><th>Security meaning</th></tr></thead><tbody><tr><td><code>Secure</code></td><td>Send cookie only over HTTPS, except special localhost behavior in modern browsers.</td><td>Reduces network exposure over plaintext HTTP.</td></tr><tr><td><code>HttpOnly</code></td><td>Do not expose the cookie to JavaScript through <code>document.cookie</code>.</td><td>Reduces cookie theft through script access, but does not stop all XSS impact.</td></tr><tr><td><code>SameSite</code></td><td>Control when the cookie is sent with cross-site requests.</td><td>Helps reduce CSRF risk.</td></tr><tr><td><code>Path</code></td><td>Limit cookie to URL paths.</td><td>Reduces accidental sending, but is not a strong isolation boundary.</td></tr><tr><td><code>Domain</code></td><td>Control which hostnames receive the cookie.</td><td>Too-broad domains can expose cookies to subdomain risk.</td></tr><tr><td><code>Max-Age</code> / <code>Expires</code></td><td>Set cookie lifetime.</td><td>Controls persistence and cleanup.</td></tr></tbody></table>
+<h3>4.7 Host-only cookies</h3><p>If a cookie does not set a <code>Domain</code> attribute, it is usually host-only. Host-only cookies reduce accidental sharing across subdomains.</p>
+<h3>4.8 Cookie prefixes</h3><p>Cookie name prefixes such as <code>__Host-</code> and <code>__Secure-</code> let browsers enforce additional rules when supported. <code>__Host-</code> is useful for strong host-bound session cookies because it requires <code>Secure</code>, <code>Path=/</code>, and no <code>Domain</code> attribute.</p>
+<h3>4.9 Same-site vs same-origin</h3><p><strong>Same-origin</strong> compares scheme, host, and port. <strong>Same-site</strong> is broader and is based on registrable site plus scheme. Cookie <code>SameSite</code> behavior is about site context, not the full origin definition.</p>
+<h3>4.10 SameSite values</h3><table><thead><tr><th>Value</th><th>Meaning</th><th>Typical use</th></tr></thead><tbody><tr><td><code>Strict</code></td><td>Send cookie only in same-site contexts.</td><td>Highly sensitive actions, where cross-site navigation convenience is less important.</td></tr><tr><td><code>Lax</code></td><td>Send cookie in many same-site contexts and limited top-level cross-site navigations.</td><td>Common default for ordinary sessions.</td></tr><tr><td><code>None</code></td><td>Allow cross-site sending; must be paired with <code>Secure</code> in modern browsers.</td><td>Embedded third-party use cases that truly need cross-site cookies.</td></tr></tbody></table>
+<h3>4.11 Session lifecycle</h3><ol><li>User arrives unauthenticated.</li><li>User authenticates.</li><li>Server creates or rotates a session ID.</li><li>Server sends a cookie containing the session ID.</li><li>Browser sends the cookie on later matching requests.</li><li>Server checks session validity, expiration, and authorization.</li><li>Session may be renewed, reauthenticated, revoked, or expired.</li><li>Logout invalidates the server-side session and clears the browser cookie where possible.</li></ol>
+<h3>4.12 Session fixation</h3><p><strong>Session fixation</strong> occurs when an application accepts a session ID chosen before login and does not rotate it after authentication. Defensive design rotates the session ID on login, privilege change, and other sensitive transitions.</p>
+<h3>4.13 Session expiration</h3><p>Sessions need expiration. <strong>Idle timeout</strong> ends a session after inactivity. <strong>Absolute timeout</strong> ends a session after a maximum total lifetime. Sensitive applications may require step-up authentication for high-risk actions.</p>
+<h3>4.14 Logout</h3><p>Logout should invalidate server-side session state. Merely deleting a browser cookie is not enough if the server would still accept the old session ID.</p>
+<h3>4.15 Server-side session vs client-side token</h3><p>In a server-side session, the browser holds a reference and the server holds the session data. In a self-contained client-side token, the browser holds a signed token containing claims. Tokens can be useful, but revocation, storage, audience, lifetime, and leakage risks must be designed carefully.</p>
+<h3>4.16 Browser storage</h3><p>Browsers provide storage mechanisms such as cookies, <code>localStorage</code>, <code>sessionStorage</code>, IndexedDB, cache storage, and memory variables. These are not interchangeable. Sensitive session credentials usually should not be placed in JavaScript-readable persistent storage.</p>
+<h3>4.17 Cross-site scripting and sessions</h3><p><strong>Cross-site scripting</strong>, or XSS, means untrusted script runs in a page's security context. <code>HttpOnly</code> can stop JavaScript from directly reading a session cookie, but XSS can still perform actions as the user while the browser automatically includes cookies.</p>
+<h3>4.18 Cross-site request forgery</h3><p><strong>Cross-site request forgery</strong>, or CSRF, tricks a browser into sending a request to a site where the user is already logged in. Because browsers automatically include matching cookies, the server may mistake the request as intentional unless it verifies intent.</p>
+<h3>4.19 CSRF defenses</h3><ul><li>Use anti-CSRF tokens bound to the session and verified by the server.</li><li>Use <code>SameSite</code> cookies where compatible with the application flow.</li><li>Validate <code>Origin</code> or <code>Referer</code> headers for sensitive actions where appropriate.</li><li>Require reauthentication or user interaction for highly sensitive operations.</li><li>Use safe HTTP method semantics: <code>GET</code> should not perform state-changing actions.</li></ul>
+<h3>4.20 Same-origin policy</h3><p>The <strong>same-origin policy</strong> is a browser boundary that restricts how documents and scripts from one origin can interact with data from another origin. It is one of the browser's core security mechanisms.</p>
+<h3>4.21 CORS</h3><p><strong>Cross-Origin Resource Sharing</strong>, or CORS, lets a server tell browsers which other origins may read responses through browser JavaScript. CORS is not a replacement for authentication or authorization.</p>
+<h3>4.22 Content Security Policy</h3><p><strong>Content Security Policy</strong>, or CSP, is a browser-enforced policy that restricts where scripts, images, styles, frames, and other resources can load from. CSP is defense in depth; it reduces impact but does not remove the need to fix XSS bugs.</p>
+<h3>4.23 Subresource Integrity</h3><p><strong>Subresource Integrity</strong>, or SRI, allows a page to include a cryptographic hash for an externally loaded script or stylesheet. The browser checks that the downloaded file matches the expected hash before using it.</p>
+<h3>4.24 HSTS</h3><p><strong>HTTP Strict Transport Security</strong>, or HSTS, tells browsers to use HTTPS for future requests to a site. It helps prevent accidental downgrade to plaintext HTTP after the first secure visit or through preload mechanisms.</p>
+<h3>4.25 Referrer Policy and Permissions Policy</h3><p><strong>Referrer Policy</strong> controls how much URL information is sent in the <code>Referer</code> header. <strong>Permissions Policy</strong> controls access to selected browser features such as camera, microphone, geolocation, and other powerful APIs.</p>
+<h3>4.26 Clickjacking and framing controls</h3><p><strong>Clickjacking</strong> tricks users into clicking hidden or disguised interface elements. Defenses include CSP <code>frame-ancestors</code> and, for older compatibility, <code>X-Frame-Options</code>.</p>
+<h3>4.27 Mixed content</h3><p><strong>Mixed content</strong> occurs when an HTTPS page loads resources over HTTP. This can weaken the protection of the secure page because some content travels without TLS protection.</p>
+<h3>4.28 Session risk signals</h3><p>Applications may evaluate risk signals such as impossible travel, device changes, IP reputation, unusual user agent, sudden privilege changes, and high-value actions. These signals should support, not replace, strong session design.</p>
+<h3>4.29 Logging and privacy</h3><p>Web logs should help investigate events without leaking secrets. Never log full session IDs, access tokens, passwords, password reset tokens, or sensitive personal data unless there is a legally approved, minimized, protected need.</p>
+<h3>4.30 Beginner rule</h3><p>A session is security-critical state. Treat session identifiers and tokens like temporary credentials. Protect creation, storage, transmission, rotation, expiration, revocation, logging, and monitoring.</p>
+</section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2>
+<h3>Session creation sequence</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant U as User
+  participant B as Browser
+  participant S as Web Server
+  participant Store as Session Store
+  U->>B: Submit login form
+  B->>S: POST /login over HTTPS
+  S->>S: Verify credentials and MFA state
+  S->>Store: Create session record
+  Store-->>S: Return random session ID reference
+  S-->>B: Set-Cookie: __Host-session=...; Secure; HttpOnly; SameSite=Lax; Path=/
+  B->>S: GET /account with Cookie header
+  S->>Store: Look up session and check expiration
+  Store-->>S: Session data
+  S-->>B: Authorized account page
+</pre></div>
+<h3>Cookie decision path</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  A[Browser prepares request] --> B{Does cookie domain match?}
+  B -- No --> X[Do not send cookie]
+  B -- Yes --> C{Does path match?}
+  C -- No --> X
+  C -- Yes --> D{Is cookie expired?}
+  D -- Yes --> X
+  D -- No --> E{Cookie has Secure?}
+  E -- Yes --> F{Request uses HTTPS or localhost exception?}
+  F -- No --> X
+  F -- Yes --> G{SameSite allows this context?}
+  E -- No --> G
+  G -- No --> X
+  G -- Yes --> H[Send Cookie header]
+</pre></div>
+<h3>CSRF concept</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant U as Logged-in User
+  participant Evil as Untrusted Site
+  participant B as Browser
+  participant Bank as Trusted Site
+  U->>Bank: Login earlier; browser stores session cookie
+  U->>Evil: Visits unrelated page
+  Evil->>B: Causes browser to submit cross-site request
+  B->>Bank: Sends matching cookies automatically
+  Bank->>Bank: Must verify intent using CSRF defenses
+  Bank-->>B: Reject if token/origin/user-interaction check fails
+</pre></div>
+<h3>Browser security architecture</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  subgraph Browser
+    UI[User interface]
+    Engine[Rendering engine]
+    JS[JavaScript engine]
+    Jar[Cookie jar]
+    Storage[Web storage]
+    Policy[Policy enforcement: SOP CORS CSP SRI]
+  end
+  UI --> Engine
+  Engine --> JS
+  JS --> Storage
+  Engine --> Jar
+  Policy --> Engine
+  Policy --> JS
+  Browser -->|HTTPS| Server[Web application]
+  Server --> Session[(Session store)]
+  Server --> Logs[(Security logs)]
+</pre></div>
+<h3>Session state machine</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --> Anonymous
+  Anonymous --> Authenticating: submit credentials
+  Authenticating --> Active: success + session rotation
+  Authenticating --> Anonymous: failure
+  Active --> StepUpRequired: sensitive action or risk signal
+  StepUpRequired --> Active: additional verification succeeds
+  Active --> IdleExpired: inactivity timeout
+  Active --> AbsoluteExpired: maximum lifetime reached
+  Active --> LoggedOut: user logout
+  IdleExpired --> Anonymous
+  AbsoluteExpired --> Anonymous
+  LoggedOut --> Anonymous
+</pre></div>
+<h3>Safe session timeline</h3><div class="diagram"><pre class="mermaid">timeline
+  title Session lifecycle controls
+  User arrives : anonymous session or no session
+  Login succeeds : rotate session ID
+  Normal use : validate session and authorize every action
+  Sensitive action : require CSRF token and optional step-up
+  Inactivity : idle timeout
+  Logout : invalidate server session and clear cookie
+  Incident : revoke sessions and investigate logs
+</pre></div>
+</section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Sessions Cookies Browser Security))
+    State
+      Stateless HTTP
+      Session lifecycle
+      Expiration
+      Revocation
+    Cookies
+      Secure
+      HttpOnly
+      SameSite
+      Domain and Path
+      Prefixes
+    Browser boundaries
+      Same-origin policy
+      CORS
+      CSP
+      SRI
+      HSTS
+    Attacks
+      Session theft
+      Session fixation
+      CSRF
+      XSS impact
+      Clickjacking
+    Defenses
+      Random IDs
+      Rotate on login
+      Server-side invalidation
+      Anti-CSRF tokens
+      Security headers
+      Careful logging
+</pre></div></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2>
+<h3>7.1 Entropy for session identifiers</h3><p><strong>Entropy</strong> measures uncertainty. A session identifier with <em>n</em> random bits has <code>2^n</code> possible values.</p>
+<pre><code class="language-text">possibilities = 2^n</code></pre>
+<p>For a 128-bit random session ID:</p>
+<pre><code class="language-text">2^128 ≈ 3.40 × 10^38 possible values</code></pre>
+<p>That is large enough that guessing a correctly generated 128-bit session ID is not practical with current ordinary computing assumptions.</p>
+<h3>7.2 Guessing probability</h3><p>If an attacker makes <em>q</em> independent guesses against a space of <em>N</em> equally likely session IDs, the rough success probability is:</p>
+<pre><code class="language-text">P(success) ≈ q / N, when q is much smaller than N</code></pre>
+<p>Example: if <code>N = 2^128</code> and <code>q = 10^12</code> guesses:</p>
+<pre><code class="language-text">P ≈ 10^12 / 3.40×10^38
+P ≈ 2.94×10^-27</code></pre>
+<p>The real system can still fail if the random generator is weak, IDs are logged, tokens are exposed to scripts, or sessions are not revoked.</p>
+<h3>7.3 Birthday collision intuition</h3><p>If a system creates many random IDs, defenders also care about accidental collisions. A rough birthday-bound approximation is:</p>
+<pre><code class="language-text">P(collision) ≈ k(k - 1) / (2N)</code></pre>
+<p>where <em>k</em> is the number of generated IDs and <em>N</em> is the number of possible IDs. Large random ID spaces reduce collision risk.</p>
+<h3>7.4 Timeout reasoning</h3><p>Timeouts are risk trade-offs. Short timeouts reduce exposure after an unattended device or stolen cookie, but they may frustrate users. Long timeouts improve convenience but increase the window of misuse.</p>
+<pre><code class="language-text">exposure window ≈ time until session expires or is revoked</code></pre>
+<p>High-risk systems usually combine idle timeout, absolute timeout, reauthentication for sensitive actions, and centralized revocation.</p>
+</section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2>
+<div class="callout warning"><strong>Authorized lab only:</strong> run these commands only against <code>localhost</code> or files you create yourself.</div>
+<h3>Linux: inspect local response headers</h3><pre><code class="language-bash"># Start a basic local file server in the current folder.
+python3 -m http.server 8000
+
+# In another terminal, request only the response headers.
+curl -I http://localhost:8000/</code></pre>
+<h3>Windows PowerShell: request local headers</h3><pre><code class="language-powershell"># Start from a folder containing test files.
+python -m http.server 8000
+
+# In another PowerShell window, inspect the local response.
+Invoke-WebRequest -Uri http://localhost:8000/ -Method Head | Select-Object -ExpandProperty Headers</code></pre>
+<h3>Browser: inspect cookies safely</h3><ol><li>Open a local lesson demo at <code>http://localhost:8000</code>.</li><li>Open Developer Tools.</li><li>Find Application or Storage.</li><li>Look for Cookies, Local Storage, and Session Storage.</li><li>Record which items are persistent, which are script-readable, and which are sent automatically.</li></ol>
+<h3>Network example: cookie in request headers</h3><pre><code class="language-http">GET /account HTTP/1.1
+Host: localhost:8000
+Cookie: theme=dark; demo_session=localdemo</code></pre>
+<p>The browser sends matching cookies automatically. That automatic behavior is useful for sessions but is also why CSRF needs server-side intent checks.</p>
+<h3>Web example: safe cookie attributes</h3><pre><code class="language-http">Set-Cookie: __Host-session=RANDOM_VALUE; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=1800</code></pre>
+<p>This is a good educational pattern for a host-bound session cookie. In production, the value must be generated using a cryptographically secure random generator and stored or validated carefully.</p>
+<h3>Cloud example: session-aware edge architecture</h3><p>A cloud-hosted application may terminate TLS at a load balancer, forward requests to an application service, use a managed identity provider for login, store session metadata in a managed cache, and send logs to a SIEM. Each boundary needs clear responsibility.</p>
+</section>
+
+<section id="code-examples"><h2>9. Code Examples</h2>
+<h3>9.1 Safe localhost cookie demonstration in Python</h3><p>This toy server is for local learning only. It creates a fake session cookie and shows how a server can clear it. It does not implement real authentication.</p>
+<pre><code class="language-python">from http.server import BaseHTTPRequestHandler, HTTPServer
+from secrets import token_urlsafe
+
+HOST = "127.0.0.1"
+PORT = 8000
+
+class DemoHandler(BaseHTTPRequestHandler):
+    def send_html(self, body, extra_headers=None):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        if extra_headers:
+            for name, value in extra_headers:
+                self.send_header(name, value)
+        self.end_headers()
+        self.wfile.write(body.encode("utf-8"))
+
+    def do_GET(self):
+        if self.path == "/login-demo":
+            session_id = token_urlsafe(32)
+            cookie = (
+                f"__Host-demo_session={session_id}; "
+                "Path=/; HttpOnly; SameSite=Lax; Max-Age=1800"
+            )
+            self.send_html(
+                "&lt;h1&gt;Demo session created&lt;/h1&gt;"
+                "&lt;p&gt;Open browser developer tools and inspect cookies.&lt;/p&gt;",
+                [("Set-Cookie", cookie)]
+            )
+        elif self.path == "/logout-demo":
+            expired_cookie = "__Host-demo_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax"
+            self.send_html("&lt;h1&gt;Demo session cleared&lt;/h1&gt;", [("Set-Cookie", expired_cookie)])
+        else:
+            self.send_html(
+                "&lt;h1&gt;Local browser-security demo&lt;/h1&gt;"
+                "&lt;p&gt;Visit &lt;a href='/login-demo'&gt;/login-demo&lt;/a&gt; to set a demo cookie.&lt;/p&gt;"
+                "&lt;p&gt;Visit &lt;a href='/logout-demo'&gt;/logout-demo&lt;/a&gt; to clear it.&lt;/p&gt;"
+            )
+
+if __name__ == "__main__":
+    server = HTTPServer((HOST, PORT), DemoHandler)
+    print(f"Serving local demo at http://{HOST}:{PORT}")
+    server.serve_forever()</code></pre>
+<h3>Line-by-line explanation</h3><table><thead><tr><th>Line or block</th><th>What it does</th><th>Security note</th></tr></thead><tbody><tr><td><code>BaseHTTPRequestHandler</code>, <code>HTTPServer</code></td><td>Use Python's standard library to create a tiny local HTTP server.</td><td>No external package is needed.</td></tr><tr><td><code>token_urlsafe(32)</code></td><td>Generates a random URL-safe value.</td><td>Use cryptographically strong randomness for session identifiers.</td></tr><tr><td><code>Set-Cookie</code></td><td>Asks the browser to store a cookie.</td><td>Cookie attributes control transmission and access behavior.</td></tr><tr><td><code>HttpOnly</code></td><td>Prevents JavaScript access through <code>document.cookie</code>.</td><td>Reduces direct cookie theft from XSS.</td></tr><tr><td><code>SameSite=Lax</code></td><td>Restricts many cross-site cookie sends.</td><td>Helps reduce CSRF risk, but does not replace server-side CSRF checks.</td></tr><tr><td><code>Max-Age=0</code></td><td>Expires the cookie immediately.</td><td>Real logout must also invalidate server-side session state.</td></tr></tbody></table>
+<div class="callout warning"><strong>Localhost note:</strong> this demo omits <code>Secure</code> because it uses plain local HTTP. Production session cookies should use HTTPS and <code>Secure</code>. Some browsers treat localhost specially for development, but do not rely on development behavior as production policy.</div>
+<h3>9.2 Safe JavaScript browser-storage example</h3><pre><code class="language-html">&lt;button id="save-theme"&gt;Save demo theme&lt;/button&gt;
+&lt;script&gt;
+  const button = document.querySelector("#save-theme");
+  button.addEventListener("click", () =&gt; {
+    localStorage.setItem("demo_theme", "dark");
+    alert("Saved a harmless preference, not a session token.");
+  });
+&lt;/script&gt;</code></pre>
+<p>This example stores a harmless preference. Do not store session IDs, access tokens, password reset links, or sensitive personal data in JavaScript-readable storage unless a careful security design explicitly justifies it.</p>
+<h3>9.3 Common mistakes</h3><ul><li>Using predictable session IDs such as user IDs or timestamps.</li><li>Failing to rotate session IDs after login.</li><li>Thinking <code>HttpOnly</code> stops all XSS damage.</li><li>Putting long-lived access tokens in <code>localStorage</code> without understanding script exposure.</li><li>Logging full cookies or tokens.</li><li>Using CORS as if it were an authorization control.</li><li>Allowing state-changing actions through <code>GET</code>.</li></ul>
+</section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2>
+<h3>Common attacks</h3><ul><li><strong>Session hijacking:</strong> misuse of a stolen session identifier.</li><li><strong>Session fixation:</strong> keeping a pre-login session ID after login.</li><li><strong>CSRF:</strong> unwanted cross-site action using automatically sent cookies.</li><li><strong>XSS-assisted session abuse:</strong> malicious script performs actions or steals non-HttpOnly data.</li><li><strong>Token leakage:</strong> secrets exposed in URLs, logs, storage, browser extensions, or third-party scripts.</li><li><strong>Clickjacking:</strong> deceptive framing causes unintended clicks.</li><li><strong>Misconfigured CORS:</strong> sensitive browser-readable responses exposed to unintended origins.</li></ul>
+<h3>Common vulnerabilities</h3><ul><li>Weak randomness for session IDs.</li><li>Missing <code>Secure</code>, <code>HttpOnly</code>, or appropriate <code>SameSite</code>.</li><li>Overbroad <code>Domain</code> settings.</li><li>No server-side logout invalidation.</li><li>No idle or absolute timeout.</li><li>State-changing <code>GET</code> endpoints.</li><li>Missing CSRF tokens on cookie-authenticated state-changing requests.</li><li>Verbose logging of tokens or cookies.</li><li>Weak CSP or unsafe inline script allowances.</li></ul>
+<h3>Defensive strategies</h3><ol><li>Generate session IDs using a cryptographically secure random generator.</li><li>Rotate session IDs after login, privilege change, and account recovery.</li><li>Use <code>Secure</code>, <code>HttpOnly</code>, and suitable <code>SameSite</code>.</li><li>Prefer host-only session cookies for sensitive applications.</li><li>Set short enough idle and absolute timeouts for the risk level.</li><li>Invalidate server-side sessions on logout and credential reset.</li><li>Use anti-CSRF tokens and origin checks for sensitive state-changing actions.</li><li>Deploy CSP, SRI, HSTS, framing controls, and careful referrer policy.</li><li>Log session events without logging the secret values themselves.</li><li>Monitor unusual session behavior and provide user-visible session management.</li></ol>
+<h3>Detection methods</h3><ul><li>Multiple locations using the same session in implausible timing.</li><li>Session use after logout or password reset.</li><li>Repeated CSRF-token validation failures.</li><li>Sudden user-agent or device change for an active session.</li><li>High-value actions soon after suspicious login or session creation.</li><li>Unusual CORS errors or blocked CSP reports.</li></ul>
+<h3>Mitigation</h3><p>Immediate mitigation after suspected session compromise may include revoking sessions, forcing reauthentication, rotating secrets, reviewing logs, disabling risky integrations, tightening cookie attributes, and deploying emergency detection rules.</p>
+<h3>Best practices</h3><p>Use server-side session management for ordinary web sessions unless tokens are needed for a clear architectural reason. Keep session identifiers secret, short-lived, revocable, logged safely, and bound to server-side authorization decisions.</p>
+</section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><table><thead><tr><th>Sector</th><th>How this topic is used</th></tr></thead><tbody><tr><td>Banks</td><td>Protect online banking sessions, require step-up authentication for transfers, detect session anomalies, and prevent CSRF for money movement.</td></tr><tr><td>Governments</td><td>Protect citizen portals, tax systems, benefits platforms, and identity services with strict session expiration and auditability.</td></tr><tr><td>Cloud providers</td><td>Secure management consoles, API sessions, single sign-on, cross-origin controls, administrative actions, and tenant isolation.</td></tr><tr><td>Healthcare</td><td>Protect patient portals, clinical dashboards, and regulated data access with short sessions, audit logs, and privacy-aware storage.</td></tr><tr><td>Defense</td><td>Use strict session controls, device posture, step-up authentication, isolation, and monitoring for sensitive mission systems.</td></tr><tr><td>Universities</td><td>Protect student records, learning platforms, library systems, research portals, and single sign-on across many subdomains.</td></tr><tr><td>Large enterprises</td><td>Manage sessions across internal apps, SaaS integrations, identity providers, proxies, browser fleets, and security monitoring systems.</td></tr></tbody></table></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2><p>Current research and engineering work around sessions and browser security includes:</p><ul><li><strong>Browser isolation:</strong> separating sites, processes, documents, and sensitive contexts more strongly.</li><li><strong>Client-side integrity:</strong> improving assurance that JavaScript delivered to users has not changed unexpectedly.</li><li><strong>Privacy-preserving state:</strong> reducing cross-site tracking while preserving legitimate login and embedded-service use cases.</li><li><strong>Passkeys and phishing-resistant authentication:</strong> reducing dependence on passwords while preserving usable sessions.</li><li><strong>Agentic browsers:</strong> studying whether AI-driven browser agents can bypass assumptions built into same-origin policy and user-intent checks.</li><li><strong>Session anomaly detection:</strong> identifying compromised sessions using behavior, device, network, and timing signals without excessive false positives.</li><li><strong>Formal verification of browser policies:</strong> modeling policies such as SOP, CORS, CSP, and sandboxing to find edge-case failures.</li></ul><p>Open problems include balancing privacy with fraud detection, preventing token theft in complex single-page applications, making security headers easier to deploy correctly, and maintaining user experience while reducing session risk.</p></section>
+
+<section id="case-studies"><h2>13. Case Studies</h2>
+<h3>Case study 1: Session sidejacking over unencrypted networks</h3><p><strong>What happened:</strong> tools publicly demonstrated that unencrypted session cookies on shared Wi-Fi could be captured and reused. <strong>Root cause:</strong> sites protected login but did not consistently protect the whole session with HTTPS. <strong>Impact:</strong> users could lose account control even without password theft. <strong>Lesson:</strong> protect the entire session with HTTPS and <code>Secure</code> cookies, not only the login page.</p>
+<h3>Case study 2: CSRF against state-changing actions</h3><p><strong>What happened:</strong> many historical web applications allowed state-changing requests without proving user intent. <strong>Root cause:</strong> servers trusted the presence of a cookie as enough evidence. <strong>Impact:</strong> attackers could trick logged-in browsers into sending unintended requests. <strong>Lesson:</strong> cookie authentication needs CSRF defenses for state-changing operations.</p>
+<h3>Case study 3: Third-party script compromise and payment data theft</h3><p><strong>What happened:</strong> attackers have abused third-party or injected scripts on commerce pages to steal data entered in browsers. <strong>Root cause:</strong> client-side code had access to sensitive page context and was not sufficiently constrained or monitored. <strong>Impact:</strong> payment and personal data exposure. <strong>Lesson:</strong> browser security includes supply-chain thinking: minimize third-party script power, use CSP/SRI where suitable, monitor changes, and segment sensitive flows.</p>
+<h3>Case study 4: Overbroad subdomain cookie scope</h3><p><strong>What happened:</strong> organizations sometimes set cookies for a parent domain so many subdomains receive them. <strong>Root cause:</strong> convenience was prioritized over host isolation. <strong>Impact:</strong> a weaker or outsourced subdomain can increase cookie exposure risk. <strong>Lesson:</strong> use host-only or <code>__Host-</code> cookies for sensitive sessions when possible.</p>
+</section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><table><thead><tr><th>Misconception</th><th>Why it is incorrect</th></tr></thead><tbody><tr><td>“HTTPS means the session is secure.”</td><td>HTTPS protects transport, but session logic, cookie attributes, storage, CSRF defenses, and authorization can still fail.</td></tr><tr><td>“A cookie is always dangerous.”</td><td>Cookies are normal web state tools. Risk depends on contents, attributes, lifecycle, and server behavior.</td></tr><tr><td>“HttpOnly stops XSS.”</td><td>HttpOnly blocks script access to the cookie, but XSS can still run actions in the user's browser context.</td></tr><tr><td>“SameSite fully prevents CSRF.”</td><td>SameSite helps, but applications still need correct methods, CSRF tokens, origin checks, and sensitive-action protections.</td></tr><tr><td>“CORS protects APIs from attackers.”</td><td>CORS controls browser read access. APIs still need authentication, authorization, validation, and rate limiting.</td></tr><tr><td>“localStorage is safer than cookies.”</td><td>localStorage is readable by JavaScript on the origin, so XSS can expose stored values.</td></tr><tr><td>“Logout means the cookie disappeared.”</td><td>Secure logout requires server-side invalidation; cookie clearing alone is incomplete.</td></tr><tr><td>“Long sessions are always bad.”</td><td>Risk depends on sensitivity, device trust, monitoring, step-up authentication, and revocation. Some systems require balanced usability.</td></tr></tbody></table></section>
+
+<section id="summary"><h2>15. Summary</h2><p>Sessions let stateless HTTP support login-based applications. Cookies are the browser mechanism often used to carry session identifiers. Browser security controls such as same-origin policy, CORS, CSP, SRI, HSTS, and cookie attributes reduce specific risks, but none of them replace secure server-side design. Strong session security requires unpredictable identifiers, secure transport, careful cookie attributes, session rotation, expiration, revocation, CSRF protections, safe storage, safe logging, and monitoring.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl>
+<dt>Absolute timeout</dt><dd>Maximum total session lifetime regardless of activity.</dd>
+<dt>Anti-CSRF token</dt><dd>A server-generated value used to verify that a state-changing request was intentionally made through the legitimate application flow.</dd>
+<dt>Browser storage</dt><dd>Storage mechanisms available in browsers, including cookies, localStorage, sessionStorage, IndexedDB, and caches.</dd>
+<dt>Content Security Policy</dt><dd>A browser-enforced policy that restricts which resources a page may load and execute.</dd>
+<dt>Cookie</dt><dd>A small browser-stored name-value item sent with matching HTTP requests.</dd>
+<dt>Cookie jar</dt><dd>The browser's internal store of cookies and their attributes.</dd>
+<dt>Cross-Origin Resource Sharing</dt><dd>A browser mechanism that allows servers to declare which origins may read cross-origin responses.</dd>
+<dt>Cross-site request forgery</dt><dd>An attack pattern where a browser is tricked into sending an unwanted request to a site where the user is already authenticated.</dd>
+<dt>HttpOnly</dt><dd>A cookie attribute that prevents JavaScript access through document.cookie.</dd>
+<dt>Idle timeout</dt><dd>A session expiration rule based on inactivity.</dd>
+<dt>Same-origin policy</dt><dd>A browser security boundary restricting how one origin can interact with another origin's data.</dd>
+<dt>SameSite</dt><dd>A cookie attribute controlling whether a cookie is sent in cross-site contexts.</dd>
+<dt>Secure cookie</dt><dd>A cookie marked to be sent only over HTTPS, subject to browser-specific development exceptions.</dd>
+<dt>Session</dt><dd>Application state representing a continuing interaction between a client and an application.</dd>
+<dt>Session fixation</dt><dd>A weakness where a pre-login session identifier remains valid after authentication.</dd>
+<dt>Session hijacking</dt><dd>Misuse of a stolen or exposed session identifier.</dd>
+<dt>Session identifier</dt><dd>A random value used to refer to session state.</dd>
+<dt>Subresource Integrity</dt><dd>A browser feature that checks loaded external resources against a declared cryptographic hash.</dd>
+</dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2>
+<h3>20 MCQs</h3><ol>
+<li class="quiz-question">Why do web applications need sessions? <details><summary>Answer</summary>Because HTTP requests are mostly independent, but applications need to remember login and interaction state.</details></li>
+<li class="quiz-question">Which response header sets a cookie? <details><summary>Answer</summary><code>Set-Cookie</code>.</details></li>
+<li class="quiz-question">Which request header sends cookies back to the server? <details><summary>Answer</summary><code>Cookie</code>.</details></li>
+<li class="quiz-question">What does <code>HttpOnly</code> reduce? <details><summary>Answer</summary>JavaScript access to the cookie through <code>document.cookie</code>.</details></li>
+<li class="quiz-question">What does <code>Secure</code> mean for a cookie? <details><summary>Answer</summary>The cookie should be sent only over HTTPS, with browser-specific localhost development behavior.</details></li>
+<li class="quiz-question">Which cookie attribute helps reduce CSRF risk? <details><summary>Answer</summary><code>SameSite</code>.</details></li>
+<li class="quiz-question">Does CORS replace authorization? <details><summary>Answer</summary>No. CORS controls browser read behavior; server authorization is still required.</details></li>
+<li class="quiz-question">What is a session ID like in the badge analogy? <details><summary>Answer</summary>A temporary badge that points to server-side state.</details></li>
+<li class="quiz-question">Why rotate a session ID after login? <details><summary>Answer</summary>To reduce session fixation risk.</details></li>
+<li class="quiz-question">What is an idle timeout? <details><summary>Answer</summary>Expiration after a period of inactivity.</details></li>
+<li class="quiz-question">What is an absolute timeout? <details><summary>Answer</summary>Maximum session lifetime regardless of activity.</details></li>
+<li class="quiz-question">Why should full session IDs not be logged? <details><summary>Answer</summary>Logs could become a source of session theft.</details></li>
+<li class="quiz-question">What does CSP restrict? <details><summary>Answer</summary>Resources and actions the browser allows for a page, such as script sources.</details></li>
+<li class="quiz-question">What does SRI verify? <details><summary>Answer</summary>That an external resource matches an expected cryptographic hash.</details></li>
+<li class="quiz-question">Can XSS still be harmful with HttpOnly cookies? <details><summary>Answer</summary>Yes. The script may still perform actions in the user's browser context.</details></li>
+<li class="quiz-question">Why is <code>GET</code> poor for state-changing actions? <details><summary>Answer</summary>GET requests can be triggered, cached, prefetched, and linked; state change should require intentional protected methods.</details></li>
+<li class="quiz-question">What is the same-origin policy? <details><summary>Answer</summary>A browser boundary restricting interactions between different origins.</details></li>
+<li class="quiz-question">Which is generally safer for sensitive session cookies: host-only or broad parent-domain cookies? <details><summary>Answer</summary>Host-only cookies.</details></li>
+<li class="quiz-question">What does HSTS help enforce? <details><summary>Answer</summary>Future HTTPS use for a site.</details></li>
+<li class="quiz-question">What is the best beginner rule for session identifiers? <details><summary>Answer</summary>Treat them like temporary credentials.</details></li>
+</ol>
+<h3>10 short questions</h3><ol><li>Define session in your own words.</li><li>Explain the difference between <code>Set-Cookie</code> and <code>Cookie</code>.</li><li>Why is SameSite not the same as same-origin?</li><li>Why is logout more than deleting a cookie?</li><li>What is session fixation?</li><li>Name three cookie attributes used for security.</li><li>Why is localStorage risky for tokens?</li><li>How can CSP reduce XSS impact?</li><li>What is the purpose of an anti-CSRF token?</li><li>Why should applications avoid logging tokens?</li></ol>
+<h3>5 long questions</h3><ol><li>Design a session lifecycle for a fictional university portal, including login, timeout, reauthentication, logout, and revocation.</li><li>Compare server-side sessions and self-contained client-side tokens for a healthcare portal.</li><li>Explain how CSRF works and propose layered defenses.</li><li>Explain how XSS interacts with cookies, browser storage, and CSP.</li><li>Write a cookie policy for a banking application and justify each attribute.</li></ol>
+<h3>Scenario-based questions</h3><ol><li>A portal stores an access token in localStorage for 30 days. Identify risks and safer alternatives.</li><li>A site uses <code>SameSite=None</code> for all cookies. What questions would you ask before approving this?</li><li>A logout button only removes the cookie in JavaScript. What is missing?</li><li>A browser console shows CSP violations. What evidence should be collected?</li><li>A user reports being logged out often. How would you balance usability and security?</li></ol>
+<h3>Interview questions</h3><ol><li>Explain cookies to a non-technical manager.</li><li>What is the difference between authentication, authorization, and session management?</li><li>How would you test cookie flags safely in an authorized assessment?</li><li>Why does CSRF exist if same-origin policy exists?</li><li>What headers would you review on a sensitive web app?</li></ol>
+<h3>Critical thinking questions</h3><ol><li>When might a long session lifetime be justified?</li><li>How can privacy protections conflict with fraud detection?</li><li>Why is browser security partly a supply-chain problem?</li><li>Can a strong CSP hide insecure application design?</li><li>What evidence would convince you a session was compromised?</li></ol>
+<h3>Research questions</h3><ol><li>How are browsers changing third-party cookie behavior and what does that mean for authentication?</li><li>How can agentic browsers preserve user intent and same-origin boundaries?</li><li>What is the future of client-side integrity for web applications?</li><li>How effective are anomaly-based session detection systems in practice?</li><li>How can web applications reduce token exposure in single-page architectures?</li></ol>
+</section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2>
+<h3>Title</h3><p>Safe Local Cookie and Browser-Security Review</p>
+<h3>Prerequisites</h3><ul><li>Python 3 installed.</li><li>A modern browser with Developer Tools.</li><li>Terminal or PowerShell.</li><li>No internet-facing target is required.</li></ul>
+<h3>Objectives</h3><ul><li>Run a localhost-only server.</li><li>Inspect <code>Set-Cookie</code> and <code>Cookie</code> headers.</li><li>Observe which values appear in browser cookie storage.</li><li>Explain why <code>HttpOnly</code>, <code>SameSite</code>, and <code>Secure</code> matter.</li><li>Create a defensive session review checklist.</li></ul>
+<h3>Steps</h3><ol><li>Create a folder named <code>session-lab</code>.</li><li>Copy the Python demo from Section 9.1 into <code>demo_server.py</code>.</li><li>Run <code>python3 demo_server.py</code> on Linux/macOS or <code>python demo_server.py</code> on Windows.</li><li>Open <code>http://127.0.0.1:8000/login-demo</code>.</li><li>Use Developer Tools to inspect the cookie name, value visibility, expiration, path, and SameSite behavior.</li><li>Use <code>curl -i http://127.0.0.1:8000/login-demo</code> or PowerShell's <code>Invoke-WebRequest</code> to inspect the response headers.</li><li>Visit <code>/logout-demo</code> and verify that the cookie is cleared.</li><li>Write a one-page review explaining which production changes would be required before using this pattern in a real system.</li></ol>
+<h3>Expected outcomes</h3><ul><li>You can explain the difference between response-set cookies and request-sent cookies.</li><li>You can identify secure cookie attributes.</li><li>You can explain why local demos differ from production HTTPS deployments.</li><li>You can write a basic session-security checklist.</li></ul>
+<h3>Safety rules</h3><ul><li>Use only localhost.</li><li>Do not copy real cookies from any account.</li><li>Do not test third-party sites.</li><li>Do not capture other users' traffic.</li><li>Do not store or share real session identifiers.</li></ul>
+</section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies">MDN: Using HTTP cookies</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie">MDN: Set-Cookie header</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP: Session Management Cheat Sheet</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html">OWASP: CSRF Prevention Cheat Sheet</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy">MDN: Same-origin policy</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP">MDN: Content Security Policy</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html">OWASP: Content Security Policy Cheat Sheet</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Subresource_Integrity">MDN: Subresource Integrity</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6265">RFC 6265: HTTP State Management Mechanism</a></li>
+<li>Research topics: browser isolation, third-party cookie deprecation, token storage in single-page applications, client-side integrity transparency, CSP usability, and agentic browser security.</li>
+</ul></section>
+
+<div class="prev-next"><a class="btn" href="web-applications-from-first-principles.html">← Lesson 6.1</a><a class="btn" href="index.html">Week 6 Overview</a><a class="btn btn-primary" href="injection-xss-and-secure-output.html">Next: Lesson 6.3 →</a></div>
+</article><aside class="toc card"><h2 class="no-toc">On this page</h2><ol id="tocList"></ol></aside></div></div></main></div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

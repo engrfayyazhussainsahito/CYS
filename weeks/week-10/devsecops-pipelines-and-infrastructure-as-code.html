@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 10.4: DevSecOps Pipelines and Infrastructure as Code | MS Cybersecurity</title>
+  <meta name="description" content="DevSecOps pipelines and Infrastructure as Code from first principles: CI/CD, runners, release gates, secrets, IaC, Terraform-style plans, policy as code, drift, provenance, and safe labs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-10-04" data-title="Lesson 10.4: DevSecOps Pipelines and Infrastructure as Code">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main"><div class="page-wrap"><div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 10</a> / Lesson 10.4</div>
+<header class="hero"><div class="eyebrow">Week 10 · Cloud, Containers, and DevSecOps</div><h1>Lesson 10.4: DevSecOps Pipelines and Infrastructure as Code</h1><p class="lead">DevSecOps is not a slogan and Infrastructure as Code is not automatically secure. This lesson starts from zero, explains how software moves from an idea to production, then shows how security controls can be built into the pipeline so cloud infrastructure changes become reviewable, repeatable, auditable, and reversible.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>650–950 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div><div class="meta-item"><strong>Required background</strong>Weeks 0–9 and Lessons 10.1–10.3 recommended; key ideas are reintroduced</div><div class="meta-item"><strong>Practice time</strong>8–14 hours</div></div><div class="toolbar"><button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button><button id="completeBtn" class="complete-btn" type="button">Mark complete</button><button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button><button class="pdf-btn print-page" type="button">Download lesson as PDF</button><button class="theme-toggle" type="button">Toggle dark mode</button></div></header>
+
+<section class="lesson-visual card"><div class="visual-graphic" aria-label="DevSecOps pipeline and Infrastructure as Code security illustration"><svg viewBox="0 0 1120 620" role="img" aria-labelledby="devsecops-title devsecops-desc"><title id="devsecops-title">DevSecOps and IaC security pipeline</title><desc id="devsecops-desc">A pipeline shows code, commit, test, scan, plan, policy, approval, deploy, monitor, and rollback.</desc><defs><linearGradient id="g104" x1="0" x2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#22c55e"/></linearGradient></defs><rect x="20" y="20" width="1080" height="580" rx="30" fill="url(#g104)" opacity="0.14"/><g fill="none" stroke="currentColor" stroke-width="3"><rect x="70" y="90" width="150" height="80" rx="18"/><rect x="260" y="90" width="150" height="80" rx="18"/><rect x="450" y="90" width="150" height="80" rx="18"/><rect x="640" y="90" width="150" height="80" rx="18"/><rect x="830" y="90" width="150" height="80" rx="18"/><path d="M220 130 H260 M410 130 H450 M600 130 H640 M790 130 H830"/><rect x="140" y="285" width="220" height="95" rx="18"/><rect x="450" y="285" width="220" height="95" rx="18"/><rect x="760" y="285" width="220" height="95" rx="18"/><path d="M360 332 H450 M670 332 H760"/><path d="M905 170 V285"/><path d="M250 380 V500 H870 V380"/></g><g font-family="system-ui, sans-serif" font-size="28" font-weight="700"><text x="103" y="140">Commit</text><text x="296" y="140">Test</text><text x="486" y="140">Scan</text><text x="678" y="140">Plan</text><text x="857" y="140">Policy</text><text x="181" y="343">Approve</text><text x="503" y="343">Deploy</text><text x="807" y="343">Monitor</text><text x="456" y="535">Evidence · Rollback · Continuous Improvement</text></g></svg></div><div><h2>Learning path</h2><p>First, understand ordinary software delivery. Then add security feedback before changes reach production. Finally, make infrastructure changes traceable through code, review, policy, evidence, deployment, monitoring, and rollback.</p><div class="pill-row"><span class="pill">CI/CD</span><span class="pill">IaC</span><span class="pill">Policy as Code</span><span class="pill">Release Gates</span><span class="pill">Provenance</span><span class="pill">Drift</span></div></div></section>
+
+<div class="content-grid"><article class="lesson-content card article">
+<section id="introduction"><h2>1. Introduction</h2><p>Modern cloud systems change quickly. Developers commit code. Automated systems test it. Build systems create artifacts. Deployment systems push those artifacts into environments. Infrastructure teams define networks, storage, identities, databases, and permissions as configuration files. This speed is useful, but it creates a security problem: a single bad change can be copied into production faster than a human can manually inspect every detail.</p><p><strong>DevSecOps</strong> means integrating security into development and operations instead of treating it as a final gate after everything is built. The term combines development, security, and operations. The important idea is not the name. The important idea is feedback: security checks should happen early, repeatedly, automatically where possible, and with human review where judgment is needed.</p><p><strong>Infrastructure as Code</strong>, often shortened to <strong>IaC</strong>, means infrastructure is described in machine-readable files. Instead of manually clicking through a cloud console to create a network, storage bucket, firewall rule, or identity role, the team writes configuration and lets a tool create or update the infrastructure. IaC matters because it makes infrastructure reviewable, version-controlled, repeatable, testable, and auditable.</p><p>This topic exists because cloud infrastructure is now software-like. Banks use pipelines to deploy transaction systems. Governments use controlled release workflows for citizen services. Cloud providers use automation at massive scale. Healthcare organizations use change records for compliance and safety. Defense organizations need controlled promotion and evidence. Universities use pipelines to maintain learning platforms, identity systems, and research computing environments.</p><div class="callout"><strong>Core warning:</strong> automation does not automatically create security. It can also automate mistakes. DevSecOps is useful only when the pipeline itself is trustworthy.</div></section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ol><li>Define DevSecOps, CI, CD, pipeline, runner, artifact, release gate, IaC, plan, apply, policy as code, drift, provenance, attestation, and rollback.</li><li>Explain how a change moves from source code to production.</li><li>Identify security risks in source repositories, CI/CD workflows, runners, secrets, artifacts, deployment identities, and IaC files.</li><li>Design a beginner-safe DevSecOps pipeline with tests, scans, policy checks, approvals, evidence, monitoring, and rollback.</li><li>Compare manual infrastructure changes with Infrastructure as Code.</li><li>Review Terraform-style configuration for public storage, wildcard permissions, missing encryption, and unsafe automation.</li><li>Explain the difference between preventive, detective, and corrective pipeline controls.</li><li>Use a local Python script to review training IaC and workflow files without touching real cloud systems.</li></ol></section>
+
+<section id="prerequisites"><h2>3. Prerequisites</h2><p>You need six ideas. First, <strong>source code</strong> is human-written instructions for software. Second, <strong>Git</strong> records changes to files. Third, <strong>cloud infrastructure</strong> includes compute, storage, networks, identities, keys, logs, and managed services. Fourth, <strong>identity and authorization</strong> decide who or what can perform actions. Fifth, <strong>testing</strong> checks whether software behaves as expected. Sixth, <strong>logging</strong> provides evidence after actions happen.</p><p>If those ideas are new, use this analogy. A pipeline is like a factory line. Source code is the design. Tests are quality checks. Scanners are safety inspections. A release gate is the supervisor's approval point. IaC is the blueprint for the building itself. Monitoring is the security camera. Rollback is the emergency plan for returning to a safe state.</p></section>
+
+<section id="core-concepts"><h2>4. Core Concepts</h2><h3>4.1 From DevOps to DevSecOps</h3><p><strong>DevOps</strong> tries to reduce the gap between building software and operating it. <strong>DevSecOps</strong> adds security into that same flow. Security should not appear only as a late audit. Late security feedback is expensive, slow, and often ignored under release pressure.</p><p>The goal is not to replace security professionals. The goal is to make good security practices part of normal engineering work: secure defaults, automated checks, clear ownership, fast feedback, evidence, and continuous improvement.</p><h3>4.2 CI/CD from first principles</h3><p><strong>Continuous Integration</strong>, or <strong>CI</strong>, means code changes are integrated frequently and checked automatically. A CI system may run unit tests, linting, dependency scanning, secret scanning, build steps, and artifact creation.</p><p><strong>Continuous Delivery</strong> means validated changes are kept ready for release, usually requiring a human approval before production. <strong>Continuous Deployment</strong> means validated changes are automatically deployed to production. Continuous deployment is powerful but risky for high-impact systems unless controls are very mature.</p><h3>4.3 Pipeline, job, step, and runner</h3><p>A <strong>pipeline</strong> is a sequence of automated work. A <strong>job</strong> is one group of pipeline tasks. A <strong>step</strong> is one command or action inside a job. A <strong>runner</strong> is the machine or container that executes the job. Runners are security-sensitive because they may receive source code, credentials, build artifacts, and deployment permissions.</p><h3>4.4 Trust boundaries in a pipeline</h3><p>A trust boundary is a place where control changes. Examples: developer laptop to source repository, source repository to CI runner, CI runner to artifact registry, registry to production deployment, deployment system to cloud control plane. Each boundary needs authentication, authorization, logging, and integrity checks.</p><h3>4.5 Artifacts, provenance, and attestations</h3><p>An <strong>artifact</strong> is an output of a build, such as a container image, binary, package, or deployment bundle. <strong>Provenance</strong> is evidence about how that artifact was produced. An <strong>attestation</strong> is a signed statement about some property of the artifact, such as which source commit and build system created it. These help answer: "Is this the artifact we intended to ship?"</p><p>They do not prove the application is vulnerability-free. They strengthen integrity and traceability.</p><h3>4.6 Release gates</h3><p>A <strong>release gate</strong> is a control point before a change moves to another environment. A gate can be automatic, manual, or mixed. Examples include passing unit tests, no high-severity unreviewed dependency findings, clean secret scan, reviewed Terraform plan, signed artifact, approved change ticket, and rollback plan.</p><h3>4.7 Infrastructure as Code</h3><p>IaC describes infrastructure using files. Common IaC tools include Terraform-style declarative configuration, cloud-native templates, Kubernetes manifests, and configuration-management tools. A declarative file says what the desired state should be. The tool compares desired state with actual state and creates, changes, or deletes resources.</p><p>IaC improves security when it is reviewed, scanned, tested, and governed. It increases risk when teams copy untrusted modules, commit secrets, use wildcard permissions, skip reviews, or auto-apply changes without understanding impact.</p><h3>4.8 Plan and apply</h3><p>A <strong>plan</strong> previews intended infrastructure changes. An <strong>apply</strong> executes them. For production, a safer workflow usually requires a reviewed plan before apply. Auto-approval may be acceptable in tightly controlled low-risk environments, but it is dangerous as a blanket default.</p><h3>4.9 Policy as code</h3><p><strong>Policy as code</strong> expresses rules in files that machines can evaluate. A policy might reject public storage, privileged containers, wildcard administrator policies, missing encryption, or missing tags. Policy as code is useful because the rules can be version-controlled, tested, reviewed, and applied consistently.</p><h3>4.10 Secrets in pipelines</h3><p>A <strong>secret</strong> is sensitive material such as an API key, token, password, private key, or cloud credential. Pipelines need secrets to deploy, but secrets must be scoped, rotated, logged carefully, and protected from untrusted code. Pull requests from untrusted sources should not receive powerful production secrets.</p><h3>4.11 Deployment identities</h3><p>A deployment identity is the user, service account, role, or workload identity used by the pipeline to change infrastructure. It should have least privilege. One global administrator key for all deployments is a major failure point.</p><h3>4.12 Drift</h3><p><strong>Drift</strong> is the difference between intended configuration and actual deployed state. Drift can happen when someone manually changes cloud settings, emergency fixes bypass IaC, resources are edited by another tool, or deployment fails halfway. Drift matters because documentation and reality disagree.</p><h3>4.13 Environments and promotion</h3><p>Common environments include development, testing, staging, and production. <strong>Promotion</strong> moves a change through these environments. The point is to catch problems before production. Production should have stricter permissions, approvals, logging, and rollback requirements than development.</p><h3>4.14 Rollback and recovery</h3><p>Rollback means returning to a known-good version or configuration. Not every infrastructure change is safely reversible. Deleting a database, changing identity policies, or rotating keys can have irreversible effects unless backups and recovery plans exist.</p></section>
+
+<section id="visual-learning"><h2>5. Visual Learning</h2><h3>5.1 DevSecOps pipeline</h3><pre class="mermaid"><code>flowchart LR
+  A[Developer commits change] --> B[Pull request]
+  B --> C[Unit and integration tests]
+  C --> D[Secret and dependency scans]
+  D --> E[IaC format, validate, and plan]
+  E --> F[Policy as code]
+  F --> G{Release gate}
+  G -- pass --> H[Build and sign artifact]
+  G -- fail --> R[Fix and resubmit]
+  H --> I[Deploy to staging]
+  I --> J[Manual approval for production]
+  J --> K[Deploy production]
+  K --> L[Monitor and rollback if needed]</code></pre><h3>5.2 CI/CD trust boundaries</h3><pre class="mermaid"><code>sequenceDiagram
+  participant Dev as Developer
+  participant Repo as Source Repository
+  participant Runner as CI/CD Runner
+  participant Registry as Artifact Registry
+  participant Cloud as Cloud Control Plane
+  participant Prod as Production
+  Dev->>Repo: Submit reviewed change
+  Repo->>Runner: Trigger job with scoped token
+  Runner->>Runner: Test, scan, build, sign
+  Runner->>Registry: Push artifact with provenance
+  Runner->>Cloud: Submit IaC plan or deployment request
+  Cloud->>Prod: Apply approved change
+  Prod-->>Runner: Logs and deployment status</code></pre><h3>5.3 IaC change decision tree</h3><pre class="mermaid"><code>flowchart TD
+  Start[Review IaC change] --> A{Plan available?}
+  A -- No --> Stop1[Do not approve]
+  A -- Yes --> B{Public exposure changed?}
+  B -- Yes --> C{Business owner and exception?}
+  C -- No --> Stop2[Reject or redesign]
+  C -- Yes --> D[Add compensating controls]
+  B -- No --> E{IAM expanded?}
+  D --> E
+  E -- Yes --> F{Least privilege justified?}
+  F -- No --> Stop3[Reduce permissions]
+  F -- Yes --> G{Monitoring and rollback ready?}
+  E -- No --> G
+  G -- No --> Stop4[Prepare evidence]
+  G -- Yes --> Approve[Approve promotion]</code></pre><h3>5.4 Pipeline control architecture</h3><pre class="mermaid"><code>flowchart TB
+  subgraph Source
+    Git[Git repository]
+    Review[Peer review]
+    Branch[Protected branch]
+  end
+  subgraph Build
+    Runner[Ephemeral runner]
+    Tests[Tests]
+    Scans[Secrets, SCA, SAST, IaC scan]
+    Artifact[Signed artifact]
+  end
+  subgraph Deploy
+    Plan[IaC plan]
+    Policy[Policy as code]
+    Gate[Release gate]
+    Prod[Production]
+  end
+  subgraph Observe
+    Logs[Audit logs]
+    Metrics[Metrics]
+    Alerts[Alerts]
+    Rollback[Rollback plan]
+  end
+  Git --> Review --> Branch --> Runner
+  Runner --> Tests --> Scans --> Artifact --> Plan --> Policy --> Gate --> Prod
+  Prod --> Logs --> Alerts
+  Prod --> Metrics
+  Alerts --> Rollback</code></pre><h3>5.5 Timeline</h3><pre class="mermaid"><code>timeline
+  title Secure Change Timeline
+  Idea : Security requirement considered
+  Commit : Code and IaC reviewed
+  Pipeline : Tests and scans run
+  Plan : Infrastructure impact previewed
+  Gate : Evidence and approval checked
+  Deploy : Scoped identity applies change
+  Monitor : Logs and alerts verify behavior
+  Improve : Findings feed next iteration</code></pre></section>
+
+<section id="mind-maps"><h2>6. Mind Maps</h2><pre class="mermaid"><code>mindmap
+  root((DevSecOps and IaC))
+    Pipeline
+      CI
+      CD
+      Runner
+      Artifact
+      Release gate
+    Security Controls
+      Secret scan
+      Dependency scan
+      SAST
+      IaC scan
+      Policy as code
+      Signed artifacts
+    Infrastructure as Code
+      Plan
+      Apply
+      Modules
+      State
+      Drift
+    Governance
+      Approval
+      Evidence
+      Exception
+      Least privilege
+      Rollback
+    Operations
+      Monitoring
+      Logs
+      Alerts
+      Incident response</code></pre></section>
+
+<section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2><p>DevSecOps decisions often use simple measurement. The mathematics is not advanced, but it forces clarity.</p><h3>7.1 Pipeline pass rate</h3><p>If 80 out of 100 pipeline runs pass, the pass rate is 80 / 100 = 0.80 = 80%. A low pass rate may mean poor test quality, unstable dependencies, flaky environments, or unclear requirements.</p><h3>7.2 Change failure rate</h3><p>If 6 out of 50 production deployments require rollback or urgent fixes, the change failure rate is 6 / 50 = 12%. This matters because frequent unsafe deployments reduce trust in automation.</p><h3>7.3 Mean time to recovery</h3><p>If three incidents take 30, 60, and 90 minutes to recover, the mean time to recovery is (30 + 60 + 90) / 3 = 60 minutes. Better rollback design should reduce this value.</p><h3>7.4 Simple release risk score</h3><p>A beginner score can use:</p><pre><code>release risk = impact × likelihood × exposure × reversibility factor</code></pre><p>Example: impact = 5, likelihood = 3, exposure = 4, reversibility factor = 2 gives 5 × 3 × 4 × 2 = 120. The score is not universal truth. It is a decision aid for comparing changes.</p></section>
+
+<section id="practical-examples"><h2>8. Practical Examples</h2><h3>8.1 Linux examples</h3><pre><code class="language-bash"># Local-only Linux examples. These commands create and review training files.
+mkdir devsecops-iac-lab
+cd devsecops-iac-lab
+
+# Save the workflow and Terraform examples from this lesson.
+# Then run the local review script.
+python3 iac_review.py
+
+# Optional local checks if tools are installed.
+terraform fmt -check -recursive
+terraform validate
+
+# Git evidence for review.
+git init
+git status
+git diff -- risky-storage.tf safer-storage.tf</code></pre><h3>8.2 Windows examples</h3><pre><code class="language-powershell"># Local-only PowerShell examples. These do not access a cloud account.
+New-Item -ItemType Directory -Path devsecops-iac-lab
+Set-Location devsecops-iac-lab
+
+# Save the example files from this lesson, then run:
+python .\\iac_review.py
+
+# Optional local checks if Terraform is installed.
+terraform fmt -check -recursive
+terraform validate
+
+git init
+git status
+git diff -- risky-storage.tf safer-storage.tf</code></pre><h3>8.3 Python defensive automation</h3><p>The following script reviews local training files for beginner pipeline and IaC risks. It does not connect to any service.</p><pre><code class="language-python"># iac_review.py
+# Purpose: perform a beginner static review of local CI/CD and IaC files.
+# Safety: this script reads local files only. It does not contact GitHub, a cloud
+# provider, Terraform Cloud, a registry, or any network target.
+
+from pathlib import Path
+import re
+
+CHECKS = [
+    (&quot;workflow uses broad write-all permissions&quot;, r&quot;permissions:\s*write-all&quot;),
+    (&quot;workflow pulls a shell script directly into bash&quot;, r&quot;curl\s+[^\n|]+\|\s*bash&quot;),
+    (&quot;workflow runs auto-approved infrastructure change&quot;, r&quot;terraform\s+apply\s+.*-auto-approve&quot;),
+    (&quot;action reference is not pinned to a version-like tag&quot;, r&quot;uses:\s*[^\s]+@(main|master)&quot;),
+    (&quot;possible secret written to file&quot;, r&quot;(SECRET|TOKEN|KEY|PASSWORD)\s*=&quot;),
+    (&quot;public storage protection disabled&quot;, r&quot;block_public_(acls|policy)\s*=\s*false&quot;),
+    (&quot;wildcard IAM action and resource&quot;, r&quot;Action\s*=\s*\&quot;\*\&quot;.*Resource\s*=\s*\&quot;\*\&quot;&quot;),
+]
+
+for path in sorted(Path(&#x27;.&#x27;).glob(&#x27;**/*&#x27;)):
+    if path.is_dir() or path.suffix not in {&#x27;.yml&#x27;, &#x27;.yaml&#x27;, &#x27;.tf&#x27;}:
+        continue
+
+    text = path.read_text(encoding=&#x27;utf-8&#x27;, errors=&#x27;replace&#x27;)
+    findings = []
+
+    for label, pattern in CHECKS:
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+            findings.append(label)
+
+    if findings:
+        print(f&quot;\n{path}&quot;)
+        for finding in findings:
+            print(f&quot; - {finding}&quot;)</code></pre><h3>8.4 Network example</h3><p>A deployment pipeline should not have unrestricted network access. A safer design limits the runner to required repositories, registries, package mirrors, and cloud APIs. Logs should record outbound destinations used during builds.</p><h3>8.5 Web example</h3><p>A web application pipeline might run unit tests, dependency scanning, SAST, API contract checks, DAST against a staging URL, security-header checks, and then require approval before production deployment.</p><h3>8.6 Cloud example</h3><p>A cloud IaC workflow should produce a plan, check public exposure, check encryption, check IAM privilege expansion, require approval for production, apply with a scoped deployment role, then verify logs and alerts.</p></section>
+
+<section id="code-examples"><h2>9. Code Examples</h2><h3>9.1 Risky workflow for review</h3><pre><code class="language-yaml"># unsafe-demo.yml
+# This workflow is intentionally risky and is for review only.
+# Do not use it in a real repository.
+name: unsafe-demo
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@main
+      - run: echo &quot;DEPLOY_KEY=example-secret&quot; &gt;&gt; .env
+      - run: curl https://example.invalid/install.sh | bash
+      - run: terraform apply -auto-approve</code></pre><p>Line-by-line concerns: <code>on: [push]</code> runs for every push. <code>permissions: write-all</code> is too broad. <code>checkout@main</code> follows a moving branch. Writing a key-like value into <code>.env</code> risks leakage. Piping downloaded content into <code>bash</code> trusts remote code without review. <code>terraform apply -auto-approve</code> can change infrastructure without human review.</p><h3>9.2 Safer workflow pattern</h3><pre><code class="language-yaml"># safer-demo.yml
+# Purpose: demonstrate safer CI/CD structure for a training repository.
+# Safety: this example uses placeholder domains and a plan-only Terraform command.
+name: safer-demo
+
+on:
+  pull_request:
+    branches: [&quot;main&quot;]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository at the reviewed commit
+        uses: actions/checkout@v4
+
+      - name: Set up Python for local validation scripts
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Validate Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Create a Terraform plan only
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan</code></pre><p>This example uses pull requests, narrower permissions, specific action versions, tests, formatting checks, a plan-only Terraform step, and an uploaded review artifact. It still needs real-world additions such as pinned action digests where appropriate, secret handling, environment protection, artifact signing, and deployment approvals.</p><h3>9.3 Risky Terraform-style example</h3><pre><code class="language-hcl"># risky-storage.tf
+# Intentionally risky example for review only.
+resource &quot;aws_s3_bucket&quot; &quot;training&quot; {
+  bucket = &quot;northbridge-public-training-data&quot;
+}
+
+resource &quot;aws_s3_bucket_public_access_block&quot; &quot;training&quot; {
+  bucket                  = aws_s3_bucket.training.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource &quot;aws_iam_policy&quot; &quot;too_broad&quot; {
+  name = &quot;training-too-broad&quot;
+  policy = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [{
+      Effect   = &quot;Allow&quot;
+      Action   = &quot;*&quot;
+      Resource = &quot;*&quot;
+    }]
+  })
+}</code></pre><p>The storage public-access controls are disabled, and the IAM policy grants all actions on all resources. This is a training example of excessive exposure and excessive privilege.</p><h3>9.4 Safer Terraform-style pattern</h3><pre><code class="language-hcl"># safer-storage.tf
+# Safer pattern for a fictional training bucket.
+# This file is not meant to be applied to a real cloud account in this course.
+resource &quot;aws_s3_bucket&quot; &quot;training&quot; {
+  bucket = &quot;northbridge-private-training-data-example&quot;
+}
+
+resource &quot;aws_s3_bucket_public_access_block&quot; &quot;training&quot; {
+  bucket                  = aws_s3_bucket.training.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource &quot;aws_s3_bucket_server_side_encryption_configuration&quot; &quot;training&quot; {
+  bucket = aws_s3_bucket.training.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = &quot;AES256&quot;
+    }
+  }
+}</code></pre><p>This pattern blocks public access and enables basic server-side encryption. It is not complete production security, but it shows the direction: secure defaults, explicit settings, and reviewable configuration.</p><h3>9.5 Policy-as-code example</h3><pre><code class="language-rego"># training_policy.rego
+# Simplified policy-as-code example for teaching only.
+# It demonstrates the idea of denying risky infrastructure changes.
+package training.iac
+
+deny[msg] {
+  input.resource_type == &quot;storage_bucket&quot;
+  input.public_access == true
+  msg := &quot;Public storage buckets require a documented exception.&quot;
+}
+
+deny[msg] {
+  input.resource_type == &quot;iam_policy&quot;
+  input.action == &quot;*&quot;
+  input.resource == &quot;*&quot;
+  msg := &quot;Wildcard administrator policies are not allowed by default.&quot;
+}</code></pre><p>This simplified policy demonstrates the idea of denying risky conditions. Production policies need testing, versioning, exceptions, ownership, and clear error messages.</p><h3>9.6 Release gate checklist</h3><pre><code class="language-yaml"># release-gate-policy.yaml
+# A human-readable policy checklist for a fictional deployment gate.
+release_gate:
+  required_before_production:
+    - unit_tests_pass
+    - integration_tests_pass
+    - dependency_scan_reviewed
+    - secret_scan_clean
+    - iac_plan_reviewed
+    - no_public_storage_without_exception
+    - least_privilege_iam_reviewed
+    - signed_artifact_available
+    - rollback_plan_documented
+    - monitoring_dashboard_ready
+  allowed_exceptions:
+    owner_required: true
+    expiry_required: true
+    compensating_control_required: true</code></pre></section>
+
+<section id="security-perspective"><h2>10. Security Perspective</h2><h3>Common attacks</h3><ul><li>Stealing CI/CD secrets or deployment tokens.</li><li>Changing pipeline definitions to run malicious steps.</li><li>Compromising a runner and tampering with artifacts.</li><li>Abusing broad cloud deployment permissions.</li><li>Injecting malicious dependencies or build scripts.</li><li>Using IaC misconfigurations to expose storage, databases, or management interfaces.</li></ul><h3>Common vulnerabilities</h3><ul><li>Long-lived administrator credentials in pipelines.</li><li>Unprotected branches and no peer review.</li><li>Untrusted pull requests receiving secrets.</li><li>Runners reused across trust levels.</li><li>No artifact signing or provenance.</li><li>IaC with public access, wildcard IAM, disabled logs, missing encryption, and no rollback plan.</li></ul><h3>Defensive strategies</h3><ul><li>Use protected branches and required reviews.</li><li>Use least-privilege, short-lived deployment credentials.</li><li>Separate build, test, staging, and production identities.</li><li>Scan secrets, dependencies, containers, and IaC.</li><li>Require plan review and policy-as-code checks.</li><li>Sign artifacts and collect provenance.</li><li>Monitor pipeline logs, cloud audit logs, and deployment events.</li></ul><h3>Detection methods</h3><ul><li>Alert on pipeline definition changes.</li><li>Alert on new secrets, new deployment identities, or new wildcard permissions.</li><li>Compare IaC state with cloud reality to find drift.</li><li>Detect unusual runner network destinations.</li><li>Detect production deploys outside approved windows or approval paths.</li></ul><h3>Mitigation and best practices</h3><p>Use defense in depth: strong repository governance, trusted build systems, minimal runner privileges, isolated environments, secret management, artifact integrity, IaC review, policy checks, audit logging, and rehearsed rollback.</p></section>
+
+<section id="industry-perspective"><h2>11. Industry Perspective</h2><ul><li><strong>Banks:</strong> use controlled promotion, separation of duties, audit evidence, approval workflows, and rollback plans for transaction systems.</li><li><strong>Governments:</strong> need traceable changes, compliance evidence, software supply-chain controls, and strict identity governance.</li><li><strong>Cloud providers:</strong> rely on automation, policy enforcement, telemetry, and blast-radius reduction at large scale.</li><li><strong>Healthcare:</strong> must protect patient systems and records while maintaining availability and change traceability.</li><li><strong>Defense:</strong> emphasizes provenance, controlled build environments, least privilege, and strong authorization boundaries.</li><li><strong>Universities:</strong> use pipelines for websites, identity services, research platforms, and teaching systems; the challenge is often decentralized ownership.</li><li><strong>Large enterprises:</strong> need standard templates, reusable modules, governance, exception handling, and pipeline observability across many teams.</li></ul></section>
+
+<section id="research-perspective"><h2>12. Research Perspective</h2><p>Current research explores how to verify policies before deployment, how to generate least-privilege IaC automatically, how to measure SBOM and provenance quality, how to detect build-system compromise, and how to reduce false positives in IaC scanners. Another active area is AI-assisted infrastructure generation. Large language models can generate syntactically valid configuration, but semantic correctness, least privilege, and hidden security assumptions remain difficult.</p><p>Open problems include: proving that a pipeline executed exactly as claimed, creating portable policy languages across clouds, detecting drift without overwhelming teams, securing ephemeral runners, protecting secrets during untrusted contribution workflows, and making supply-chain frameworks easier to adopt in small organizations.</p></section>
+
+<section id="case-studies"><h2>13. Case Studies</h2><h3>13.1 SolarWinds</h3><p>The SolarWinds compromise showed how damaging build and software supply-chain compromise can be. The broad lesson for this course is that trusted build and release systems are high-value security assets, not background automation.</p><h3>13.2 Codecov</h3><p>The Codecov incident involved unauthorized modification of a script used in CI environments. The lesson is that CI/CD scripts can become a path to secrets and downstream systems when teams run remote tooling with broad access.</p><h3>13.3 GitHub Actions and leaked tokens</h3><p>Public repositories often expose risky workflow patterns, broad token permissions, and accidental secrets. The lesson is to treat workflow configuration as production code and review it with the same seriousness as application code.</p><h3>13.4 Cloud storage exposure</h3><p>Many organizations have accidentally exposed storage because of public access rules, weak review, or manual changes. IaC can prevent this only when secure templates, policy checks, and drift detection are actually used.</p></section>
+
+<section id="common-misconceptions"><h2>14. Common Misconceptions</h2><ul><li><strong>Misconception:</strong> DevSecOps means developers do all security work. <strong>Correction:</strong> security expertise still matters; DevSecOps integrates that expertise into engineering flow.</li><li><strong>Misconception:</strong> IaC is automatically secure. <strong>Correction:</strong> IaC makes infrastructure reviewable; it can also repeatedly deploy insecure settings.</li><li><strong>Misconception:</strong> Passing a scanner means the release is safe. <strong>Correction:</strong> scanners are useful but incomplete.</li><li><strong>Misconception:</strong> Production auto-deploy is always mature. <strong>Correction:</strong> automatic production deployment requires strong testing, rollback, observability, and risk tolerance.</li><li><strong>Misconception:</strong> A signed artifact has no vulnerabilities. <strong>Correction:</strong> a signature helps verify origin and integrity, not absence of defects.</li><li><strong>Misconception:</strong> Manual cloud console changes are safer than code. <strong>Correction:</strong> manual changes often lack review, reproducibility, and evidence.</li></ul></section>
+
+<section id="summary"><h2>15. Summary</h2><p>DevSecOps integrates security into software delivery and operations. CI/CD pipelines run tests, scans, builds, release gates, deployments, and monitoring. Infrastructure as Code makes cloud resources reviewable and repeatable, but it must be paired with policy checks, least privilege, evidence, and drift detection. The secure pattern is not blind automation. It is controlled automation with clear ownership, small privileges, documented exceptions, observable outcomes, and practiced rollback.</p></section>
+
+<section id="glossary"><h2>16. Glossary</h2><dl><dt>Artifact</dt><dd>A build output such as a binary, package, image, or deployment bundle.</dd><dt>Attestation</dt><dd>A signed statement about an artifact or process.</dd><dt>CI/CD</dt><dd>Continuous integration and continuous delivery or deployment.</dd><dt>DevSecOps</dt><dd>Security integrated into development and operations workflows.</dd><dt>Drift</dt><dd>Difference between intended configuration and actual deployed state.</dd><dt>IaC</dt><dd>Infrastructure as Code; infrastructure described in machine-readable files.</dd><dt>Pipeline</dt><dd>A sequence of automated jobs and steps.</dd><dt>Policy as Code</dt><dd>Machine-checkable rules stored and reviewed as code.</dd><dt>Provenance</dt><dd>Evidence about how and where an artifact was created.</dd><dt>Release Gate</dt><dd>A required control point before promotion to another environment.</dd><dt>Runner</dt><dd>The system that executes CI/CD jobs.</dd><dt>Rollback</dt><dd>Returning to a known-good version or configuration.</dd></dl></section>
+
+<section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><ol><li><p>What does DevSecOps add to DevOps?</p><p>A. Security work integrated into development and operations workflows<br>B. A rule that security happens only after release<br>C. A replacement for testing<br>D. A physical firewall model</p><details><summary>Answer</summary>A</details></li><li><p>What is a CI pipeline?</p><p>A. Automated checks that run after code changes<br>B. A manual password reset process<br>C. A DNS server<br>D. A storage volume</p><details><summary>Answer</summary>A</details></li><li><p>What is CD in CI/CD usually about?</p><p>A. Delivery or deployment of validated changes<br>B. Compact discs<br>C. Cryptographic destruction<br>D. Client-side DNS only</p><details><summary>Answer</summary>A</details></li><li><p>What is Infrastructure as Code?</p><p>A. Managing infrastructure through version-controlled configuration files<br>B. Drawing infrastructure on paper only<br>C. Manually clicking cloud consoles without records<br>D. Encrypting source code</p><details><summary>Answer</summary>A</details></li><li><p>What is a Terraform plan useful for?</p><p>A. Reviewing intended infrastructure changes before applying them<br>B. Proving that no risk exists<br>C. Replacing IAM<br>D. Disabling logs</p><details><summary>Answer</summary>A</details></li><li><p>Why are CI/CD runners security-sensitive?</p><p>A. They may access source code, secrets, artifacts, and deployment permissions<br>B. They only display static web pages<br>C. They cannot be abused<br>D. They are unrelated to supply chains</p><details><summary>Answer</summary>A</details></li><li><p>Which workflow permission is usually risky by default?</p><p>A. write-all<br>B. contents: read<br>C. no token permissions<br>D. read-only checkout</p><details><summary>Answer</summary>A</details></li><li><p>What is policy as code?</p><p>A. Security or governance rules expressed in machine-checkable form<br>B. A password policy printed as a poster only<br>C. Random shell scripts<br>D. A manual ticket with no rules</p><details><summary>Answer</summary>A</details></li><li><p>What is drift?</p><p>A. Difference between intended configuration and actual deployed state<br>B. A faster network card<br>C. A cookie value<br>D. A log format</p><details><summary>Answer</summary>A</details></li><li><p>What is a release gate?</p><p>A. A required control point before promotion to another environment<br>B. A network cable connector<br>C. A password hash<br>D. A browser tab</p><details><summary>Answer</summary>A</details></li><li><p>What is provenance?</p><p>A. Evidence about how and where an artifact was built<br>B. A CSS style rule<br>C. A DNS query type<br>D. A symmetric key only</p><details><summary>Answer</summary>A</details></li><li><p>Why sign artifacts?</p><p>A. To help verify integrity and origin<br>B. To compress them<br>C. To bypass testing<br>D. To make vulnerabilities impossible</p><details><summary>Answer</summary>A</details></li><li><p>What is a least-privilege deployment identity?</p><p>A. An identity with only the permissions needed for a specific deployment task<br>B. A permanent global administrator key<br>C. An anonymous public token<br>D. A hardcoded password</p><details><summary>Answer</summary>A</details></li><li><p>What is the safer default for production infrastructure changes?</p><p>A. Reviewed, planned, logged, and reversible changes<br>B. Auto-approve every push<br>C. Disable audit logs<br>D. Use one shared admin account</p><details><summary>Answer</summary>A</details></li><li><p>What is one limitation of IaC scanning?</p><p>A. It may miss runtime context and business intent<br>B. It proves all code is secure<br>C. It replaces monitoring<br>D. It eliminates access reviews</p><details><summary>Answer</summary>A</details></li><li><p>Why should secrets not be stored in repositories?</p><p>A. Repositories are copied, cached, forked, and logged in many places<br>B. Secrets become stronger when committed<br>C. Git automatically rotates them<br>D. Search engines encrypt them</p><details><summary>Answer</summary>A</details></li><li><p>What is environment promotion?</p><p>A. Moving a change from development to staging to production after checks<br>B. Advertising a product<br>C. Changing monitor brightness<br>D. Updating DNS only</p><details><summary>Answer</summary>A</details></li><li><p>What is an exception in a release process?</p><p>A. A documented temporary approval to deviate from a rule<br>B. A way to avoid accountability forever<br>C. A substitute for logs<br>D. A Python syntax error only</p><details><summary>Answer</summary>A</details></li><li><p>What is rollback planning?</p><p>A. Preparing how to return to a known-good state if release fails<br>B. Deleting all logs<br>C. Removing backups<br>D. Increasing privileges</p><details><summary>Answer</summary>A</details></li><li><p>What is the strongest lesson of DevSecOps?</p><p>A. Security becomes repeatable when it is built into normal engineering flow<br>B. Security can be ignored after automation exists<br>C. Developers should never see security feedback<br>D. Manual production clicks are always safer</p><details><summary>Answer</summary>A</details></li></ol><h3>10 Short Questions</h3><ol><li>Define DevSecOps in one paragraph.</li><li>Explain the difference between continuous delivery and continuous deployment.</li><li>Why are CI/CD runners high-value targets?</li><li>What is Infrastructure as Code and why is it useful?</li><li>What is the difference between a Terraform plan and apply?</li><li>List five security checks that can run before deployment.</li><li>Explain policy as code using a beginner-friendly analogy.</li><li>What is infrastructure drift and why does it matter?</li><li>Why should deployment identities use least privilege?</li><li>Explain why auto-approve infrastructure changes can be dangerous.</li></ol><h3>5 Long Questions</h3><ol><li>Design a secure CI/CD pipeline for a small web application. Include source control, tests, scanning, artifact creation, signing, approval, deployment, monitoring, and rollback.</li><li>Compare manual cloud configuration with Infrastructure as Code. Discuss security benefits, risks, and governance requirements.</li><li>Explain how a malicious change could move from source code to production through a weak pipeline. Identify controls at each stage.</li><li>Write a policy for handling CI/CD exceptions. Include owner, expiry, compensating controls, evidence, and review requirements.</li><li>Analyze the relationship between SBOMs, provenance, signatures, and release integrity. Explain what each proves and what each does not prove.</li></ol><h3>Scenario-Based Questions</h3><ol><li>A pull request changes a storage bucket from private to public. What evidence should you require before approval?</li><li>A pipeline uses one administrator credential for every environment. What can go wrong, and how would you redesign it?</li><li>A production incident follows an auto-approved Terraform apply. What logs and artifacts would you collect?</li><li>A scanner reports many medium findings. How do you decide what blocks release?</li><li>A developer requests a temporary exception to deploy without a complete rollback plan. What questions do you ask?</li></ol><h3>Interview Questions</h3><ol><li>Explain DevSecOps without using buzzwords.</li><li>What is the difference between SAST, SCA, secret scanning, and IaC scanning?</li><li>How would you protect CI/CD secrets?</li><li>What makes a runner trustworthy?</li><li>What is the purpose of provenance?</li></ol><h3>Critical Thinking Questions</h3><ol><li>When can too many security gates reduce security?</li><li>Should every production deployment require human approval? Defend your answer.</li><li>What pipeline controls are most valuable for a small startup with limited staff?</li><li>How can teams prevent policy as code from becoming ignored bureaucracy?</li><li>What should happen when automation and human judgment disagree?</li></ol><h3>Research Questions</h3><ol><li>How can provenance be verified across multiple independent build systems?</li><li>How can AI-generated IaC be checked for semantic security defects?</li><li>What are the strongest predictors of IaC misconfiguration in real repositories?</li><li>How can organizations measure the effectiveness of policy-as-code programs?</li><li>How can ephemeral CI/CD runners be made safer against supply-chain compromise?</li></ol></section>
+
+<section id="practice-lab"><h2>18. Practice Lab</h2><div class="callout"><strong>Safety boundary:</strong> this lab is local-only. Do not connect to a real cloud account. Do not run Terraform apply. Do not test public repositories or systems without written authorization.</div><h3>Lab title</h3><p>Local CI/CD and IaC Security Review</p><h3>Prerequisites</h3><ul><li>A local computer with Python 3.</li><li>Optional: Git and Terraform installed locally.</li><li>No cloud account is required.</li></ul><h3>Objectives</h3><ul><li>Identify risky pipeline and IaC patterns.</li><li>Compare risky and safer configurations.</li><li>Create a short release-gate report.</li></ul><h3>Files to create</h3><details><summary>unsafe-demo.yml</summary><pre><code class="language-yaml"># unsafe-demo.yml
+# This workflow is intentionally risky and is for review only.
+# Do not use it in a real repository.
+name: unsafe-demo
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - uses: actions/checkout@main
+      - run: echo &quot;DEPLOY_KEY=example-secret&quot; &gt;&gt; .env
+      - run: curl https://example.invalid/install.sh | bash
+      - run: terraform apply -auto-approve</code></pre></details><details><summary>safer-demo.yml</summary><pre><code class="language-yaml"># safer-demo.yml
+# Purpose: demonstrate safer CI/CD structure for a training repository.
+# Safety: this example uses placeholder domains and a plan-only Terraform command.
+name: safer-demo
+
+on:
+  pull_request:
+    branches: [&quot;main&quot;]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository at the reviewed commit
+        uses: actions/checkout@v4
+
+      - name: Set up Python for local validation scripts
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+
+      - name: Validate Terraform formatting
+        run: terraform fmt -check -recursive
+
+      - name: Create a Terraform plan only
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Upload review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan</code></pre></details><details><summary>risky-storage.tf</summary><pre><code class="language-hcl"># risky-storage.tf
+# Intentionally risky example for review only.
+resource &quot;aws_s3_bucket&quot; &quot;training&quot; {
+  bucket = &quot;northbridge-public-training-data&quot;
+}
+
+resource &quot;aws_s3_bucket_public_access_block&quot; &quot;training&quot; {
+  bucket                  = aws_s3_bucket.training.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource &quot;aws_iam_policy&quot; &quot;too_broad&quot; {
+  name = &quot;training-too-broad&quot;
+  policy = jsonencode({
+    Version = &quot;2012-10-17&quot;
+    Statement = [{
+      Effect   = &quot;Allow&quot;
+      Action   = &quot;*&quot;
+      Resource = &quot;*&quot;
+    }]
+  })
+}</code></pre></details><details><summary>safer-storage.tf</summary><pre><code class="language-hcl"># safer-storage.tf
+# Safer pattern for a fictional training bucket.
+# This file is not meant to be applied to a real cloud account in this course.
+resource &quot;aws_s3_bucket&quot; &quot;training&quot; {
+  bucket = &quot;northbridge-private-training-data-example&quot;
+}
+
+resource &quot;aws_s3_bucket_public_access_block&quot; &quot;training&quot; {
+  bucket                  = aws_s3_bucket.training.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource &quot;aws_s3_bucket_server_side_encryption_configuration&quot; &quot;training&quot; {
+  bucket = aws_s3_bucket.training.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = &quot;AES256&quot;
+    }
+  }
+}</code></pre></details><details><summary>iac_review.py</summary><pre><code class="language-python"># iac_review.py
+# Purpose: perform a beginner static review of local CI/CD and IaC files.
+# Safety: this script reads local files only. It does not contact GitHub, a cloud
+# provider, Terraform Cloud, a registry, or any network target.
+
+from pathlib import Path
+import re
+
+CHECKS = [
+    (&quot;workflow uses broad write-all permissions&quot;, r&quot;permissions:\s*write-all&quot;),
+    (&quot;workflow pulls a shell script directly into bash&quot;, r&quot;curl\s+[^\n|]+\|\s*bash&quot;),
+    (&quot;workflow runs auto-approved infrastructure change&quot;, r&quot;terraform\s+apply\s+.*-auto-approve&quot;),
+    (&quot;action reference is not pinned to a version-like tag&quot;, r&quot;uses:\s*[^\s]+@(main|master)&quot;),
+    (&quot;possible secret written to file&quot;, r&quot;(SECRET|TOKEN|KEY|PASSWORD)\s*=&quot;),
+    (&quot;public storage protection disabled&quot;, r&quot;block_public_(acls|policy)\s*=\s*false&quot;),
+    (&quot;wildcard IAM action and resource&quot;, r&quot;Action\s*=\s*\&quot;\*\&quot;.*Resource\s*=\s*\&quot;\*\&quot;&quot;),
+]
+
+for path in sorted(Path(&#x27;.&#x27;).glob(&#x27;**/*&#x27;)):
+    if path.is_dir() or path.suffix not in {&#x27;.yml&#x27;, &#x27;.yaml&#x27;, &#x27;.tf&#x27;}:
+        continue
+
+    text = path.read_text(encoding=&#x27;utf-8&#x27;, errors=&#x27;replace&#x27;)
+    findings = []
+
+    for label, pattern in CHECKS:
+        if re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL):
+            findings.append(label)
+
+    if findings:
+        print(f&quot;\n{path}&quot;)
+        for finding in findings:
+            print(f&quot; - {finding}&quot;)</code></pre></details><details><summary>release-gate-policy.yaml</summary><pre><code class="language-yaml"># release-gate-policy.yaml
+# A human-readable policy checklist for a fictional deployment gate.
+release_gate:
+  required_before_production:
+    - unit_tests_pass
+    - integration_tests_pass
+    - dependency_scan_reviewed
+    - secret_scan_clean
+    - iac_plan_reviewed
+    - no_public_storage_without_exception
+    - least_privilege_iam_reviewed
+    - signed_artifact_available
+    - rollback_plan_documented
+    - monitoring_dashboard_ready
+  allowed_exceptions:
+    owner_required: true
+    expiry_required: true
+    compensating_control_required: true</code></pre></details><h3>Steps</h3><ol><li>Create a folder named <code>devsecops-iac-lab</code>.</li><li>Save the example files from this lab.</li><li>Run <code>python3 iac_review.py</code> on Linux/macOS or <code>python .\iac_review.py</code> on Windows.</li><li>Review every finding manually. Explain why it matters.</li><li>Compare each risky file to the safer pattern.</li><li>Write a release-gate report using the template below.</li></ol><h3>Report template</h3><pre><code>Change reviewed:
+Pipeline risks found:
+IaC risks found:
+Evidence:
+Required fixes before production:
+Allowed exceptions, if any:
+Compensating controls:
+Rollback plan:
+Monitoring plan:
+Final decision: approve / reject / approve with conditions</code></pre><h3>Expected outcomes</h3><ul><li>You can explain why broad pipeline permissions are dangerous.</li><li>You can identify public storage and wildcard IAM in IaC.</li><li>You can distinguish scan output from human risk judgment.</li><li>You can produce a basic release-gate decision.</li></ul></section>
+
+<section id="further-reading"><h2>19. Further Reading</h2><ul><li>NIST SP 800-204C: Implementation of DevSecOps for a Microservices-based Application with Service Mesh.</li><li>NIST SP 800-204D: software supply-chain security assurance in CI/CD pipelines.</li><li>NIST SP 800-218: Secure Software Development Framework.</li><li>OWASP CI/CD Security Cheat Sheet.</li><li>OWASP Infrastructure as Code Security Cheat Sheet.</li><li>SLSA: Supply-chain Levels for Software Artifacts.</li><li>OpenSSF and Sigstore resources on signing, provenance, and artifact integrity.</li><li>Research topics: IaC security smells, SLSA adoption barriers, policy-as-code verification, drift detection, and AI-assisted IaC review.</li></ul></section>
+</article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div><div class="prev-next"><a class="btn" href="containers-images-and-kubernetes-security.html">← Lesson 10.3</a><a class="btn btn-primary" href="cloud-logging-monitoring-and-incident-response.html">Lesson 10.5 →</a></div>
+</div></main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

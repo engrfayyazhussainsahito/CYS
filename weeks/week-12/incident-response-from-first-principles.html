@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 12.1: Incident Response from First Principles | MS Cybersecurity</title>
+  <meta name="description" content="Learn incident response from first principles: declaration, severity, roles, evidence-aware containment, communication, recovery, and first-response decision records.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-12/incident-response-from-first-principles" data-title="Lesson 12.1: Incident Response from First Principles">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 12</a> / Lesson 12.1</div>
+      <header class="hero">
+        <div class="eyebrow">Week 12 · Lesson 12.1 · Incident Response</div>
+        <h1>Incident Response from First Principles</h1>
+        <p class="lead">Incident response is the discipline of making authorized, evidence-aware decisions under uncertainty so the organization can reduce harm, preserve facts, recover safely, and improve controls.</p>
+        <div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>85 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Weeks 0–11 and Week 12 Overview</div><div class="meta-item"><strong>Practice time</strong>90–120 minutes</div></div>
+        <div class="toolbar"><button id="bookmarkBtn">☆ Bookmark lesson</button><button id="completeBtn">Mark complete</button><button id="quizModeBtn">Start quiz mode</button><button class="print-page">Download lesson as PDF</button><button class="theme-toggle">Toggle dark mode</button></div>
+      </header>
+      <div class="layout-article">
+        <article class="article">
+<section id="introduction"><h2>1. Introduction</h2>
+<p>Incident response starts when uncertainty becomes operational risk. A SOC alert may be investigated by one analyst, but an incident requires coordinated authority: someone must decide whether to declare, preserve evidence, contain harm, communicate impact, recover service, and track improvement actions.</p>
+<p>The weak version of incident response is heroic cleanup: a technical person runs commands, isolates systems, rebuilds machines, and writes a short note afterward. That can stop an immediate problem, but it often destroys evidence, hides decision rationale, ignores legal and business context, and leaves the same failure waiting to happen again.</p>
+<p>The stronger version treats incident response as a risk-management capability. It connects governance, asset knowledge, detection, response, recovery, evidence handling, communications, and continuous improvement.</p></section>
+
+<section id="learning-outcomes"><h2>2. Learning Outcomes</h2>
+<ul><li>Define the difference between an event, alert, case, incident, major incident, and crisis.</li><li>Explain why current incident response is broader than a simple cleanup lifecycle.</li><li>Use a CSF 2.0-aligned mental model to organize incident response responsibilities.</li><li>Write practical declaration criteria that combine confidence, impact, scope, and urgency.</li><li>Assign response roles without confusing technical skill with decision authority.</li><li>Build a severity model that accounts for business impact and evidence confidence.</li><li>Preserve minimum evidence before taking destructive or irreversible response actions.</li><li>Create a safe first-response decision record for a fictional incident scenario.</li></ul></section>
+
+<section id="research-anchors"><h2>3. Research Anchors Used for This Lesson</h2>
+<p>This lesson is based on current and authoritative defensive guidance:</p>
+<ul><li><a href="https://csrc.nist.gov/pubs/sp/800/61/r3/final">NIST SP 800-61 Rev. 3</a> is the current NIST incident-response publication. It frames incident response as part of cybersecurity risk management using NIST CSF 2.0.</li><li><a href="https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf">NIST Cybersecurity Framework 2.0</a> organizes cybersecurity outcomes around Govern, Identify, Protect, Detect, Respond, and Recover.</li><li><a href="https://www.cisa.gov/resources-tools/resources/federal-government-cybersecurity-incident-and-vulnerability-response-playbooks">CISA Cybersecurity Incident and Vulnerability Response Playbooks</a> provide standardized procedure language for identifying, coordinating, remediating, recovering, and tracking mitigations.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/86/final">NIST SP 800-86</a> supports integrating forensic techniques into incident response from an IT operations perspective.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/184/final">NIST SP 800-184</a> supports recovery planning, recovery playbooks, testing, and improvement.</li><li><a href="https://csrc.nist.gov/pubs/sp/800/84/final">NIST SP 800-84</a> supports training, testing, and exercise programs so response plans are practiced before a real event.</li></ul>
+<div class="warning"><strong>Currency note:</strong> NIST SP 800-61 Rev. 2 is no longer the current NIST incident-response reference. Older four-phase lifecycle language is still useful as a teaching shortcut, but this lesson uses the newer CSF 2.0-aligned framing.</div></section>
+
+<section id="safety-boundary"><h2>4. Safety, Authorization, and Legal Boundary</h2>
+<div class="warning"><strong>Defensive scope only:</strong> This lesson uses fictional records and local scripts. Do not collect logs, image disks, inspect devices, disable accounts, isolate hosts, or access cloud resources unless you are explicitly authorized to do so.</div>
+<p>Real incident response can involve employee activity, customer records, privileged communications, regulated data, law-enforcement coordination, contractual obligations, and litigation risk. This course teaches operational concepts, not legal advice. In real work, follow organizational policy and involve legal, privacy, HR, compliance, and executive stakeholders when required.</p></section>
+
+<section id="first-principle"><h2>5. First Principle: Incident Response Is Decision Control Under Uncertainty</h2>
+<p>An incident responder rarely begins with perfect evidence. Logs may be delayed, endpoints may be offline, cloud records may be incomplete, and alerts may be noisy. The response function exists to make accountable decisions anyway.</p>
+<table><thead><tr><th>Decision</th><th>Bad version</th><th>Better version</th></tr></thead><tbody>
+<tr><td>Declare or not declare</td><td>Wait until everyone agrees completely.</td><td>Declare when evidence crosses a policy threshold, then update severity as facts change.</td></tr>
+<tr><td>Contain or observe</td><td>Always isolate immediately or always watch quietly.</td><td>Balance active harm, evidence preservation, business impact, and authority.</td></tr>
+<tr><td>Communicate</td><td>Send vague updates or flood executives with raw logs.</td><td>State facts, uncertainty, impact, next action, owner, and next update time.</td></tr>
+<tr><td>Recover</td><td>Turn systems back on as soon as possible.</td><td>Restore only after integrity, identity, vulnerability, and monitoring checks are satisfied.</td></tr>
+<tr><td>Improve</td><td>Close the ticket after cleanup.</td><td>Assign corrective actions with owners, due dates, and validation evidence.</td></tr>
+</tbody></table></section>
+
+<section id="vocabulary"><h2>6. Core Vocabulary</h2>
+<table><thead><tr><th>Term</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+<tr><td>Event</td><td>An observable occurrence in a system, network, application, identity platform, or cloud service.</td><td>A login failure, process start, DNS query, or firewall connection.</td></tr>
+<tr><td>Alert</td><td>A notification produced by detection logic or a security tool that requires review.</td><td>EDR flags encoded PowerShell.</td></tr>
+<tr><td>Case</td><td>A collection of related alerts, evidence, notes, and analyst actions.</td><td>Suspicious login plus mailbox forwarding rule plus endpoint alert.</td></tr>
+<tr><td>Incident</td><td>A cybersecurity event or set of events requiring coordinated response because harm, exposure, compromise, or serious risk is plausible or confirmed.</td><td>Confirmed privileged account compromise.</td></tr>
+<tr><td>Major incident</td><td>An incident with high business, legal, operational, safety, or reputational impact requiring senior coordination.</td><td>Ransomware across production servers or exposure of regulated data.</td></tr>
+<tr><td>Crisis</td><td>A broader business emergency where cybersecurity is one part of a larger continuity, legal, safety, or public-trust problem.</td><td>A destructive cyberattack affecting essential public services.</td></tr>
+</tbody></table></section>
+
+<section id="csf-model"><h2>7. CSF 2.0-Aligned Response Model</h2>
+<p>Incident response is easiest to misunderstand when it is treated as only the “Respond” function. Real response depends on all six CSF 2.0 functions.</p>
+<pre class="mermaid"><code>flowchart LR
+  G[Govern
+roles, policy, risk appetite, authority] --> I[Identify
+assets, business context, dependencies]
+  I --> P[Protect
+access controls, backups, hardening]
+  P --> D[Detect
+telemetry, alerts, cases]
+  D --> R[Respond
+declare, communicate, contain, coordinate]
+  R --> RC[Recover
+restore, validate, monitor]
+  RC --> G
+  R --> L[Lessons and corrective actions]
+  L --> G</code></pre>
+<table><thead><tr><th>Function</th><th>Incident response implication</th></tr></thead><tbody>
+<tr><td>Govern</td><td>Defines authority, roles, escalation paths, legal/privacy expectations, and risk appetite.</td></tr>
+<tr><td>Identify</td><td>Provides asset criticality, data sensitivity, ownership, dependencies, and recovery priorities.</td></tr>
+<tr><td>Protect</td><td>Provides prevention and resilience controls such as MFA, segmentation, backups, hardening, and least privilege.</td></tr>
+<tr><td>Detect</td><td>Provides telemetry, alerting, case evidence, and confidence signals.</td></tr>
+<tr><td>Respond</td><td>Coordinates declaration, investigation, containment, communication, and short-term risk reduction.</td></tr>
+<tr><td>Recover</td><td>Restores services safely and validates that systems, data, and identities are trustworthy enough to return.</td></tr>
+</tbody></table></section>
+
+<section id="declaration"><h2>8. Incident Declaration Criteria</h2>
+<p>An organization needs declaration criteria before the incident begins. Without them, teams lose time debating labels while harm continues. Declaration criteria should not require perfect proof. They should define when enough evidence exists to coordinate response.</p>
+<p>Common declaration triggers include:</p>
+<ul><li>Confirmed or strongly suspected unauthorized access to sensitive systems or data.</li><li>Compromise of privileged, service, break-glass, or cloud administrator accounts.</li><li>Evidence of persistence, lateral movement, command-and-control, destructive activity, or data staging.</li><li>Ransomware indicators, mass encryption, backup tampering, or destructive deletion.</li><li>Public exposure of confidential or regulated data.</li><li>Exploitation of a critical vulnerability on an internet-facing or business-critical system.</li><li>Loss of integrity in production identity, finance, healthcare, safety, legal, or customer systems.</li></ul>
+<div class="callout"><strong>Practical rule:</strong> Declare early when coordination is needed. Downgrade later if facts disprove the incident. Undeclared incidents create hidden work and unclear authority.</div></section>
+
+<section id="triage-to-ir"><h2>9. From SOC Triage to Incident Response</h2>
+<p>Lesson 11.4 focused on triage and investigation. Lesson 12.1 begins where the handoff becomes formal. The handoff should be structured enough that the incident team can make decisions without repeating all triage work.</p>
+<table><thead><tr><th>Handoff field</th><th>Why it matters</th></tr></thead><tbody>
+<tr><td>What happened?</td><td>Creates a plain-language hypothesis that can be tested.</td></tr>
+<tr><td>What is affected?</td><td>Connects technical artifacts to asset criticality and business ownership.</td></tr>
+<tr><td>What evidence exists?</td><td>Separates facts from suspicion and identifies missing evidence.</td></tr>
+<tr><td>What is happening now?</td><td>Determines urgency and containment pressure.</td></tr>
+<tr><td>What actions were already taken?</td><td>Prevents duplicated work and records evidence-impacting changes.</td></tr>
+<tr><td>What decision is needed?</td><td>Forces clarity: declare, contain, escalate, preserve, notify, or continue triage.</td></tr>
+</tbody></table></section>
+
+<section id="roles"><h2>10. Response Roles and Authority</h2>
+<p>A serious incident needs role clarity. Small organizations may assign multiple responsibilities to one person, but the responsibilities still exist.</p>
+<table><thead><tr><th>Role</th><th>Primary responsibility</th><th>Common mistake</th></tr></thead><tbody>
+<tr><td>Incident commander</td><td>Coordinates response rhythm, decisions, blockers, status, and authority.</td><td>Letting the deepest technical expert also manage all coordination.</td></tr>
+<tr><td>Technical lead</td><td>Directs evidence review, scoping, containment options, eradication, and recovery validation.</td><td>Making business-risk decisions alone.</td></tr>
+<tr><td>Evidence custodian</td><td>Maintains evidence inventory, hashes where applicable, storage, access, and chain-of-custody notes.</td><td>Allowing evidence to be copied, edited, or deleted without tracking.</td></tr>
+<tr><td>Communications lead</td><td>Prepares internal updates, executive summaries, customer language, and external coordination drafts.</td><td>Publishing uncertain details as facts.</td></tr>
+<tr><td>Business owner</td><td>Explains operational impact, downtime tolerance, critical dependencies, and recovery priorities.</td><td>Treating containment as only a technical decision.</td></tr>
+<tr><td>Legal/privacy/compliance</td><td>Advises on sensitive data, privilege, notification, contracts, regulators, and records.</td><td>Involving them only after evidence has been mishandled.</td></tr>
+</tbody></table></section>
+
+<section id="severity"><h2>11. Severity: More Than Technical Interestingness</h2>
+<p>Severity should be based on organizational risk, not how novel an attack looks. A routine credential theft against payroll can be more severe than clever malware on an isolated lab host.</p>
+<table><thead><tr><th>Dimension</th><th>Questions to ask</th></tr></thead><tbody>
+<tr><td>Confidence</td><td>How strong is the evidence? Are multiple sources aligned?</td></tr>
+<tr><td>Asset criticality</td><td>Does the asset support production, identity, safety, finance, legal, healthcare, or customer trust?</td></tr>
+<tr><td>Data sensitivity</td><td>Could regulated, confidential, personal, financial, health, student, or trade-secret data be affected?</td></tr>
+<tr><td>Blast radius</td><td>How many users, systems, tenants, regions, or business processes may be affected?</td></tr>
+<tr><td>Activity</td><td>Is harm active, historical, blocked, or uncertain?</td></tr>
+<tr><td>Persistence</td><td>Are there signs of unauthorized accounts, tokens, scheduled tasks, services, startup items, or cloud roles?</td></tr>
+<tr><td>Recovery difficulty</td><td>Are backups trusted? Is system integrity known? Can operations continue safely?</td></tr>
+<tr><td>External obligations</td><td>Could contracts, regulators, law enforcement, insurers, customers, or partners be involved?</td></tr>
+</tbody></table></section>
+
+<section id="severity-levels"><h2>12. Example Severity Model</h2>
+<p>Use organization-specific definitions in real work. The model below is a teaching example.</p>
+<table><thead><tr><th>Level</th><th>Meaning</th><th>Example response posture</th></tr></thead><tbody>
+<tr><td>SEV4 Event / Alert</td><td>Low confidence or low impact; normal triage is enough.</td><td>Analyst validates, enriches, closes, tunes, or escalates.</td></tr>
+<tr><td>SEV3 Minor incident or case</td><td>Limited confirmed issue with contained impact.</td><td>Assign owner, preserve notes, perform targeted containment, track corrective action.</td></tr>
+<tr><td>SEV2 Incident</td><td>High-confidence compromise or exposure affecting important assets or sensitive data.</td><td>Declare incident, assign commander, preserve evidence, coordinate containment and communications.</td></tr>
+<tr><td>SEV1 Major incident candidate</td><td>Critical system, regulated data, active harm, destructive activity, wide blast radius, or high external exposure.</td><td>Executive coordination, legal/privacy involvement, formal update cadence, recovery leadership, post-incident review.</td></tr>
+</tbody></table>
+<div class="warning"><strong>Failure point:</strong> Severity models fail when they ignore uncertainty. A high-impact but uncertain event may need urgent coordination even before compromise is fully proven.</div></section>
+
+<section id="communication"><h2>13. Communication Discipline</h2>
+<p>Incident communication should reduce confusion, not create more of it. Every update should separate facts, assumptions, uncertainty, decisions, and next steps.</p>
+<pre><code>Incident update template
+Time window: 2026-05-03 08:00–09:00 UTC
+Current severity: SEV2, under review
+What we know: Payroll admin login succeeded after repeated MFA prompts.
+Evidence: IdP sign-in logs, MFA logs, admin audit record.
+What we do not know: Whether payroll records were viewed or changed.
+Actions taken: Case opened, evidence log started, account session review in progress.
+Decision needed: Approve token revocation and password reset after preserving current session records.
+Business impact: Payroll integrity risk, no confirmed outage.
+Next update: 10:00 UTC or earlier if containment occurs.</code></pre>
+<p>Good communication prevents both panic and underreaction. It also creates a defensible record of why the team acted when it did.</p></section>
+
+<section id="evidence-aware"><h2>14. Evidence-Aware First Response</h2>
+<p>Early response actions can change or destroy evidence. Before rebooting, rebuilding, disabling, deleting, or rotating anything, ask what minimum evidence should be preserved.</p>
+<table><thead><tr><th>Action</th><th>Evidence risk</th><th>Safer first step</th></tr></thead><tbody>
+<tr><td>Reboot endpoint</td><td>Loses memory, process state, network connections, temporary files.</td><td>Capture EDR process tree, logged-in users, network connections, relevant logs, and memory if policy requires it.</td></tr>
+<tr><td>Disable account</td><td>Can end active harm but may obscure current session behavior or break services.</td><td>Export sign-in logs, token/session data where available, role assignments, recent changes, and linked service-account dependencies.</td></tr>
+<tr><td>Fix public cloud storage policy</td><td>Can remove exposure but destroys proof of what was exposed.</td><td>Capture policy, object listing metadata, audit events, screenshots where allowed, and owner approval.</td></tr>
+<tr><td>Delete malware</td><td>Removes sample and context.</td><td>Preserve hash, file path, quarantine details, process tree, parent process, user, and detection record.</td></tr>
+<tr><td>Rebuild server</td><td>Destroys root-cause artifacts.</td><td>Snapshot or image first when feasible, export logs, capture configuration, and record approval.</td></tr>
+</tbody></table></section>
+
+<section id="containment"><h2>15. Containment Choices</h2>
+<p>Containment should be proportionate to active harm and evidence needs. It is not always “pull the plug.”</p>
+<ul><li><strong>Identity containment:</strong> revoke sessions, reset credentials, disable accounts, remove unauthorized roles, rotate keys, invalidate tokens.</li><li><strong>Endpoint containment:</strong> isolate host, quarantine file, stop process, block hash, preserve image, rebuild after evidence capture.</li><li><strong>Network containment:</strong> block destination, isolate segment, disable VPN session, tighten firewall rule, sinkhole known command channel.</li><li><strong>Cloud containment:</strong> snapshot workload, remove public policy, disable access key, lock role assumption, preserve audit trail.</li><li><strong>Application containment:</strong> disable vulnerable function, block exploit path, revoke API token, freeze deployment pipeline.</li></ul>
+<p>The right containment action depends on the situation. A destructive ransomware event may demand immediate isolation. A suspected espionage case may require quiet scoping before action. A public storage exposure may need fast policy correction after documenting exposure state.</p></section>
+
+<section id="coordination"><h2>16. Coordination and External Reporting</h2>
+<p>CISA’s playbook language emphasizes that response is not only technical remediation. Teams need coordination, recovery, and tracking. In practice, coordination may include internal executives, IT operations, cloud platform owners, application owners, legal, privacy, communications, vendors, insurers, regulators, customers, or law enforcement.</p>
+<p>Do not improvise public or regulatory statements from a technical chat thread. Real reporting obligations vary by country, sector, contract, data type, and organization. The safe course-level rule is: identify potential reporting triggers early, preserve facts, and route external communications through authorized legal and communications channels.</p></section>
+
+<section id="documentation"><h2>17. Documentation and Timeline Quality</h2>
+<p>Incident notes are evidence. They should be written as if another qualified responder must understand the case later.</p>
+<ul><li>Use UTC unless policy requires another timezone, and label the timezone every time.</li><li>Separate event time, ingestion time, detection time, analyst review time, and action time.</li><li>Record who made each decision and what evidence was available at the time.</li><li>Mark assumptions and uncertainty explicitly.</li><li>Preserve raw evidence references instead of pasting untraceable fragments only.</li><li>Track containment actions, recovery actions, approvals, rollback plans, and validation results.</li></ul>
+<p>A strong timeline does not merely list artifacts. It tells the story of access, action, impact, response, and recovery with evidence references.</p></section>
+
+<section id="recovery"><h2>18. Recovery Begins During Response</h2>
+<p>Recovery is not a final button pressed after the investigation. Recovery decisions begin early: which systems matter most, which backups are trustworthy, which identities must be reset, which vulnerabilities must be fixed, and what validation proves the service is safe enough to return.</p>
+<pre class="mermaid"><code>flowchart TD
+  A[Incident declared] --> B[Identify affected services and owners]
+  B --> C[Define minimum safe restoration criteria]
+  C --> D[Preserve evidence and contain active harm]
+  D --> E[Eradicate known unauthorized access paths]
+  E --> F[Restore from trusted source]
+  F --> G[Validate identity, integrity, vulnerability, and monitoring]
+  G --> H{Safe enough?}
+  H -->|No| D
+  H -->|Yes| I[Return service with heightened monitoring]
+  I --> J[Post-incident improvements]</code></pre></section>
+
+<section id="common-failures"><h2>19. Common Failure Points</h2>
+<ul><li><strong>Waiting for certainty:</strong> teams delay declaration until the incident grows.</li><li><strong>No authority model:</strong> analysts know what needs to happen but cannot get approval.</li><li><strong>Technical tunnel vision:</strong> responders ignore business criticality, legal sensitivity, and communications.</li><li><strong>Evidence destruction:</strong> teams rebuild, reboot, delete, or rotate before capturing minimum evidence.</li><li><strong>Unclear severity:</strong> severity changes silently, making stakeholders distrust updates.</li><li><strong>Shadow response:</strong> teams work in side chats without an official evidence log or decision record.</li><li><strong>Recovery optimism:</strong> systems are restored without validating identity paths, persistence, vulnerabilities, backups, and monitoring.</li><li><strong>No corrective-action owner:</strong> the same control failure repeats because the post-incident review becomes a document, not a work queue.</li></ul></section>
+
+<section id="lab"><h2>20. Safe Local Lab: Incident Declaration Decision Aid</h2>
+<p>This lab uses fictional JSONL records. It does not connect to real systems, scan networks, collect logs, or perform containment. The goal is to practice declaration logic, severity thinking, and next-step documentation.</p>
+<h3>Step 1: Create the fictional signal file</h3>
+<p>Save this as <code>incident_signals.jsonl</code>.</p>
+<pre><code>{&quot;id&quot;:&quot;E-1201-001&quot;,&quot;source&quot;:&quot;identity&quot;,&quot;event_time&quot;:&quot;2026-05-03T08:10:00Z&quot;,&quot;summary&quot;:&quot;MFA push fatigue followed by successful login for payroll administrator&quot;,&quot;asset&quot;:&quot;payroll-admin&quot;,&quot;asset_criticality&quot;:&quot;critical&quot;,&quot;data_sensitivity&quot;:&quot;regulated&quot;,&quot;confidence&quot;:0.86,&quot;active_harm&quot;:true,&quot;persistence_indicator&quot;:false,&quot;external_exposure&quot;:false,&quot;affected_count&quot;:1,&quot;evidence_sources&quot;:[&quot;idp_signin&quot;,&quot;mfa_logs&quot;,&quot;admin_audit&quot;],&quot;business_impact&quot;:&quot;payroll integrity risk&quot;,&quot;recommended_owner&quot;:&quot;incident_commander&quot;}
+{&quot;id&quot;:&quot;E-1201-002&quot;,&quot;source&quot;:&quot;endpoint&quot;,&quot;event_time&quot;:&quot;2026-05-03T08:18:00Z&quot;,&quot;summary&quot;:&quot;EDR quarantined commodity malware on student lab workstation&quot;,&quot;asset&quot;:&quot;lab-ws-17&quot;,&quot;asset_criticality&quot;:&quot;low&quot;,&quot;data_sensitivity&quot;:&quot;low&quot;,&quot;confidence&quot;:0.74,&quot;active_harm&quot;:false,&quot;persistence_indicator&quot;:false,&quot;external_exposure&quot;:false,&quot;affected_count&quot;:1,&quot;evidence_sources&quot;:[&quot;edr_alert&quot;,&quot;file_hash&quot;],&quot;business_impact&quot;:&quot;limited lab disruption&quot;,&quot;recommended_owner&quot;:&quot;soc_analyst&quot;}
+{&quot;id&quot;:&quot;E-1201-003&quot;,&quot;source&quot;:&quot;cloud&quot;,&quot;event_time&quot;:&quot;2026-05-03T08:31:00Z&quot;,&quot;summary&quot;:&quot;Public storage bucket containing support exports discovered by exposure scan&quot;,&quot;asset&quot;:&quot;support-export-bucket&quot;,&quot;asset_criticality&quot;:&quot;high&quot;,&quot;data_sensitivity&quot;:&quot;confidential&quot;,&quot;confidence&quot;:0.91,&quot;active_harm&quot;:true,&quot;persistence_indicator&quot;:false,&quot;external_exposure&quot;:true,&quot;affected_count&quot;:1,&quot;evidence_sources&quot;:[&quot;cloud_audit&quot;,&quot;storage_policy&quot;,&quot;scanner_result&quot;],&quot;business_impact&quot;:&quot;possible customer data exposure&quot;,&quot;recommended_owner&quot;:&quot;cloud_response_lead&quot;}
+{&quot;id&quot;:&quot;E-1201-004&quot;,&quot;source&quot;:&quot;network&quot;,&quot;event_time&quot;:&quot;2026-05-03T08:42:00Z&quot;,&quot;summary&quot;:&quot;Single IDS alert for suspicious DNS pattern from guest Wi-Fi&quot;,&quot;asset&quot;:&quot;guest-wifi-client&quot;,&quot;asset_criticality&quot;:&quot;low&quot;,&quot;data_sensitivity&quot;:&quot;low&quot;,&quot;confidence&quot;:0.38,&quot;active_harm&quot;:false,&quot;persistence_indicator&quot;:false,&quot;external_exposure&quot;:false,&quot;affected_count&quot;:1,&quot;evidence_sources&quot;:[&quot;ids_alert&quot;],&quot;business_impact&quot;:&quot;unknown&quot;,&quot;recommended_owner&quot;:&quot;soc_analyst&quot;}
+{&quot;id&quot;:&quot;E-1201-005&quot;,&quot;source&quot;:&quot;identity&quot;,&quot;event_time&quot;:&quot;2026-05-03T09:04:00Z&quot;,&quot;summary&quot;:&quot;Privileged group membership changed by newly created service account&quot;,&quot;asset&quot;:&quot;directory-services&quot;,&quot;asset_criticality&quot;:&quot;critical&quot;,&quot;data_sensitivity&quot;:&quot;confidential&quot;,&quot;confidence&quot;:0.88,&quot;active_harm&quot;:true,&quot;persistence_indicator&quot;:true,&quot;external_exposure&quot;:false,&quot;affected_count&quot;:3,&quot;evidence_sources&quot;:[&quot;directory_audit&quot;,&quot;idp_signin&quot;,&quot;edr_process&quot;],&quot;business_impact&quot;:&quot;privilege escalation and persistence risk&quot;,&quot;recommended_owner&quot;:&quot;technical_lead&quot;}
+{&quot;id&quot;:&quot;E-1201-006&quot;,&quot;source&quot;:&quot;application&quot;,&quot;event_time&quot;:&quot;2026-05-03T09:22:00Z&quot;,&quot;summary&quot;:&quot;Failed SQL injection probes blocked by WAF against marketing site&quot;,&quot;asset&quot;:&quot;marketing-site&quot;,&quot;asset_criticality&quot;:&quot;medium&quot;,&quot;data_sensitivity&quot;:&quot;public&quot;,&quot;confidence&quot;:0.67,&quot;active_harm&quot;:false,&quot;persistence_indicator&quot;:false,&quot;external_exposure&quot;:true,&quot;affected_count&quot;:1,&quot;evidence_sources&quot;:[&quot;waf_logs&quot;,&quot;web_access_logs&quot;],&quot;business_impact&quot;:&quot;blocked attack attempts&quot;,&quot;recommended_owner&quot;:&quot;appsec_engineer&quot;}</code></pre>
+<h3>Step 2: Create the decision assistant</h3>
+<p>Save this as <code>ir_decision_assistant.py</code>.</p>
+<pre><code>import json
+from collections import Counter
+from pathlib import Path
+
+SIGNAL_FILE = Path(&quot;incident_signals.jsonl&quot;)
+CRITICALITY_SCORE = {&quot;low&quot;: 0, &quot;medium&quot;: 1, &quot;high&quot;: 2, &quot;critical&quot;: 3}
+SENSITIVITY_SCORE = {&quot;low&quot;: 0, &quot;public&quot;: 0, &quot;confidential&quot;: 2, &quot;regulated&quot;: 3}
+
+
+def load_signals(path=SIGNAL_FILE):
+    with path.open() as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def score_signal(signal):
+    score = 0
+    score += CRITICALITY_SCORE.get(signal[&quot;asset_criticality&quot;], 0)
+    score += SENSITIVITY_SCORE.get(signal[&quot;data_sensitivity&quot;], 0)
+    if signal[&quot;confidence&quot;] &gt;= 0.85:
+        score += 2
+    elif signal[&quot;confidence&quot;] &gt;= 0.60:
+        score += 1
+    if signal[&quot;active_harm&quot;]:
+        score += 3
+    if signal[&quot;persistence_indicator&quot;]:
+        score += 2
+    if signal[&quot;external_exposure&quot;]:
+        score += 1
+    if signal[&quot;affected_count&quot;] &gt;= 3:
+        score += 1
+    if len(signal[&quot;evidence_sources&quot;]) &gt;= 3:
+        score += 1
+    return score
+
+
+def classify(score):
+    if score &gt;= 10:
+        return &quot;sev1_major_incident_candidate&quot;
+    if score &gt;= 7:
+        return &quot;sev2_incident&quot;
+    if score &gt;= 4:
+        return &quot;sev3_case_or_minor_incident&quot;
+    return &quot;event_or_alert&quot;
+
+
+def recommended_next_steps(signal, classification):
+    steps = []
+    if classification in {&quot;sev1_major_incident_candidate&quot;, &quot;sev2_incident&quot;}:
+        steps.append(&quot;declare incident and assign incident commander&quot;)
+        steps.append(&quot;open evidence log with UTC timestamps&quot;)
+    else:
+        steps.append(&quot;continue analyst triage before formal declaration&quot;)
+
+    if signal[&quot;active_harm&quot;]:
+        steps.append(&quot;evaluate containment options with business owner&quot;)
+    if signal[&quot;data_sensitivity&quot;] in {&quot;confidential&quot;, &quot;regulated&quot;}:
+        steps.append(&quot;notify privacy/legal contact per policy&quot;)
+    if signal[&quot;persistence_indicator&quot;]:
+        steps.append(&quot;preserve identity and endpoint evidence before cleanup&quot;)
+    if signal[&quot;external_exposure&quot;]:
+        steps.append(&quot;capture exposure evidence before changing policy&quot;)
+    if len(signal[&quot;evidence_sources&quot;]) &lt; 2:
+        steps.append(&quot;collect at least one independent evidence source&quot;)
+    return steps
+
+
+def build_decision_record(signal):
+    score = score_signal(signal)
+    classification = classify(score)
+    return {
+        &quot;id&quot;: signal[&quot;id&quot;],
+        &quot;summary&quot;: signal[&quot;summary&quot;],
+        &quot;asset&quot;: signal[&quot;asset&quot;],
+        &quot;score&quot;: score,
+        &quot;classification&quot;: classification,
+        &quot;recommended_owner&quot;: signal[&quot;recommended_owner&quot;],
+        &quot;evidence_sources&quot;: signal[&quot;evidence_sources&quot;],
+        &quot;next_steps&quot;: recommended_next_steps(signal, classification),
+        &quot;uncertainty_note&quot;: &quot;This is a training aid. A real declaration requires policy, authority, and human review.&quot;,
+    }
+
+
+def summarize(records):
+    counts = Counter(record[&quot;classification&quot;] for record in records)
+    declared = [r for r in records if r[&quot;classification&quot;] in {&quot;sev1_major_incident_candidate&quot;, &quot;sev2_incident&quot;}]
+    return {
+        &quot;classification_mix&quot;: dict(counts),
+        &quot;declaration_candidates&quot;: [r[&quot;id&quot;] for r in declared],
+        &quot;highest_score&quot;: max(r[&quot;score&quot;] for r in records),
+        &quot;needs_incident_commander&quot;: any(r[&quot;classification&quot;] == &quot;sev1_major_incident_candidate&quot; for r in records),
+    }
+
+
+def main():
+    signals = load_signals()
+    records = [build_decision_record(signal) for signal in signals]
+    output = {&quot;summary&quot;: summarize(records), &quot;decision_records&quot;: records}
+    print(json.dumps(output, indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<h3>Step 3: Run the report</h3>
+<pre><code>python3 ir_decision_assistant.py
+# or on Windows:
+python ir_decision_assistant.py</code></pre>
+<p>The output lists classification mix, declaration candidates, evidence sources, suggested owners, and next steps. Treat the score as a training aid, not as an automatic incident declaration.</p>
+<h3>Step 4: Optional tests</h3>
+<p>Save this as <code>test_ir_decision_assistant.py</code> if you want to check the logic with <code>pytest</code>.</p>
+<pre><code>from ir_decision_assistant import build_decision_record, load_signals, summarize
+
+
+def records_by_id():
+    return {r[&quot;id&quot;]: build_decision_record(r) for r in load_signals()}
+
+
+def test_privileged_identity_change_is_major_candidate():
+    records = records_by_id()
+    assert records[&quot;E-1201-005&quot;][&quot;classification&quot;] == &quot;sev1_major_incident_candidate&quot;
+
+
+def test_single_low_confidence_ids_alert_is_not_declared():
+    records = records_by_id()
+    assert records[&quot;E-1201-004&quot;][&quot;classification&quot;] == &quot;event_or_alert&quot;
+
+
+def test_sensitive_cloud_exposure_recommends_legal_contact():
+    records = records_by_id()
+    steps = records[&quot;E-1201-003&quot;][&quot;next_steps&quot;]
+    assert &quot;notify privacy/legal contact per policy&quot; in steps
+
+
+def test_summary_lists_declaration_candidates():
+    records = [build_decision_record(s) for s in load_signals()]
+    summary = summarize(records)
+    assert &quot;E-1201-001&quot; in summary[&quot;declaration_candidates&quot;]
+    assert &quot;E-1201-005&quot; in summary[&quot;declaration_candidates&quot;]</code></pre></section>
+
+<section id="lab-interpretation"><h2>21. How to Read the Lab Output</h2>
+<p>The lab should classify the privileged directory-services change as a major incident candidate because it combines critical asset impact, high confidence, active harm, persistence, multiple affected objects, and multiple evidence sources. The guest Wi-Fi IDS alert should remain an event or alert because confidence, impact, and evidence depth are weak.</p>
+<p>The point is not that scoring can replace judgment. The point is that explicit scoring exposes assumptions. A responder can challenge the score: Is asset criticality correct? Is confidence overstated? Is active harm confirmed? Are we missing a business owner? That discussion is better than hidden intuition.</p></section>
+
+<section id="self-assessment"><h2>22. Self-Assessment</h2>
+<ol><li>Why is incident response a decision-control function, not only a technical cleanup function?</li><li>What is the difference between an alert, a case, and an incident?</li><li>Why can waiting for perfect proof make response worse?</li><li>How does CSF 2.0 change the way you think about incident response?</li><li>Which severity dimensions are missing from a purely technical score?</li><li>Why might fast containment conflict with evidence preservation?</li><li>What should an incident update include to be useful to executives and technical teams?</li><li>Why should recovery validation include identity, vulnerability, integrity, and monitoring checks?</li></ol></section>
+
+<section id="practical-deliverables"><h2>23. Practical Deliverables</h2>
+<p>After completing this lesson, produce:</p>
+<ul><li>An incident declaration checklist with at least eight triggers.</li><li>A severity model that includes confidence, asset criticality, data sensitivity, blast radius, active harm, persistence, recovery difficulty, and external obligations.</li><li>A role matrix for incident commander, technical lead, evidence custodian, communications lead, business owner, and legal/privacy/compliance contact.</li><li>A first-response communication template that separates facts, uncertainty, decisions, and next update time.</li><li>A minimum evidence preservation checklist for identity, endpoint, cloud, application, and network incidents.</li></ul></section>
+
+<section id="further-reading"><h2>24. Further Reading</h2>
+<ul><li>NIST SP 800-61 Rev. 3 for current incident-response recommendations and CSF 2.0 alignment.</li><li>NIST Cybersecurity Framework 2.0 for Govern, Identify, Protect, Detect, Respond, and Recover functions.</li><li>CISA Cybersecurity Incident and Vulnerability Response Playbooks for standardized response procedure concepts.</li><li>NIST SP 800-86 for forensic techniques in incident response.</li><li>NIST SP 800-184 for cybersecurity event recovery planning and playbook development.</li><li>NIST SP 800-84 for test, training, and exercise program concepts.</li></ul></section>
+
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="index.html">← Week 12 Overview</a><a class="btn btn-primary" href="evidence-preservation-and-digital-forensics-fundamentals.html">Lesson 12.2 →</a></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

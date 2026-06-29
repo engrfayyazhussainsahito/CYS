@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 14.1: Cybersecurity Governance from First Principles | MS Cybersecurity</title>
+  <meta name="description" content="Cybersecurity governance from first principles: accountability, decision rights, risk appetite, policy, controls, oversight, evidence, exceptions, and executive reporting.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-14-lesson-1" data-title="Lesson 14.1: Cybersecurity Governance from First Principles">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 14</a> / Lesson 14.1</div>
+      <header class="hero"><div class="eyebrow">Week 14 · Lesson 14.1</div><h1>Cybersecurity Governance from First Principles</h1><p class="lead">Governance is the system that decides who is accountable for cyber risk, what level of risk is acceptable, what controls are required, how decisions are evidenced, and when issues must be escalated. It turns security from scattered technical work into an accountable management discipline.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>75–100 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Weeks 0–13, especially risk, SOC, incident response, and reporting lessons</div><div class="meta-item"><strong>Lab mode</strong>Safe local governance-readiness review using fictional JSON data</div></div></header>
+
+      <div class="callout"><strong>Legal and governance boundary:</strong> This lesson teaches governance concepts and decision discipline. It is not legal advice, audit assurance, regulator guidance, or a substitute for counsel, compliance, privacy, procurement, finance, or executive risk owners.</div>
+
+      <div class="lesson-layout">
+        <article class="lesson-content">
+          <section id="objectives"><h2>1. Learning Objectives</h2><p>By the end of this lesson, you should be able to:</p><ul><li>Define cybersecurity governance without reducing it to policies or compliance checklists.</li><li>Separate governance, management, operations, assurance, audit, and legal/compliance responsibilities.</li><li>Identify risk owners, control owners, policy owners, data owners, and decision rights.</li><li>Explain risk appetite, risk tolerance, exceptions, residual risk, and escalation triggers.</li><li>Translate technical issues into governance decisions that leadership can act on.</li><li>Build a defensible evidence package for a governance committee or executive risk review.</li><li>Recognize when privacy, legal, contractual, third-party, or regulatory questions require escalation.</li></ul></section>
+
+          <section id="research-basis"><h2>2. Research Basis</h2><p>This lesson is grounded in widely used and current governance references. NIST CSF 2.0 adds <strong>Govern</strong> as a core function alongside Identify, Protect, Detect, Respond, and Recover; the Govern function covers cybersecurity risk-management strategy, expectations, policy, roles, responsibilities, oversight, and supply-chain risk management. NIST SP 800-37 Rev. 2 provides the Risk Management Framework for categorization, control selection, implementation, assessment, authorization, and continuous monitoring. NIST SP 800-53 Rev. 5 provides a flexible control catalog for security and privacy controls. CISA CPG 2.0 gives voluntary high-impact baseline practices, and ISO/IEC 27001:2022 frames information security as a management system for establishing, implementing, maintaining, and continually improving security.</p><p>The practical conclusion is simple: governance is not paperwork. Governance is a recurring decision system that connects business objectives, legal duties, privacy expectations, risk appetite, technical controls, funding, oversight, and evidence.</p></section>
+
+          <section id="governance-definition"><h2>3. Governance in One Sentence</h2><p><strong>Cybersecurity governance is the accountable decision system for managing cyber and privacy risk in line with organizational objectives, obligations, and risk appetite.</strong></p><p>This sentence matters because it names the pieces that weak programs often omit:</p><ul><li><strong>Accountable:</strong> someone owns the risk decision.</li><li><strong>Decision system:</strong> governance is repeated, documented, and reviewable.</li><li><strong>Cyber and privacy risk:</strong> security and privacy overlap but are not identical.</li><li><strong>Organizational objectives:</strong> security supports mission, safety, customer trust, and resilience.</li><li><strong>Obligations:</strong> contracts, laws, regulations, policies, and stakeholder promises affect decisions.</li><li><strong>Risk appetite:</strong> leadership must define what risk levels are acceptable and unacceptable.</li></ul></section>
+
+          <section id="not-paperwork"><h2>4. What Governance Is Not</h2><p>Governance fails when it becomes a document collection exercise. A policy library is not governance if nobody owns exceptions. A risk register is not governance if risks do not change decisions. A dashboard is not governance if it reports activity but hides unresolved risk. A committee is not governance if it only receives status updates and never makes tradeoffs.</p><div class="callout"><strong>Test:</strong> If a governance artifact cannot change a decision, funding priority, risk acceptance, control requirement, escalation, or accountability assignment, it is probably administrative noise.</div></section>
+
+          <section id="roles"><h2>5. Governance Roles and Decision Rights</h2><p>Cybersecurity governance requires clear ownership because technical teams cannot accept enterprise risk on behalf of the business. A mature program separates at least these roles:</p><ul><li><strong>Board or governing body:</strong> oversees enterprise risk, asks whether management understands and manages material cyber risk, and challenges major assumptions.</li><li><strong>Executive management:</strong> sets priorities, allocates resources, approves risk appetite, and accepts major residual risks when appropriate.</li><li><strong>CISO or security leader:</strong> advises on risk, defines security strategy, manages the security program, and reports control posture and risk movement.</li><li><strong>Business risk owner:</strong> owns the business impact of a risk and decides whether to reduce, avoid, transfer, or accept it within authority.</li><li><strong>Control owner:</strong> implements and operates a specific control, such as access review, backup testing, logging, endpoint protection, or supplier review.</li><li><strong>Policy owner:</strong> maintains policy requirements, exception criteria, enforcement expectations, and review cycles.</li><li><strong>Data owner:</strong> defines approved data use, sensitivity, retention, access, and business purpose.</li><li><strong>Compliance/privacy/legal functions:</strong> interpret obligations and escalation requirements; they do not make technical evidence true or false.</li><li><strong>Internal audit or assurance:</strong> independently assesses whether controls are designed and operating as claimed.</li></ul></section>
+
+          <section id="model"><h2>6. Governance Operating Model</h2><p>A useful governance model links strategy to execution through a repeatable loop:</p><pre class="mermaid">flowchart TD
+  A[Business objectives and obligations] --> B[Risk appetite and governance expectations]
+  B --> C[Policies, standards, and control baselines]
+  C --> D[Implementation by control owners]
+  D --> E[Evidence, metrics, monitoring, and assessment]
+  E --> F[Risk decisions, exceptions, funding, and escalation]
+  F --> B
+  E --> G[Board and executive reporting]
+  G --> F</pre><p>This loop prevents two common failures: security work that is disconnected from business decisions, and leadership decisions that are disconnected from technical evidence.</p></section>
+
+          <section id="governance-management-operations"><h2>7. Governance vs Management vs Operations</h2><p>The distinction is not academic. Mixing these layers causes confusion during audits, incidents, budget reviews, and risk acceptance.</p><table><thead><tr><th>Layer</th><th>Main question</th><th>Example</th></tr></thead><tbody><tr><td>Governance</td><td>What outcomes, risk levels, accountability, and oversight are required?</td><td>Approve risk appetite for critical clinical systems and require quarterly recovery evidence.</td></tr><tr><td>Management</td><td>How will the organization plan, resource, and coordinate the work?</td><td>Fund backup modernization and assign program milestones.</td></tr><tr><td>Operations</td><td>How is the control performed day to day?</td><td>Run restore tests, monitor backup failures, and escalate missed jobs.</td></tr><tr><td>Assurance</td><td>Is the control designed and operating as claimed?</td><td>Review test evidence, sample restore results, and verify exception handling.</td></tr><tr><td>Audit</td><td>Can an independent reviewer rely on the evidence?</td><td>Assess whether the backup control meets policy and regulatory expectations.</td></tr></tbody></table></section>
+
+          <section id="risk-appetite"><h2>8. Risk Appetite and Risk Tolerance</h2><p><strong>Risk appetite</strong> expresses the type and amount of risk leadership is willing to pursue or retain to meet objectives. <strong>Risk tolerance</strong> turns that appetite into more specific thresholds, such as maximum outage duration, maximum number of unresolved critical findings, maximum age of access reviews, or maximum exposure of internet-facing administration interfaces.</p><p>Weak risk appetite statements are generic: “We have low appetite for cyber risk.” Better statements are decision-useful:</p><ul><li>“Very low tolerance for cyber events that interrupt patient-care workflows for more than four hours.”</li><li>“No tolerance for unencrypted regulated data in unmanaged storage locations.”</li><li>“Moderate tolerance for temporary legacy-system risk only when compensating controls, expiry dates, and funded retirement plans exist.”</li></ul></section>
+
+          <section id="policies"><h2>9. Policies, Standards, Procedures, and Baselines</h2><p>Governance needs a hierarchy. A <strong>policy</strong> states mandatory expectations. A <strong>standard</strong> defines measurable requirements. A <strong>procedure</strong> explains how work is performed. A <strong>baseline</strong> packages required controls for a class of system. A <strong>guideline</strong> gives recommended practices.</p><p>For example, an access-control policy might require least privilege. A standard might require MFA for privileged accounts, quarterly access review, and approved break-glass procedures. A procedure explains how reviews are completed. A baseline says what controls must exist on cloud admin accounts, production databases, SaaS administrators, and domain administrators.</p></section>
+
+          <section id="controls"><h2>10. Controls and Accountability</h2><p>A control without an owner is an aspiration. A governance-ready control record should include:</p><ul><li>control objective;</li><li>control owner;</li><li>control performer;</li><li>assets and systems covered;</li><li>frequency;</li><li>evidence produced;</li><li>success and failure criteria;</li><li>exception process;</li><li>monitoring metric;</li><li>mapping to risks, policies, and frameworks.</li></ul><p>NIST SP 800-53 is useful because it treats controls as selectable, tailorable, assessable safeguards rather than generic slogans. But the catalog alone does not create governance; leadership still has to decide which controls are required, who owns them, and how evidence will be reviewed.</p></section>
+
+          <section id="risk-statements"><h2>11. Writing Governance-Ready Risk Statements</h2><p>Governance discussions fail when risks are written as tool findings. “Server missing patch” is not enough. A governance-ready risk statement should show the business consequence and decision need.</p><div class="example"><p><strong>Weak:</strong> “VPN appliance has a critical vulnerability.”</p><p><strong>Better:</strong> “If the internet-facing VPN appliance remains exposed with affected software, an attacker could gain remote access to systems that support clinical operations, exceeding the organization’s very-low tolerance for patient-care disruption. Infrastructure Operations owns remediation; the COO owns the business risk if remediation misses the emergency change window.”</p></div><p>A useful pattern is: <strong>If [condition], then [threat or failure scenario] could cause [business/privacy/legal impact], affecting [objective] and requiring [owner decision].</strong></p></section>
+
+          <section id="exceptions"><h2>12. Exceptions and Risk Acceptance</h2><p>Exception handling is one of the clearest tests of governance maturity. A real exception record should include the requirement being waived, affected assets, reason, risk owner, compensating controls, evidence, expiry date, review cadence, and acceptance authority. Permanent exceptions are usually a warning sign; they often mean the organization normalized noncompliance instead of making a real risk decision.</p><p>Risk acceptance should not be a technical team saying “we cannot fix it.” It should be an accountable owner deciding that residual risk is acceptable within defined authority after reviewing impact, alternatives, cost, timing, compensating controls, and obligations.</p></section>
+
+          <section id="committees"><h2>13. Governance Committees and Escalation</h2><p>A governance committee should not spend all its time hearing status updates. Its agenda should prioritize decisions:</p><ul><li>risk appetite changes;</li><li>major exceptions and residual risks;</li><li>unfunded risks above tolerance;</li><li>incident and recovery readiness gaps;</li><li>third-party and supply-chain risks;</li><li>privacy/legal/compliance escalations;</li><li>control-failure trends;</li><li>program funding tradeoffs;</li><li>audit findings and overdue corrective actions.</li></ul><p>Escalation paths matter because some questions cannot be resolved inside security. Privacy-law interpretation, securities disclosure, contractual notification, regulatory reporting, customer notification, and risk acceptance above management authority require designated owners.</p></section>
+
+          <section id="metrics"><h2>14. Governance Metrics</h2><p>Governance metrics should help leaders decide. Activity counts are useful only when tied to risk outcomes. “Number of vulnerabilities closed” is weaker than “percentage of externally exposed critical vulnerabilities remediated within risk-tolerance window.” A balanced dashboard should combine:</p><ul><li><strong>Exposure:</strong> critical internet-facing assets, privileged access paths, sensitive data stores, crown-jewel dependencies.</li><li><strong>Control effectiveness:</strong> backup restore pass rate, MFA coverage, EDR coverage, logging coverage, access-review completion.</li><li><strong>Risk decisions:</strong> unresolved high risks, aging exceptions, unfunded risks above appetite, accepted residual risks.</li><li><strong>Incident readiness:</strong> tabletop completion, recovery-test results, detection coverage, playbook currency.</li><li><strong>Third-party risk:</strong> critical supplier review status, privileged vendor access, contract evidence gaps.</li><li><strong>Privacy/data governance:</strong> data-owner coverage, retention exceptions, high-risk processing reviews.</li></ul></section>
+
+          <section id="three-lines"><h2>15. Three Lines of Accountability</h2><p>Many organizations use a “three lines” model. The exact structure varies, but the logic is useful:</p><ul><li><strong>First line:</strong> business and technology owners who own and operate risk and controls.</li><li><strong>Second line:</strong> risk, security governance, compliance, privacy, and similar functions that set expectations and challenge decisions.</li><li><strong>Third line:</strong> internal audit or independent assurance that evaluates whether governance and controls are reliable.</li></ul><p>The trap is outsourcing ownership to the second line. Security governance can advise, monitor, and challenge, but the business must own business risk.</p></section>
+
+          <section id="frameworks"><h2>16. Frameworks: Useful Maps, Not Autopilot</h2><p>Frameworks are useful, but no framework can decide your organization’s risk appetite. NIST CSF helps structure outcomes and profiles. RMF helps sequence risk-management decisions. NIST SP 800-53 helps select and assess controls. ISO/IEC 27001 frames an information security management system. CISA CPGs help prioritize high-impact baseline practices.</p><p>The misuse pattern is “framework theater”: mapping everything to a framework without improving decisions, ownership, evidence, or risk reduction. Good governance asks: Which outcomes matter most? Which controls are required? What evidence proves operation? Who owns residual risk? What changed because of the assessment?</p></section>
+
+          <section id="privacy"><h2>17. Governance Includes Privacy and Data Protection</h2><p>Security and privacy are connected but not identical. A system can be secure and still create privacy risk through excessive collection, unclear purpose, indefinite retention, opaque processing, or inappropriate secondary use. Governance must bring privacy into the same decision system: data owners, processing purpose, retention, access, sharing, subject-rights processes, data-protection impact review where required, and escalation to privacy/legal owners.</p><p>This lesson does not interpret law. It teaches that privacy questions should not be hidden inside technical security tickets.</p></section>
+
+          <section id="board-reporting"><h2>18. Executive and Board Reporting</h2><p>Board-ready reporting should be concise, evidence-based, and decision-oriented. It should separate facts, judgments, and uncertainty. A good report does not say “security is improving” without showing what improved, what remains above tolerance, and what decisions are needed.</p><p>A useful executive report contains:</p><ul><li>top risks and whether they are inside or outside appetite;</li><li>material changes since the last report;</li><li>major incidents, exercises, and lessons learned;</li><li>control effectiveness trends;</li><li>critical third-party and supply-chain issues;</li><li>privacy/legal/compliance escalations;</li><li>exceptions and accepted residual risks;</li><li>decisions, funding, or approvals requested.</li></ul></section>
+
+          <section id="failure-modes"><h2>19. Common Governance Failure Modes</h2><ul><li><strong>Unowned risk:</strong> security identifies risk but no business owner is accountable.</li><li><strong>Control theater:</strong> controls exist on paper but evidence shows weak operation.</li><li><strong>Metric theater:</strong> dashboards count work but hide risk movement.</li><li><strong>Permanent exceptions:</strong> temporary waivers become the normal operating model.</li><li><strong>Framework worship:</strong> mapping replaces thinking.</li><li><strong>Compliance tunnel vision:</strong> passing an audit is mistaken for being resilient.</li><li><strong>Legal late escalation:</strong> privacy, contract, regulator, or disclosure questions are raised after decisions have already been made.</li><li><strong>No residual-risk owner:</strong> remediation misses deadlines and nobody has accepted the remaining risk.</li></ul></section>
+
+          <section id="governance-artifacts"><h2>20. Portfolio Artifacts to Build</h2><p>By the end of Week 14, your portfolio should include governance artifacts that a reviewer could understand without you explaining them verbally:</p><ul><li>cybersecurity governance charter;</li><li>risk appetite and tolerance examples;</li><li>risk register with named owners;</li><li>control ownership matrix;</li><li>policy exception template;</li><li>governance committee agenda;</li><li>executive risk dashboard;</li><li>privacy/legal escalation checklist;</li><li>third-party risk decision record;</li><li>audit evidence index.</li></ul></section>
+
+          <section id="lab"><h2>21. Safe Local Lab: Governance Readiness Review</h2><p>This lab reviews fictional governance items and decides whether each item is ready for committee review. It performs no network activity, scanning, cloud access, legal analysis, or real organizational assessment. It is a local reasoning exercise over JSON data.</p><p>Create a folder named <code>lesson-14-1-governance-lab</code>. Save this as <code>governance_review.json</code>:</p><pre><code>{
+  &quot;organization&quot;: {
+    &quot;name&quot;: &quot;Fictional Northstar Health Services&quot;,
+    &quot;review_period&quot;: &quot;2026-Q3 governance readiness review&quot;,
+    &quot;board_committee&quot;: &quot;Risk and Technology Committee&quot;,
+    &quot;scope_note&quot;: &quot;Fictional educational data only. No real systems, networks, people, or legal obligations are assessed.&quot;,
+    &quot;risk_appetite&quot;: {
+      &quot;patient_care_disruption&quot;: &quot;very_low&quot;,
+      &quot;regulated_data_exposure&quot;: &quot;very_low&quot;,
+      &quot;legacy_internal_tool_risk&quot;: &quot;moderate_with_compensating_controls&quot;,
+      &quot;innovation_delay&quot;: &quot;moderate&quot;
+    }
+  },
+  &quot;governance_items&quot;: [
+    {
+      &quot;id&quot;: &quot;GV-1401-001&quot;,
+      &quot;topic&quot;: &quot;Risk ownership for electronic health record downtime risk&quot;,
+      &quot;business_objective&quot;: &quot;Maintain clinical service continuity during cyber incidents.&quot;,
+      &quot;risk_statement&quot;: &quot;If identity or endpoint controls fail across clinical workstations, ransomware could disrupt patient-care workflows and exceed the organization&#x27;s very-low tolerance for care disruption.&quot;,
+      &quot;decision_needed&quot;: &quot;Approve a funded recovery-readiness improvement plan and name a business risk owner.&quot;,
+      &quot;risk_owner&quot;: &quot;Chief Operating Officer&quot;,
+      &quot;control_owner&quot;: &quot;Infrastructure Operations&quot;,
+      &quot;policy_owner&quot;: &quot;CISO Office&quot;,
+      &quot;evidence&quot;: [
+        &quot;incident exercise report&quot;,
+        &quot;backup restore test&quot;,
+        &quot;EDR coverage dashboard&quot;,
+        &quot;clinical downtime procedure&quot;
+      ],
+      &quot;evidence_age_days&quot;: 28,
+      &quot;mapped_frameworks&quot;: [
+        &quot;NIST CSF 2.0 GV.RR&quot;,
+        &quot;NIST CSF 2.0 RC.RP&quot;,
+        &quot;NIST SP 800-53 CP family&quot;
+      ],
+      &quot;decision_rights_defined&quot;: true,
+      &quot;escalation_path&quot;: [
+        &quot;CISO&quot;,
+        &quot;COO&quot;,
+        &quot;Risk and Technology Committee&quot;
+      ],
+      &quot;legal_privacy_escalation&quot;: false,
+      &quot;metrics&quot;: [
+        &quot;restore test pass rate&quot;,
+        &quot;critical endpoint EDR coverage&quot;,
+        &quot;downtime procedure exercise completion&quot;
+      ],
+      &quot;status&quot;: &quot;ready_for_committee&quot;
+    },
+    {
+      &quot;id&quot;: &quot;GV-1401-002&quot;,
+      &quot;topic&quot;: &quot;Unowned cloud data lake risk&quot;,
+      &quot;business_objective&quot;: &quot;Enable analytics without unmanaged personal-data exposure.&quot;,
+      &quot;risk_statement&quot;: &quot;If the cloud data lake contains personal or regulated data without a named data owner, access review, retention rule, or processing purpose, privacy and compliance risk may be accepted unintentionally.&quot;,
+      &quot;decision_needed&quot;: &quot;Assign a data owner, confirm lawful/approved purpose through the privacy function, and pause new ingestion until ownership is clarified.&quot;,
+      &quot;risk_owner&quot;: &quot;&quot;,
+      &quot;control_owner&quot;: &quot;Cloud Platform Team&quot;,
+      &quot;policy_owner&quot;: &quot;Privacy Office&quot;,
+      &quot;evidence&quot;: [
+        &quot;asset inventory entry&quot;,
+        &quot;IAM group export&quot;
+      ],
+      &quot;evidence_age_days&quot;: 73,
+      &quot;mapped_frameworks&quot;: [
+        &quot;NIST CSF 2.0 GV.OC&quot;,
+        &quot;NIST Privacy Framework GV.PO-P&quot;,
+        &quot;NIST SP 800-53 AC family&quot;
+      ],
+      &quot;decision_rights_defined&quot;: false,
+      &quot;escalation_path&quot;: [
+        &quot;Privacy Office&quot;,
+        &quot;Data Governance Council&quot;
+      ],
+      &quot;legal_privacy_escalation&quot;: true,
+      &quot;metrics&quot;: [
+        &quot;owner assignment&quot;,
+        &quot;access review completion&quot;,
+        &quot;retention rule coverage&quot;
+      ],
+      &quot;status&quot;: &quot;needs_owner_and_privacy_review&quot;
+    },
+    {
+      &quot;id&quot;: &quot;GV-1401-003&quot;,
+      &quot;topic&quot;: &quot;Policy exception for legacy reporting system&quot;,
+      &quot;business_objective&quot;: &quot;Keep archival reporting available while modernization is scheduled.&quot;,
+      &quot;risk_statement&quot;: &quot;If a legacy internal reporting system remains exempt from the standard hardening baseline without expiration, residual risk can become normalized and invisible.&quot;,
+      &quot;decision_needed&quot;: &quot;Approve or reject a time-bound exception with compensating controls, owner, review date, and retirement milestone.&quot;,
+      &quot;risk_owner&quot;: &quot;Director of Data Services&quot;,
+      &quot;control_owner&quot;: &quot;Data Services&quot;,
+      &quot;policy_owner&quot;: &quot;Security Governance Team&quot;,
+      &quot;evidence&quot;: [
+        &quot;exception request&quot;,
+        &quot;network segmentation record&quot;,
+        &quot;modernization roadmap&quot;,
+        &quot;vulnerability scan summary&quot;
+      ],
+      &quot;evidence_age_days&quot;: 19,
+      &quot;mapped_frameworks&quot;: [
+        &quot;NIST CSF 2.0 GV.RM&quot;,
+        &quot;NIST CSF 2.0 GV.PO&quot;,
+        &quot;NIST SP 800-53 RA family&quot;
+      ],
+      &quot;decision_rights_defined&quot;: true,
+      &quot;escalation_path&quot;: [
+        &quot;CISO&quot;,
+        &quot;Architecture Review Board&quot;
+      ],
+      &quot;legal_privacy_escalation&quot;: false,
+      &quot;metrics&quot;: [
+        &quot;exception age&quot;,
+        &quot;open compensating control failures&quot;,
+        &quot;retirement milestone status&quot;
+      ],
+      &quot;status&quot;: &quot;ready_with_conditions&quot;
+    },
+    {
+      &quot;id&quot;: &quot;GV-1401-004&quot;,
+      &quot;topic&quot;: &quot;Third-party managed service provider access&quot;,
+      &quot;business_objective&quot;: &quot;Use managed operations support without excessive administrative access risk.&quot;,
+      &quot;risk_statement&quot;: &quot;If the managed service provider has privileged access without contractual evidence, logging, MFA, and emergency revocation procedures, the organization may inherit unmanaged third-party risk.&quot;,
+      &quot;decision_needed&quot;: &quot;Require vendor-risk review, access evidence, contract control language, and incident notification expectations before renewal.&quot;,
+      &quot;risk_owner&quot;: &quot;Chief Financial Officer&quot;,
+      &quot;control_owner&quot;: &quot;Vendor Management&quot;,
+      &quot;policy_owner&quot;: &quot;Third-Party Risk Office&quot;,
+      &quot;evidence&quot;: [
+        &quot;contract summary&quot;,
+        &quot;vendor questionnaire&quot;
+      ],
+      &quot;evidence_age_days&quot;: 120,
+      &quot;mapped_frameworks&quot;: [
+        &quot;NIST CSF 2.0 GV.SC&quot;,
+        &quot;CISA CPG third-party risk&quot;,
+        &quot;NIST SP 800-53 SR family&quot;
+      ],
+      &quot;decision_rights_defined&quot;: true,
+      &quot;escalation_path&quot;: [
+        &quot;Third-Party Risk Office&quot;,
+        &quot;Legal&quot;,
+        &quot;CFO&quot;
+      ],
+      &quot;legal_privacy_escalation&quot;: true,
+      &quot;metrics&quot;: [
+        &quot;vendor MFA evidence&quot;,
+        &quot;privileged access review&quot;,
+        &quot;contractual notification terms&quot;
+      ],
+      &quot;status&quot;: &quot;needs_evidence_refresh&quot;
+    },
+    {
+      &quot;id&quot;: &quot;GV-1401-005&quot;,
+      &quot;topic&quot;: &quot;Security metrics for executive reporting&quot;,
+      &quot;business_objective&quot;: &quot;Give leadership a truthful view of risk movement and investment needs.&quot;,
+      &quot;risk_statement&quot;: &quot;If executive metrics report only activity counts, leaders may fund visible work while missing unresolved business risk.&quot;,
+      &quot;decision_needed&quot;: &quot;Replace activity-only metrics with a balanced risk dashboard covering exposure, control effectiveness, exceptions, incidents, third-party risk, and overdue decisions.&quot;,
+      &quot;risk_owner&quot;: &quot;CISO&quot;,
+      &quot;control_owner&quot;: &quot;Security Governance Team&quot;,
+      &quot;policy_owner&quot;: &quot;CISO Office&quot;,
+      &quot;evidence&quot;: [
+        &quot;monthly metrics pack&quot;,
+        &quot;risk register&quot;,
+        &quot;incident trend summary&quot;,
+        &quot;exception register&quot;
+      ],
+      &quot;evidence_age_days&quot;: 14,
+      &quot;mapped_frameworks&quot;: [
+        &quot;NIST CSF 2.0 GV.OV&quot;,
+        &quot;NIST SP 800-55&quot;,
+        &quot;NIST SP 800-37 Monitor&quot;
+      ],
+      &quot;decision_rights_defined&quot;: true,
+      &quot;escalation_path&quot;: [
+        &quot;CISO&quot;,
+        &quot;Risk and Technology Committee&quot;
+      ],
+      &quot;legal_privacy_escalation&quot;: false,
+      &quot;metrics&quot;: [
+        &quot;risk reduction trend&quot;,
+        &quot;control failure rate&quot;,
+        &quot;exception burn-down&quot;,
+        &quot;critical decision aging&quot;
+      ],
+      &quot;status&quot;: &quot;ready_for_committee&quot;
+    }
+  ]
+}</code></pre><p>Save this as <code>governance_readiness_review.py</code>:</p><pre><code>import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+DATA_FILE = Path(&quot;governance_review.json&quot;)
+FRESH_EVIDENCE_DAYS = 90
+
+
+@dataclass
+class GovernanceReview:
+    item_id: str
+    topic: str
+    readiness: str
+    missing: list[str]
+    escalations: list[str]
+    committee_question: str
+    dashboard_line: str
+
+
+def load_data(path: Path = DATA_FILE) -&gt; dict[str, Any]:
+    return json.loads(path.read_text())
+
+
+def missing_governance_inputs(item: dict[str, Any]) -&gt; list[str]:
+    missing: list[str] = []
+    if not item.get(&quot;risk_owner&quot;):
+        missing.append(&quot;named business risk owner&quot;)
+    if not item.get(&quot;control_owner&quot;):
+        missing.append(&quot;named control owner&quot;)
+    if not item.get(&quot;policy_owner&quot;):
+        missing.append(&quot;named policy owner&quot;)
+    if not item.get(&quot;decision_needed&quot;):
+        missing.append(&quot;clear decision requested&quot;)
+    if not item.get(&quot;risk_statement&quot;):
+        missing.append(&quot;risk statement&quot;)
+    if not item.get(&quot;decision_rights_defined&quot;):
+        missing.append(&quot;defined decision rights&quot;)
+    if len(item.get(&quot;evidence&quot;, [])) &lt; 3:
+        missing.append(&quot;sufficient evidence package&quot;)
+    if item.get(&quot;evidence_age_days&quot;, 999) &gt; FRESH_EVIDENCE_DAYS:
+        missing.append(&quot;fresh evidence&quot;)
+    if not item.get(&quot;metrics&quot;):
+        missing.append(&quot;monitoring metric&quot;)
+    if not item.get(&quot;escalation_path&quot;):
+        missing.append(&quot;escalation path&quot;)
+    return missing
+
+
+def escalation_flags(item: dict[str, Any]) -&gt; list[str]:
+    flags: list[str] = []
+    if item.get(&quot;legal_privacy_escalation&quot;):
+        flags.append(&quot;privacy/legal/compliance review required&quot;)
+    if &quot;third&quot; in item.get(&quot;topic&quot;, &quot;&quot;).lower() or &quot;vendor&quot; in &quot; &quot;.join(item.get(&quot;mapped_frameworks&quot;, [])).lower():
+        flags.append(&quot;third-party risk review required&quot;)
+    if not item.get(&quot;risk_owner&quot;):
+        flags.append(&quot;executive ownership decision required&quot;)
+    if item.get(&quot;status&quot;) == &quot;ready_with_conditions&quot;:
+        flags.append(&quot;conditional approval must include expiry and compensating controls&quot;)
+    return flags
+
+
+def determine_readiness(item: dict[str, Any]) -&gt; str:
+    missing = missing_governance_inputs(item)
+    flags = escalation_flags(item)
+    if &quot;named business risk owner&quot; in missing:
+        return &quot;not_ready_missing_owner&quot;
+    if &quot;fresh evidence&quot; in missing or &quot;sufficient evidence package&quot; in missing:
+        return &quot;not_ready_evidence_gap&quot;
+    if &quot;privacy/legal/compliance review required&quot; in flags:
+        return &quot;ready_only_after_privacy_legal_review&quot;
+    if item.get(&quot;status&quot;) == &quot;ready_with_conditions&quot;:
+        return &quot;ready_with_conditions&quot;
+    if not missing:
+        return &quot;ready_for_committee&quot;
+    return &quot;needs_governance_cleanup&quot;
+
+
+def build_committee_question(item: dict[str, Any]) -&gt; str:
+    if not item.get(&quot;risk_owner&quot;):
+        return f&quot;Who is accountable for accepting, reducing, transferring, or avoiding the risk in {item[&#x27;topic&#x27;]}?&quot;
+    if item.get(&quot;legal_privacy_escalation&quot;):
+        return f&quot;Has {item[&#x27;policy_owner&#x27;]} confirmed whether privacy, legal, contractual, or regulatory duties affect this decision?&quot;
+    if item.get(&quot;status&quot;) == &quot;ready_with_conditions&quot;:
+        return &quot;Should this exception be approved only with an expiry date, compensating controls, and a named review owner?&quot;
+    return f&quot;Does the proposed decision align with risk appetite and the business objective: {item[&#x27;business_objective&#x27;]}&quot;
+
+
+def dashboard_line(item: dict[str, Any], readiness: str) -&gt; str:
+    owner = item.get(&quot;risk_owner&quot;) or &quot;UNASSIGNED&quot;
+    evidence_age = item.get(&quot;evidence_age_days&quot;, &quot;unknown&quot;)
+    return f&quot;{item[&#x27;id&#x27;]} | {readiness} | risk owner: {owner} | evidence age: {evidence_age} days | decision: {item[&#x27;decision_needed&#x27;]}&quot;
+
+
+def review_item(item: dict[str, Any]) -&gt; GovernanceReview:
+    readiness = determine_readiness(item)
+    return GovernanceReview(
+        item_id=item[&quot;id&quot;],
+        topic=item[&quot;topic&quot;],
+        readiness=readiness,
+        missing=missing_governance_inputs(item),
+        escalations=escalation_flags(item),
+        committee_question=build_committee_question(item),
+        dashboard_line=dashboard_line(item, readiness),
+    )
+
+
+def summarize_reviews(data: dict[str, Any]) -&gt; dict[str, Any]:
+    reviews = [review_item(item) for item in data[&quot;governance_items&quot;]]
+    counts: dict[str, int] = {}
+    for review in reviews:
+        counts[review.readiness] = counts.get(review.readiness, 0) + 1
+    return {
+        &quot;organization&quot;: data[&quot;organization&quot;][&quot;name&quot;],
+        &quot;review_period&quot;: data[&quot;organization&quot;][&quot;review_period&quot;],
+        &quot;readiness_counts&quot;: counts,
+        &quot;reviews&quot;: [review.__dict__ for review in reviews],
+    }
+
+
+def main() -&gt; None:
+    data = load_data()
+    print(json.dumps(summarize_reviews(data), indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre><p>Run the lab:</p><pre><code>python3 governance_readiness_review.py
+# or
+python governance_readiness_review.py</code></pre><p>Optional test setup. Save this as <code>conftest.py</code>:</p><pre><code>import json
+import pytest
+
+
+@pytest.fixture
+def sample_data():
+    return json.loads(&quot;{\&quot;organization\&quot;: {\&quot;name\&quot;: \&quot;Fictional Northstar Health Services\&quot;, \&quot;review_period\&quot;: \&quot;2026-Q3 governance readiness review\&quot;, \&quot;board_committee\&quot;: \&quot;Risk and Technology Committee\&quot;, \&quot;scope_note\&quot;: \&quot;Fictional educational data only. No real systems, networks, people, or legal obligations are assessed.\&quot;, \&quot;risk_appetite\&quot;: {\&quot;patient_care_disruption\&quot;: \&quot;very_low\&quot;, \&quot;regulated_data_exposure\&quot;: \&quot;very_low\&quot;, \&quot;legacy_internal_tool_risk\&quot;: \&quot;moderate_with_compensating_controls\&quot;, \&quot;innovation_delay\&quot;: \&quot;moderate\&quot;}}, \&quot;governance_items\&quot;: [{\&quot;id\&quot;: \&quot;GV-1401-001\&quot;, \&quot;topic\&quot;: \&quot;Risk ownership for electronic health record downtime risk\&quot;, \&quot;business_objective\&quot;: \&quot;Maintain clinical service continuity during cyber incidents.\&quot;, \&quot;risk_statement\&quot;: \&quot;If identity or endpoint controls fail across clinical workstations, ransomware could disrupt patient-care workflows and exceed the organization&#x27;s very-low tolerance for care disruption.\&quot;, \&quot;decision_needed\&quot;: \&quot;Approve a funded recovery-readiness improvement plan and name a business risk owner.\&quot;, \&quot;risk_owner\&quot;: \&quot;Chief Operating Officer\&quot;, \&quot;control_owner\&quot;: \&quot;Infrastructure Operations\&quot;, \&quot;policy_owner\&quot;: \&quot;CISO Office\&quot;, \&quot;evidence\&quot;: [\&quot;incident exercise report\&quot;, \&quot;backup restore test\&quot;, \&quot;EDR coverage dashboard\&quot;, \&quot;clinical downtime procedure\&quot;], \&quot;evidence_age_days\&quot;: 28, \&quot;mapped_frameworks\&quot;: [\&quot;NIST CSF 2.0 GV.RR\&quot;, \&quot;NIST CSF 2.0 RC.RP\&quot;, \&quot;NIST SP 800-53 CP family\&quot;], \&quot;decision_rights_defined\&quot;: true, \&quot;escalation_path\&quot;: [\&quot;CISO\&quot;, \&quot;COO\&quot;, \&quot;Risk and Technology Committee\&quot;], \&quot;legal_privacy_escalation\&quot;: false, \&quot;metrics\&quot;: [\&quot;restore test pass rate\&quot;, \&quot;critical endpoint EDR coverage\&quot;, \&quot;downtime procedure exercise completion\&quot;], \&quot;status\&quot;: \&quot;ready_for_committee\&quot;}, {\&quot;id\&quot;: \&quot;GV-1401-002\&quot;, \&quot;topic\&quot;: \&quot;Unowned cloud data lake risk\&quot;, \&quot;business_objective\&quot;: \&quot;Enable analytics without unmanaged personal-data exposure.\&quot;, \&quot;risk_statement\&quot;: \&quot;If the cloud data lake contains personal or regulated data without a named data owner, access review, retention rule, or processing purpose, privacy and compliance risk may be accepted unintentionally.\&quot;, \&quot;decision_needed\&quot;: \&quot;Assign a data owner, confirm lawful/approved purpose through the privacy function, and pause new ingestion until ownership is clarified.\&quot;, \&quot;risk_owner\&quot;: \&quot;\&quot;, \&quot;control_owner\&quot;: \&quot;Cloud Platform Team\&quot;, \&quot;policy_owner\&quot;: \&quot;Privacy Office\&quot;, \&quot;evidence\&quot;: [\&quot;asset inventory entry\&quot;, \&quot;IAM group export\&quot;], \&quot;evidence_age_days\&quot;: 73, \&quot;mapped_frameworks\&quot;: [\&quot;NIST CSF 2.0 GV.OC\&quot;, \&quot;NIST Privacy Framework GV.PO-P\&quot;, \&quot;NIST SP 800-53 AC family\&quot;], \&quot;decision_rights_defined\&quot;: false, \&quot;escalation_path\&quot;: [\&quot;Privacy Office\&quot;, \&quot;Data Governance Council\&quot;], \&quot;legal_privacy_escalation\&quot;: true, \&quot;metrics\&quot;: [\&quot;owner assignment\&quot;, \&quot;access review completion\&quot;, \&quot;retention rule coverage\&quot;], \&quot;status\&quot;: \&quot;needs_owner_and_privacy_review\&quot;}, {\&quot;id\&quot;: \&quot;GV-1401-003\&quot;, \&quot;topic\&quot;: \&quot;Policy exception for legacy reporting system\&quot;, \&quot;business_objective\&quot;: \&quot;Keep archival reporting available while modernization is scheduled.\&quot;, \&quot;risk_statement\&quot;: \&quot;If a legacy internal reporting system remains exempt from the standard hardening baseline without expiration, residual risk can become normalized and invisible.\&quot;, \&quot;decision_needed\&quot;: \&quot;Approve or reject a time-bound exception with compensating controls, owner, review date, and retirement milestone.\&quot;, \&quot;risk_owner\&quot;: \&quot;Director of Data Services\&quot;, \&quot;control_owner\&quot;: \&quot;Data Services\&quot;, \&quot;policy_owner\&quot;: \&quot;Security Governance Team\&quot;, \&quot;evidence\&quot;: [\&quot;exception request\&quot;, \&quot;network segmentation record\&quot;, \&quot;modernization roadmap\&quot;, \&quot;vulnerability scan summary\&quot;], \&quot;evidence_age_days\&quot;: 19, \&quot;mapped_frameworks\&quot;: [\&quot;NIST CSF 2.0 GV.RM\&quot;, \&quot;NIST CSF 2.0 GV.PO\&quot;, \&quot;NIST SP 800-53 RA family\&quot;], \&quot;decision_rights_defined\&quot;: true, \&quot;escalation_path\&quot;: [\&quot;CISO\&quot;, \&quot;Architecture Review Board\&quot;], \&quot;legal_privacy_escalation\&quot;: false, \&quot;metrics\&quot;: [\&quot;exception age\&quot;, \&quot;open compensating control failures\&quot;, \&quot;retirement milestone status\&quot;], \&quot;status\&quot;: \&quot;ready_with_conditions\&quot;}, {\&quot;id\&quot;: \&quot;GV-1401-004\&quot;, \&quot;topic\&quot;: \&quot;Third-party managed service provider access\&quot;, \&quot;business_objective\&quot;: \&quot;Use managed operations support without excessive administrative access risk.\&quot;, \&quot;risk_statement\&quot;: \&quot;If the managed service provider has privileged access without contractual evidence, logging, MFA, and emergency revocation procedures, the organization may inherit unmanaged third-party risk.\&quot;, \&quot;decision_needed\&quot;: \&quot;Require vendor-risk review, access evidence, contract control language, and incident notification expectations before renewal.\&quot;, \&quot;risk_owner\&quot;: \&quot;Chief Financial Officer\&quot;, \&quot;control_owner\&quot;: \&quot;Vendor Management\&quot;, \&quot;policy_owner\&quot;: \&quot;Third-Party Risk Office\&quot;, \&quot;evidence\&quot;: [\&quot;contract summary\&quot;, \&quot;vendor questionnaire\&quot;], \&quot;evidence_age_days\&quot;: 120, \&quot;mapped_frameworks\&quot;: [\&quot;NIST CSF 2.0 GV.SC\&quot;, \&quot;CISA CPG third-party risk\&quot;, \&quot;NIST SP 800-53 SR family\&quot;], \&quot;decision_rights_defined\&quot;: true, \&quot;escalation_path\&quot;: [\&quot;Third-Party Risk Office\&quot;, \&quot;Legal\&quot;, \&quot;CFO\&quot;], \&quot;legal_privacy_escalation\&quot;: true, \&quot;metrics\&quot;: [\&quot;vendor MFA evidence\&quot;, \&quot;privileged access review\&quot;, \&quot;contractual notification terms\&quot;], \&quot;status\&quot;: \&quot;needs_evidence_refresh\&quot;}, {\&quot;id\&quot;: \&quot;GV-1401-005\&quot;, \&quot;topic\&quot;: \&quot;Security metrics for executive reporting\&quot;, \&quot;business_objective\&quot;: \&quot;Give leadership a truthful view of risk movement and investment needs.\&quot;, \&quot;risk_statement\&quot;: \&quot;If executive metrics report only activity counts, leaders may fund visible work while missing unresolved business risk.\&quot;, \&quot;decision_needed\&quot;: \&quot;Replace activity-only metrics with a balanced risk dashboard covering exposure, control effectiveness, exceptions, incidents, third-party risk, and overdue decisions.\&quot;, \&quot;risk_owner\&quot;: \&quot;CISO\&quot;, \&quot;control_owner\&quot;: \&quot;Security Governance Team\&quot;, \&quot;policy_owner\&quot;: \&quot;CISO Office\&quot;, \&quot;evidence\&quot;: [\&quot;monthly metrics pack\&quot;, \&quot;risk register\&quot;, \&quot;incident trend summary\&quot;, \&quot;exception register\&quot;], \&quot;evidence_age_days\&quot;: 14, \&quot;mapped_frameworks\&quot;: [\&quot;NIST CSF 2.0 GV.OV\&quot;, \&quot;NIST SP 800-55\&quot;, \&quot;NIST SP 800-37 Monitor\&quot;], \&quot;decision_rights_defined\&quot;: true, \&quot;escalation_path\&quot;: [\&quot;CISO\&quot;, \&quot;Risk and Technology Committee\&quot;], \&quot;legal_privacy_escalation\&quot;: false, \&quot;metrics\&quot;: [\&quot;risk reduction trend\&quot;, \&quot;control failure rate\&quot;, \&quot;exception burn-down\&quot;, \&quot;critical decision aging\&quot;], \&quot;status\&quot;: \&quot;ready_for_committee\&quot;}]}&quot;)
+</code></pre><p>Save this as <code>test_governance_readiness_review.py</code> and run <code>pytest</code>:</p><pre><code>from governance_readiness_review import determine_readiness, review_item, summarize_reviews
+
+
+def item_by_id(data, item_id):
+    return next(item for item in data[&quot;governance_items&quot;] if item[&quot;id&quot;] == item_id)
+
+
+def test_missing_risk_owner_blocks_readiness(sample_data):
+    item = item_by_id(sample_data, &quot;GV-1401-002&quot;)
+    review = review_item(item)
+    assert review.readiness == &quot;not_ready_missing_owner&quot;
+    assert &quot;named business risk owner&quot; in review.missing
+    assert &quot;privacy/legal/compliance review required&quot; in review.escalations
+
+
+def test_stale_vendor_evidence_is_not_ready(sample_data):
+    item = item_by_id(sample_data, &quot;GV-1401-004&quot;)
+    review = review_item(item)
+    assert review.readiness == &quot;not_ready_evidence_gap&quot;
+    assert &quot;fresh evidence&quot; in review.missing
+    assert &quot;third-party risk review required&quot; in review.escalations
+
+
+def test_ready_items_have_committee_questions(sample_data):
+    item = item_by_id(sample_data, &quot;GV-1401-001&quot;)
+    review = review_item(item)
+    assert review.readiness == &quot;ready_for_committee&quot;
+    assert &quot;risk appetite&quot; in review.committee_question
+
+
+def test_summary_counts_all_items(sample_data):
+    summary = summarize_reviews(sample_data)
+    assert sum(summary[&quot;readiness_counts&quot;].values()) == len(sample_data[&quot;governance_items&quot;])
+    assert summary[&quot;readiness_counts&quot;][&quot;ready_for_committee&quot;] == 2
+</code></pre><p>Review the output and ask: Which items are decision-ready? Which need evidence? Which need a named risk owner? Which require privacy/legal or third-party risk escalation? Which dashboard lines would be useful for an executive committee?</p></section>
+
+          <section id="assessment"><h2>22. Self-Assessment Questions</h2><ol><li>Why can security teams advise on risk but not accept enterprise risk alone?</li><li>What is the difference between a risk owner and a control owner?</li><li>Why is risk appetite useless if it cannot drive a decision?</li><li>What makes a policy exception governance-ready?</li><li>Why can compliance evidence fail to prove control effectiveness?</li><li>What should a governance committee decide rather than merely hear?</li><li>How does privacy risk differ from security risk?</li><li>Why should board reporting separate facts, judgments, and uncertainty?</li><li>What is framework theater?</li><li>What evidence would you request before approving a privileged third-party access renewal?</li><li>Why should residual risk have a named owner?</li><li>What makes a metric decision-useful?</li><li>When should legal or privacy owners be escalated?</li><li>How can risk appetite shape remediation timelines?</li><li>What is one sign that governance has become paperwork rather than risk management?</li></ol></section>
+
+          <section id="deliverables"><h2>23. Deliverables</h2><ul><li>A one-page definition of cybersecurity governance for a fictional organization.</li><li>A RACI-style matrix for risk owner, control owner, policy owner, data owner, security governance, compliance/privacy/legal, and audit.</li><li>Three governance-ready risk statements.</li><li>A sample policy exception record with expiry and compensating controls.</li><li>A governance committee agenda that asks for decisions, not only updates.</li><li>Output from the safe local governance readiness lab.</li></ul></section>
+
+          <section id="further-reading"><h2>24. Further Reading</h2><ul><li><a href="https://www.nist.gov/cyberframework">NIST Cybersecurity Framework 2.0.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/37/r2/final">NIST SP 800-37 Rev. 2 — Risk Management Framework.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final">NIST SP 800-53 Rev. 5 — Security and Privacy Controls.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/55/v1/final">NIST SP 800-55 Vol. 1 — Performance Measurement Guide for Information Security.</a></li><li><a href="https://www.nist.gov/privacy-framework">NIST Privacy Framework.</a></li><li><a href="https://www.cisa.gov/cybersecurity-performance-goals-2-0-cpg-2-0">CISA Cybersecurity Performance Goals 2.0.</a></li><li><a href="https://www.iso.org/standard/27001">ISO/IEC 27001:2022 — Information Security Management Systems.</a></li></ul></section>
+        </article>
+        <aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside>
+      </div>
+      <div class="prev-next"><a class="btn" href="index.html">← Week 14 Overview</a><a class="btn btn-primary" href="risk-management-controls-and-assurance.html">Lesson 14.2 →</a></div>
+      <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

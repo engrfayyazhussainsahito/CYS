@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 15.5: Secure by Design, Cyber Resilience, and Future-Ready Programs | MS Cybersecurity</title>
+  <meta name="description" content="Secure by design, secure by default, cyber resilience, SSDF, recovery, continuity, software supply chain, secure roadmaps, metrics, governance, and future-ready cybersecurity programs.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-15-lesson-5" data-title="Lesson 15.5: Secure by Design, Cyber Resilience, and Future-Ready Programs">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 15</a> / Lesson 15.5</div>
+      <header class="hero"><div class="eyebrow">Week 15 · Lesson 15.5</div><h1>Secure by Design, Cyber Resilience, and Future-Ready Programs</h1><p class="lead">Future-ready security is not a pile of new tools. It is the ability to design safer systems by default, recover critical services under stress, adapt to new technology, and prove improvement with evidence. This lesson converts AI, PQC, Zero Trust, OT/IoT, governance, SOC, incident response, cloud, and secure software lessons into a durable security program.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>100–140 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Advanced MS synthesis</div><div class="meta-item"><strong>Required background</strong>Weeks 1–15 recommended</div><div class="meta-item"><strong>Lab mode</strong>Safe local triage using fictional program records</div></div></header>
+
+      <div class="callout"><strong>Boundary:</strong> This lesson is about defensive design, resilience planning, governance, and evidence. It does not teach exploitation, bypassing controls, scanning real assets, breaking recovery systems, accessing vendors, or evaluating real organizations. All practical work uses fictional local records.</div>
+
+      <div class="lesson-layout">
+        <article class="lesson-content">
+          <section id="objectives"><h2>1. Learning Objectives</h2><p>By the end of this lesson, you should be able to:</p><ul><li>Explain the difference between secure by design, secure by default, secure development, cyber resilience, and business continuity.</li><li>Translate security principles into product, architecture, procurement, operations, and governance decisions.</li><li>Use SSDF-style practices to connect requirements, threat modeling, secure implementation, testing, release, and vulnerability response.</li><li>Design resilience around mission functions, dependencies, recovery objectives, tested playbooks, observability, and improvement loops.</li><li>Evaluate future technology decisions using evidence instead of hype.</li><li>Build a measurable improvement roadmap with owners, acceptance criteria, and review cadence.</li></ul></section>
+
+          <section id="research-basis"><h2>2. Research Basis</h2><p>This lesson is grounded in current defensive frameworks and public guidance. CISA’s Secure by Design work argues that software manufacturers should take ownership of security outcomes, ship secure defaults, and use transparency/accountability to shift risk away from customers. NIST SP 800-218 defines the Secure Software Development Framework as high-level practices that can be integrated into software development lifecycles to reduce vulnerability risk. NIST SP 800-160 Vol. 2 Rev. 1 treats cyber resiliency as a systems-engineering discipline for achieving resilience outcomes across a system lifecycle. NIST SP 800-184 provides guidance for recovery planning, playbook development, testing, improvement, and recovery metrics. NIST CSF 2.0 provides a governance and improvement model that connects Identify, Protect, Detect, Respond, and Recover through the Govern function.</p><div class="callout"><strong>Important:</strong> A framework is not evidence by itself. A future-ready program has to show artifacts: design decisions, threat models, secure default reviews, tests, dependency records, incident lessons learned, recovery exercises, metrics, and owner-approved residual risk decisions.</div></section>
+
+          <section id="terms"><h2>3. Key Terms</h2><div class="table-wrap"><table><thead><tr><th>Term</th><th>Meaning</th><th>Common failure</th></tr></thead><tbody><tr><td>Secure by design</td><td>Security is built into architecture, product decisions, engineering practices, and ownership before release.</td><td>Adding controls only after repeated customer incidents.</td></tr><tr><td>Secure by default</td><td>The default configuration is safe for ordinary users without requiring expert hardening.</td><td>Shipping risky defaults and expecting customers to discover every setting.</td></tr><tr><td>SSDF</td><td>A set of secure software development practices that can be integrated into development lifecycles.</td><td>Treating secure development as a scanner instead of a lifecycle discipline.</td></tr><tr><td>Cyber resilience</td><td>The ability to anticipate, withstand, recover from, and adapt to adverse cyber conditions.</td><td>Assuming prevention will always work or backups will restore without testing.</td></tr><tr><td>Future-ready program</td><td>A security program that can evaluate, adopt, reject, or govern new technology with evidence.</td><td>Buying tools before defining risk, owners, data flows, recovery, and measurement.</td></tr></tbody></table></div></section>
+
+          <section id="why-add-on-security-fails"><h2>4. Why Add-On Security Fails</h2><p>Add-on security fails because many security outcomes are determined by architecture and default behavior before a control team sees the system. Authentication recovery, logging, updateability, data retention, dependency management, safe failure, and rollback cannot be reliably bolted on after a fragile design has become a production dependency.</p><p>Typical late-security symptoms include:</p><ul><li>administrators must manually discover hardening settings;</li><li>logs exist but do not support investigation or recovery decisions;</li><li>backup jobs run but restore procedures are untested;</li><li>dependencies are patched only after emergency incidents;</li><li>privacy and legal constraints are discovered after data is already collected;</li><li>critical systems cannot be patched because rollback and maintenance processes are unclear;</li><li>AI, PQC, SASE, or OT initiatives are launched before ownership and evidence are defined.</li></ul><p>The correction is not “more checklists.” The correction is design-time ownership, secure defaults, release gates, recovery testing, and governance that can say no.</p></section>
+
+          <section id="secure-by-design-principles"><h2>5. Secure-by-Design Principles</h2><p>Secure-by-design programs move responsibility earlier in the lifecycle and higher in the organization. They ask whether the product or system can be safely operated by ordinary customers, administrators, and responders without heroic manual hardening.</p><div class="grid"><article class="card"><h3>1. Own security outcomes</h3><p>Teams must own recurring security failures as product/design issues, not only customer misconfiguration.</p></article><article class="card"><h3>2. Ship secure defaults</h3><p>MFA, least privilege, logging, encryption, rate limits, safe sharing, and update channels should default to safer states where practical.</p></article><article class="card"><h3>3. Make risk visible</h3><p>Customers, operators, and risk owners need transparent documentation, configuration visibility, release notes, and vulnerability handling.</p></article><article class="card"><h3>4. Build for operation</h3><p>Security controls must be observable, testable, recoverable, and usable during incidents.</p></article></div></section>
+
+          <section id="secure-defaults"><h2>6. Secure Defaults and the Customer Burden Test</h2><p>A good secure-default review asks a blunt question: <em>What dangerous condition does a normal user inherit if they do nothing?</em> The answer reveals how much risk the product pushes onto customers, administrators, students, hospitals, small businesses, OT operators, and cloud teams.</p><div class="table-wrap"><table><thead><tr><th>Default area</th><th>Weak default</th><th>Safer default</th></tr></thead><tbody><tr><td>Identity</td><td>Admins can operate without MFA.</td><td>Privileged access requires phishing-resistant or strong MFA where feasible.</td></tr><tr><td>Logging</td><td>Security logs disabled or short-retained.</td><td>Security-relevant logs enabled with documented retention and export paths.</td></tr><tr><td>Network exposure</td><td>Services listen broadly unless manually restricted.</td><td>Least exposure; explicit enablement for risky interfaces.</td></tr><tr><td>Data sharing</td><td>Broad sharing or public links are convenient defaults.</td><td>Least-sharing defaults with expiration and owner visibility.</td></tr><tr><td>Updates</td><td>Manual, unclear, or unsafe update paths.</td><td>Signed, testable, observable updates with rollback guidance.</td></tr><tr><td>Recovery</td><td>Backup existence is treated as recovery proof.</td><td>Restore tests, recovery objectives, and role-based playbooks are maintained.</td></tr></tbody></table></div></section>
+
+          <section id="ssdf"><h2>7. SSDF as a Lifecycle Spine</h2><p>The Secure Software Development Framework is useful because it breaks secure development into practices that fit into real engineering workflows. A mature program uses SSDF-style thinking to ask whether the organization is prepared, whether software is protected from tampering, whether secure software is produced, and whether vulnerabilities are responded to.</p><div class="mermaid">flowchart LR
+  A[Governance and policy] --> B[Secure requirements]
+  B --> C[Threat modeling and abuse cases]
+  C --> D[Secure implementation]
+  D --> E[Testing and review]
+  E --> F[Release decision]
+  F --> G[Deployment and telemetry]
+  G --> H[Vulnerability response]
+  H --> I[Lessons learned]
+  I --> B
+</div><p>This loop is more important than any single tool. Static analysis, dependency scanning, code review, fuzzing, SBOMs, penetration testing, incident response, and customer feedback all become useful only when they feed decisions with owners and acceptance criteria.</p></section>
+
+          <section id="design-evidence"><h2>8. Design Evidence That Survives Scrutiny</h2><p>Design evidence should help another team understand the decision later. A secure-by-design claim is weak when it depends on memory, slogans, or screenshots without context.</p><p>Useful evidence includes:</p><ul><li>design goals, non-goals, assumptions, and constraints;</li><li>data-flow diagrams and trust-boundary notes;</li><li>misuse and abuse cases, not only happy-path requirements;</li><li>secure default decisions and exceptions;</li><li>control mappings with test evidence;</li><li>dependency, SBOM, and supplier records;</li><li>logging, monitoring, and incident-response hooks;</li><li>recovery objectives, restore tests, and rollback procedures;</li><li>residual risk approvals with named decision owners.</li></ul></section>
+
+          <section id="threat-informed-design"><h2>9. Threat-Informed Design Without Hype</h2><p>Threat-informed design does not mean copying adversary techniques into a product backlog without context. It means using credible adversary behavior, incident history, and misuse cases to improve design decisions. For example, if account takeover is a realistic threat, the design needs strong authentication, abuse-resistant recovery, session controls, rate limiting, alerting, and customer recovery workflows.</p><div class="callout"><strong>Practical rule:</strong> A threat model that does not change requirements, tests, telemetry, defaults, or recovery plans is probably documentation theater.</div></section>
+
+          <section id="cyber-resilience"><h2>10. Cyber Resilience: Beyond Prevention</h2><p>Prevention matters, but future-ready programs assume some controls will fail, some vendors will be unavailable, some credentials will be exposed, some patches will break, some models will behave unexpectedly, and some cloud dependencies will degrade. Cyber resilience is the disciplined ability to keep critical missions within tolerable bounds while detecting, responding, recovering, and adapting.</p><div class="grid"><article class="card"><h3>Anticipate</h3><p>Identify critical functions, dependencies, plausible disruptions, and failure modes before an event.</p></article><article class="card"><h3>Withstand</h3><p>Use segmentation, redundancy, safe defaults, least privilege, queueing, graceful degradation, and manual fallback where appropriate.</p></article><article class="card"><h3>Recover</h3><p>Test restoration, rollback, rebuild, re-keying, data validation, communications, and acceptance criteria.</p></article><article class="card"><h3>Adapt</h3><p>Feed incidents, exercises, audits, and technology changes back into architecture and governance.</p></article></div></section>
+
+          <section id="recovery-continuity"><h2>11. Recovery, Continuity, and Playbook Discipline</h2><p>Recovery planning is where many security programs expose their weakest assumptions. A backup job is not a recovery capability. A disaster recovery document is not a tested playbook. A tabletop exercise is not enough if it never changes design or operating practice.</p><p>Future-ready recovery evidence should answer:</p><ul><li>Which mission functions are most important?</li><li>Which systems, people, suppliers, identities, keys, data, and physical sites are dependencies?</li><li>What are the recovery time and recovery point objectives?</li><li>What is the minimum safe operating mode?</li><li>How do teams verify restored data and system integrity?</li><li>Who can approve degraded operation, customer communication, failover, rebuild, or shutdown?</li><li>What changed after the last incident, audit, or exercise?</li></ul></section>
+
+          <section id="future-technology"><h2>12. Future Technology Evaluation Model</h2><p>New technology should not be evaluated only by vendor claims or fear. Use the same evidence pattern for AI agents, post-quantum cryptography, confidential computing, identity wallets, SASE, autonomous SOC tooling, OT modernization, edge devices, and technologies that do not exist yet.</p><div class="mermaid">flowchart TD
+  A[New technology proposal] --> B[Define mission value]
+  B --> C[Map data, identities, dependencies, and trust boundaries]
+  C --> D[Identify misuse cases and failure modes]
+  D --> E[Check law, privacy, safety, procurement, and vendor constraints]
+  E --> F[Assess secure defaults and operational evidence]
+  F --> G[Define resilience and rollback criteria]
+  G --> H[Run safe pilot or reject]
+  H --> I[Record owner, acceptance criteria, metrics, and review date]
+</div></section>
+
+          <section id="program-pillars"><h2>13. Future-Ready Program Pillars</h2><div class="table-wrap"><table><thead><tr><th>Pillar</th><th>Question</th><th>Evidence</th></tr></thead><tbody><tr><td>Governance</td><td>Who can accept risk and fund change?</td><td>Risk register, board/executive reports, control ownership, review cadence.</td></tr><tr><td>Secure design</td><td>Are risky defaults and misuse cases addressed before release?</td><td>Threat models, abuse cases, secure default reviews, design decisions.</td></tr><tr><td>Engineering assurance</td><td>Are secure practices embedded in delivery?</td><td>Code review, tests, SAST/DAST where appropriate, dependency records, SBOMs, release gates.</td></tr><tr><td>Operations and detection</td><td>Can defenders observe misuse and failure?</td><td>Telemetry maps, alert rules, runbooks, incident records, detection tests.</td></tr><tr><td>Resilience and recovery</td><td>Can critical functions continue or recover?</td><td>Recovery objectives, restore tests, tabletop records, fallback procedures.</td></tr><tr><td>Continuous improvement</td><td>Do lessons change the system?</td><td>Corrective actions, metrics, ownership, due dates, retest evidence.</td></tr></tbody></table></div></section>
+
+          <section id="architecture-patterns"><h2>14. Architecture Patterns That Age Well</h2><p>Future-ready architectures avoid single points of trust and undocumented dependencies. They make security decisions visible, testable, and reversible.</p><ul><li><strong>Identity-first access:</strong> resource-specific access based on identity, device, workload, context, and policy.</li><li><strong>Least privilege and separation of duties:</strong> privileged operations require explicit approval and evidence.</li><li><strong>Segmentation and blast-radius control:</strong> failures should not move freely across environments.</li><li><strong>Secure update channels:</strong> signed updates, verified packages, staged rollout, rollback, and monitoring.</li><li><strong>Dependency transparency:</strong> SBOMs, supplier records, vulnerability response, and contract expectations.</li><li><strong>Observability by design:</strong> logs and traces support investigation, privacy, operations, and recovery.</li><li><strong>Graceful degradation:</strong> systems fail to a safer state and preserve essential mission functions.</li><li><strong>Crypto-agility:</strong> cryptography can be inventoried, changed, tested, and retired without emergency redesign.</li></ul></section>
+
+          <section id="procurement"><h2>15. Secure by Demand and Procurement Pressure</h2><p>Customers also shape future security. Procurement teams can require secure defaults, vulnerability disclosure, patch timelines, logging support, identity integration, data-flow documentation, SBOMs where appropriate, incident notification terms, recovery commitments, and exit support. This is the customer-side complement to secure-by-design manufacturing.</p><p>Weak procurement language often creates hidden risk: vendors may provide a feature but no logging, a cloud service but no export path, an AI tool but no data-use transparency, or a managed device but no update lifecycle. Strong procurement converts future risk into explicit requirements and evidence.</p></section>
+
+          <section id="metrics"><h2>16. Metrics That Show Program Movement</h2><p>Metrics must show whether risk is moving, not merely whether activity occurred. Counted meetings, scanned repositories, or published policies are weak indicators unless they connect to outcomes.</p><div class="table-wrap"><table><thead><tr><th>Metric</th><th>Better question</th></tr></thead><tbody><tr><td>Secure-default coverage</td><td>What percentage of products/services ship with safer defaults for privileged access, logging, sharing, and exposure?</td></tr><tr><td>Threat-model action closure</td><td>How many design findings changed requirements, tests, telemetry, or release decisions?</td></tr><tr><td>Dependency response time</td><td>How quickly can the organization identify exposure to a critical dependency vulnerability?</td></tr><tr><td>Restore-test success</td><td>Which critical functions have recently tested recovery within defined objectives?</td></tr><tr><td>Incident lesson closure</td><td>Which incident/exercise findings are overdue, repeated, or blocked by ownership gaps?</td></tr><tr><td>Future-tech review coverage</td><td>Which AI, PQC, OT, cloud, identity, and data initiatives passed formal security/privacy/resilience review before production?</td></tr></tbody></table></div></section>
+
+          <section id="anti-patterns"><h2>17. Anti-Patterns</h2><ul><li><strong>Framework wallpaper:</strong> mapping to a framework without changing design or operations.</li><li><strong>Scanner monoculture:</strong> treating tool output as the entire security program.</li><li><strong>Customer hardening tax:</strong> expecting every customer to discover and configure basic protections manually.</li><li><strong>Untested recovery optimism:</strong> assuming backup jobs equal business recovery.</li><li><strong>Innovation bypass:</strong> piloting AI, cloud, or OT integrations outside governance because the project is “experimental.”</li><li><strong>Residual-risk fog:</strong> accepting risk without owner, date, rationale, compensating controls, and review trigger.</li><li><strong>Security theater metrics:</strong> measuring activity volume instead of risk movement and recovery capability.</li></ul></section>
+
+          <section id="reference-architecture"><h2>18. Program Reference Architecture</h2><div class="mermaid">flowchart TD
+  G[Governance and risk appetite] --> P[Product and architecture design]
+  P --> S[Secure development and release gates]
+  S --> O[Operations, logging, and detection]
+  O --> R[Response, recovery, and lessons learned]
+  R --> G
+  V[Vendor and supply chain] --> P
+  V --> S
+  V --> R
+  M[Metrics and assurance evidence] --> G
+  M --> P
+  M --> O
+  F[Future technology review] --> G
+  F --> P
+</div><p>This architecture is intentionally circular. Future-ready programs are not linear compliance projects. They learn from incidents, audits, customer pain, technology shifts, exercises, and adversary behavior, then convert that learning into design and operating changes.</p></section>
+
+          <section id="case-study"><h2>19. Mini Case Study: The “Secure Feature” That Was Not Resilient</h2><p>A company launches a new authentication feature with strong cryptography and clean code. The launch passes code review and static analysis. Three months later, an identity-provider outage prevents administrators from accessing emergency controls. Recovery depends on a break-glass process that exists only in a wiki page, uses stale contacts, and has never been tested.</p><p>The security failure was not weak encryption. The failure was incomplete design: dependency assumptions, break-glass identity, logging, recovery testing, operational ownership, and customer communication were not designed into the feature. Secure-by-design and cyber resilience must be evaluated together.</p></section>
+
+          <section id="lab"><h2>20. Safe Local Lab: Secure-by-Design and Resilience Triage</h2><p>This lab uses fictional JSON records to evaluate component design, defaults, resilience evidence, and future-technology pressure. It performs no networking or real assessment.</p><h3>Step 1 — Create <code>future_ready_components.json</code></h3><pre><code>[
+  {
+    &quot;component_id&quot;: &quot;SBD-1505-001&quot;,
+    &quot;name&quot;: &quot;Customer Identity Portal&quot;,
+    &quot;system_type&quot;: &quot;public_web_saas&quot;,
+    &quot;business_function&quot;: &quot;Customer login, profile management, and account recovery&quot;,
+    &quot;data_sensitivity&quot;: &quot;high&quot;,
+    &quot;exposure&quot;: &quot;internet_facing&quot;,
+    &quot;release_cadence&quot;: &quot;weekly&quot;,
+    &quot;secure_default_status&quot;: &quot;weak&quot;,
+    &quot;resilience_status&quot;: &quot;partial&quot;,
+    &quot;owner&quot;: &quot;Product Identity Team&quot;,
+    &quot;assurance_evidence&quot;: [&quot;threat_model&quot;, &quot;sast_summary&quot;, &quot;penetration_test_report&quot;],
+    &quot;known_gaps&quot;: [
+      &quot;MFA optional by default for administrators&quot;,
+      &quot;Account recovery abuse cases are incomplete&quot;,
+      &quot;Rate limiting is documented but not covered by release tests&quot;,
+      &quot;No customer-facing security-default statement&quot;
+    ],
+    &quot;critical_dependencies&quot;: [&quot;cloud_identity_provider&quot;, &quot;email_delivery_service&quot;, &quot;customer_database&quot;],
+    &quot;recovery_evidence&quot;: [&quot;runbook&quot;, &quot;backup_job&quot;, &quot;partial_restore_test&quot;],
+    &quot;future_pressure&quot;: [&quot;AI assistant integration planned&quot;, &quot;passkey rollout requested&quot;]
+  },
+  {
+    &quot;component_id&quot;: &quot;SBD-1505-002&quot;,
+    &quot;name&quot;: &quot;Firmware Update Service&quot;,
+    &quot;system_type&quot;: &quot;device_update_platform&quot;,
+    &quot;business_function&quot;: &quot;Signs and distributes updates for managed field devices&quot;,
+    &quot;data_sensitivity&quot;: &quot;medium&quot;,
+    &quot;exposure&quot;: &quot;partner_and_device_facing&quot;,
+    &quot;release_cadence&quot;: &quot;monthly&quot;,
+    &quot;secure_default_status&quot;: &quot;mixed&quot;,
+    &quot;resilience_status&quot;: &quot;weak&quot;,
+    &quot;owner&quot;: &quot;Device Platform Team&quot;,
+    &quot;assurance_evidence&quot;: [&quot;architecture_diagram&quot;, &quot;release_approval_record&quot;],
+    &quot;known_gaps&quot;: [
+      &quot;Signing key rotation process has no tested recovery path&quot;,
+      &quot;Rollback criteria are informal&quot;,
+      &quot;Update failure telemetry is not tied to incident response&quot;,
+      &quot;Supplier component inventory is stale&quot;
+    ],
+    &quot;critical_dependencies&quot;: [&quot;code_signing_key&quot;, &quot;cdn&quot;, &quot;device_agent&quot;, &quot;vendor_sdk&quot;],
+    &quot;recovery_evidence&quot;: [&quot;backup_job&quot;],
+    &quot;future_pressure&quot;: [&quot;Post-quantum signing roadmap requested&quot;, &quot;new regulated markets&quot;]
+  },
+  {
+    &quot;component_id&quot;: &quot;SBD-1505-003&quot;,
+    &quot;name&quot;: &quot;Analytics Data Lake&quot;,
+    &quot;system_type&quot;: &quot;cloud_data_platform&quot;,
+    &quot;business_function&quot;: &quot;Aggregates telemetry and reporting data for product decisions&quot;,
+    &quot;data_sensitivity&quot;: &quot;high&quot;,
+    &quot;exposure&quot;: &quot;internal_and_vendor_access&quot;,
+    &quot;release_cadence&quot;: &quot;continuous&quot;,
+    &quot;secure_default_status&quot;: &quot;partial&quot;,
+    &quot;resilience_status&quot;: &quot;partial&quot;,
+    &quot;owner&quot;: &quot;Data Platform Team&quot;,
+    &quot;assurance_evidence&quot;: [&quot;data_flow_diagram&quot;, &quot;access_review&quot;, &quot;logging_dashboard&quot;, &quot;privacy_review&quot;],
+    &quot;known_gaps&quot;: [
+      &quot;Dataset retention exceptions are not reviewed quarterly&quot;,
+      &quot;Vendor notebook access uses broad project-level permissions&quot;,
+      &quot;Data deletion workflow is manual and not tested end-to-end&quot;
+    ],
+    &quot;critical_dependencies&quot;: [&quot;cloud_storage&quot;, &quot;data_catalog&quot;, &quot;notebook_service&quot;, &quot;identity_provider&quot;],
+    &quot;recovery_evidence&quot;: [&quot;backup_job&quot;, &quot;restore_test&quot;, &quot;incident_runbook&quot;],
+    &quot;future_pressure&quot;: [&quot;Generative AI summarization pilot&quot;, &quot;new data-residency requirements&quot;]
+  },
+  {
+    &quot;component_id&quot;: &quot;SBD-1505-004&quot;,
+    &quot;name&quot;: &quot;Internal Workflow API&quot;,
+    &quot;system_type&quot;: &quot;internal_api&quot;,
+    &quot;business_function&quot;: &quot;Automates employee onboarding and approval workflows&quot;,
+    &quot;data_sensitivity&quot;: &quot;medium&quot;,
+    &quot;exposure&quot;: &quot;internal_only&quot;,
+    &quot;release_cadence&quot;: &quot;biweekly&quot;,
+    &quot;secure_default_status&quot;: &quot;strong&quot;,
+    &quot;resilience_status&quot;: &quot;strong&quot;,
+    &quot;owner&quot;: &quot;Enterprise Apps Team&quot;,
+    &quot;assurance_evidence&quot;: [&quot;threat_model&quot;, &quot;unit_security_tests&quot;, &quot;sbom&quot;, &quot;dependency_scan&quot;, &quot;restore_test&quot;, &quot;tabletop_record&quot;],
+    &quot;known_gaps&quot;: [
+      &quot;Break-glass procedure needs annual review&quot;
+    ],
+    &quot;critical_dependencies&quot;: [&quot;workflow_database&quot;, &quot;identity_provider&quot;, &quot;message_queue&quot;],
+    &quot;recovery_evidence&quot;: [&quot;backup_job&quot;, &quot;restore_test&quot;, &quot;tabletop_record&quot;, &quot;dependency_failover_test&quot;],
+    &quot;future_pressure&quot;: [&quot;workflow chatbot requested&quot;]
+  }
+]</code></pre><h3>Step 2 — Create <code>future_ready_program_lab.py</code></h3><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;
+Safe local lab for Lesson 15.5.
+Analyzes fictional component records for secure-by-design and resilience gaps.
+It performs no scanning, networking, authentication, vendor access, or real system checks.
+&quot;&quot;&quot;
+import json
+from pathlib import Path
+
+SECURE_DEFAULT_TERMS = [&quot;default&quot;, &quot;mfa&quot;, &quot;admin&quot;, &quot;account recovery&quot;, &quot;rate limiting&quot;, &quot;secure-default&quot;]
+RESILIENCE_TERMS = [&quot;restore&quot;, &quot;recovery&quot;, &quot;rollback&quot;, &quot;backup&quot;, &quot;runbook&quot;, &quot;tabletop&quot;, &quot;failover&quot;, &quot;key rotation&quot;]
+ASSURANCE_TERMS = [&quot;threat_model&quot;, &quot;sbom&quot;, &quot;sast&quot;, &quot;dependency&quot;, &quot;access_review&quot;, &quot;privacy&quot;, &quot;restore&quot;, &quot;tabletop&quot;]
+FUTURE_TERMS = [&quot;ai&quot;, &quot;passkey&quot;, &quot;post-quantum&quot;, &quot;data-residency&quot;, &quot;regulated&quot;, &quot;chatbot&quot;]
+
+EXPOSURE_WEIGHTS = {
+    &quot;internet_facing&quot;: 5,
+    &quot;partner_and_device_facing&quot;: 4,
+    &quot;internal_and_vendor_access&quot;: 3,
+    &quot;internal_only&quot;: 1
+}
+DATA_WEIGHTS = {&quot;high&quot;: 4, &quot;medium&quot;: 2, &quot;low&quot;: 1}
+DEFAULT_WEIGHTS = {&quot;weak&quot;: 5, &quot;mixed&quot;: 3, &quot;partial&quot;: 2, &quot;strong&quot;: 0}
+RESILIENCE_WEIGHTS = {&quot;weak&quot;: 5, &quot;partial&quot;: 3, &quot;strong&quot;: 0}
+
+
+def normalize(value):
+    return str(value).lower().replace(&quot;-&quot;, &quot;_&quot;).replace(&quot; &quot;, &quot;_&quot;)
+
+
+def evidence_hits(component):
+    evidence_blob = &quot; &quot;.join(normalize(item) for item in component.get(&quot;assurance_evidence&quot;, []))
+    recovery_blob = &quot; &quot;.join(normalize(item) for item in component.get(&quot;recovery_evidence&quot;, []))
+    hits = []
+    for term in ASSURANCE_TERMS:
+        normalized = normalize(term)
+        if normalized in evidence_blob or normalized in recovery_blob:
+            hits.append(term)
+    return sorted(set(hits))
+
+
+def gap_hits(component, terms):
+    blob = &quot; &quot;.join(component.get(&quot;known_gaps&quot;, []) + component.get(&quot;future_pressure&quot;, []))
+    blob = blob.lower()
+    return sorted({term for term in terms if term in blob})
+
+
+def score_component(component):
+    score = 0
+    reasons = []
+
+    exposure = normalize(component.get(&quot;exposure&quot;, &quot;&quot;))
+    exposure_score = EXPOSURE_WEIGHTS.get(exposure, 2)
+    score += exposure_score
+    if exposure_score &gt;= 4:
+        reasons.append(&quot;High exposure increases the need for secure defaults, telemetry, updateability, and customer-safe failure modes.&quot;)
+
+    data_score = DATA_WEIGHTS.get(normalize(component.get(&quot;data_sensitivity&quot;, &quot;low&quot;)), 1)
+    score += data_score
+    if data_score &gt;= 4:
+        reasons.append(&quot;High data sensitivity requires privacy, access, logging, retention, and recovery evidence.&quot;)
+
+    default_score = DEFAULT_WEIGHTS.get(normalize(component.get(&quot;secure_default_status&quot;, &quot;partial&quot;)), 2)
+    score += default_score
+    if default_score &gt;= 3:
+        reasons.append(&quot;Secure defaults are weak or mixed; customers or operators may inherit avoidable risk.&quot;)
+
+    resilience_score = RESILIENCE_WEIGHTS.get(normalize(component.get(&quot;resilience_status&quot;, &quot;partial&quot;)), 2)
+    score += resilience_score
+    if resilience_score &gt;= 3:
+        reasons.append(&quot;Resilience evidence is incomplete; recovery assumptions need testing and ownership.&quot;)
+
+    gaps = component.get(&quot;known_gaps&quot;, [])
+    score += min(len(gaps), 5)
+    if gaps:
+        reasons.append(&quot;Open design or resilience gaps: &quot; + &quot;; &quot;.join(gaps) + &quot;.&quot;)
+
+    secure_default_gaps = gap_hits(component, SECURE_DEFAULT_TERMS)
+    resilience_gaps = gap_hits(component, RESILIENCE_TERMS)
+    future_gaps = gap_hits(component, FUTURE_TERMS)
+    score += len(secure_default_gaps) + len(resilience_gaps)
+
+    if secure_default_gaps:
+        reasons.append(&quot;Secure-by-design themes present: &quot; + &quot;, &quot;.join(secure_default_gaps) + &quot;.&quot;)
+    if resilience_gaps:
+        reasons.append(&quot;Cyber-resilience themes present: &quot; + &quot;, &quot;.join(resilience_gaps) + &quot;.&quot;)
+    if future_gaps:
+        score += 1
+        reasons.append(&quot;Future pressure exists; roadmap decisions need design review before adoption: &quot; + &quot;, &quot;.join(future_gaps) + &quot;.&quot;)
+
+    hits = evidence_hits(component)
+    if len(hits) &lt; 4:
+        score += 3
+        reasons.append(&quot;Assurance evidence is thin; design claims are not yet decision-ready.&quot;)
+    else:
+        reasons.append(&quot;Available assurance/recovery evidence: &quot; + &quot;, &quot;.join(hits) + &quot;.&quot;)
+
+    if not component.get(&quot;owner&quot;):
+        score += 3
+        reasons.append(&quot;No accountable owner is recorded.&quot;)
+
+    return score, reasons
+
+
+def band(score):
+    if score &gt;= 21:
+        return &quot;red&quot;
+    if score &gt;= 13:
+        return &quot;amber&quot;
+    return &quot;green&quot;
+
+
+def recommended_actions(component, risk_band):
+    actions = []
+    gaps = &quot; &quot;.join(component.get(&quot;known_gaps&quot;, [])).lower()
+    future = &quot; &quot;.join(component.get(&quot;future_pressure&quot;, [])).lower()
+
+    if risk_band == &quot;red&quot;:
+        actions.append(&quot;Escalate to product, security, operations, privacy/legal where relevant, and executive risk owners before expanding use.&quot;)
+    elif risk_band == &quot;amber&quot;:
+        actions.append(&quot;Create a dated improvement plan with owner, evidence, acceptance criteria, and review cadence.&quot;)
+    else:
+        actions.append(&quot;Maintain controls and keep secure-default, recovery, and dependency evidence current.&quot;)
+
+    if &quot;mfa&quot; in gaps or &quot;default&quot; in gaps or &quot;admin&quot; in gaps:
+        actions.append(&quot;Harden defaults so secure operation is the normal customer/operator path, not an expert-only configuration.&quot;)
+    if &quot;account recovery&quot; in gaps or &quot;rate limiting&quot; in gaps:
+        actions.append(&quot;Add abuse-case tests and release gates for account recovery, rate limiting, and misuse-resistant workflows.&quot;)
+    if &quot;signing&quot; in gaps or &quot;key&quot; in gaps:
+        actions.append(&quot;Document key custody, rotation, recovery, rollback, and emergency signing decisions with tested procedures.&quot;)
+    if &quot;sbom&quot; in gaps or &quot;supplier&quot; in gaps or &quot;vendor&quot; in gaps:
+        actions.append(&quot;Refresh supplier, SBOM, and dependency evidence and tie it to vulnerability response and procurement decisions.&quot;)
+    if &quot;restore&quot; in gaps or &quot;rollback&quot; in gaps or &quot;recovery&quot; in gaps or &quot;backup&quot; in gaps:
+        actions.append(&quot;Run a safe restore/rollback/tabletop exercise and record success criteria, failure points, and corrective actions.&quot;)
+    if &quot;ai&quot; in future or &quot;post-quantum&quot; in future or &quot;data-residency&quot; in future or &quot;passkey&quot; in future:
+        actions.append(&quot;Route future technology changes through threat modeling, privacy review, crypto/data-flow review, and rollback planning.&quot;)
+
+    actions.append(&quot;Do not accept design claims without evidence: threat model, secure tests, dependency records, logging, recovery proof, and owner approval.&quot;)
+    return actions
+
+
+def analyze(components):
+    results = []
+    summary = {&quot;red&quot;: 0, &quot;amber&quot;: 0, &quot;green&quot;: 0}
+    for component in components:
+        score, reasons = score_component(component)
+        risk_band = band(score)
+        summary[risk_band] += 1
+        results.append({
+            &quot;component_id&quot;: component[&quot;component_id&quot;],
+            &quot;name&quot;: component[&quot;name&quot;],
+            &quot;system_type&quot;: component[&quot;system_type&quot;],
+            &quot;score&quot;: score,
+            &quot;risk_band&quot;: risk_band,
+            &quot;owner&quot;: component.get(&quot;owner&quot;, &quot;unassigned&quot;),
+            &quot;reasons&quot;: reasons,
+            &quot;recommended_actions&quot;: recommended_actions(component, risk_band),
+            &quot;safe_boundary&quot;: &quot;Fictional local analysis only; no scanning, networking, exploitation, authentication, or real-system assessment.&quot;
+        })
+    results.sort(key=lambda item: (item[&quot;score&quot;], item[&quot;component_id&quot;]), reverse=True)
+    return {&quot;summary&quot;: summary, &quot;components&quot;: results}
+
+
+def main():
+    components = json.loads(Path(&quot;future_ready_components.json&quot;).read_text())
+    print(json.dumps(analyze(components), indent=2))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre><h3>Step 3 — Optional local test file</h3><pre><code>#!/usr/bin/env python3
+import importlib.util
+import json
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location(&quot;future_ready_program_lab&quot;, &quot;future_ready_program_lab.py&quot;)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+components = json.loads(Path(&quot;future_ready_components.json&quot;).read_text())
+report = module.analyze(components)
+
+identity = next(item for item in report[&quot;components&quot;] if item[&quot;component_id&quot;] == &quot;SBD-1505-001&quot;)
+firmware = next(item for item in report[&quot;components&quot;] if item[&quot;component_id&quot;] == &quot;SBD-1505-002&quot;)
+data_lake = next(item for item in report[&quot;components&quot;] if item[&quot;component_id&quot;] == &quot;SBD-1505-003&quot;)
+workflow = next(item for item in report[&quot;components&quot;] if item[&quot;component_id&quot;] == &quot;SBD-1505-004&quot;)
+
+assert identity[&quot;risk_band&quot;] in {&quot;amber&quot;, &quot;red&quot;}
+assert any(&quot;default&quot; in reason.lower() for reason in identity[&quot;reasons&quot;])
+assert any(&quot;abuse-case&quot; in action.lower() or &quot;abuse&quot; in action.lower() for action in identity[&quot;recommended_actions&quot;])
+assert firmware[&quot;risk_band&quot;] == &quot;red&quot;
+assert any(&quot;key&quot; in action.lower() for action in firmware[&quot;recommended_actions&quot;])
+assert data_lake[&quot;risk_band&quot;] in {&quot;amber&quot;, &quot;red&quot;}
+assert any(&quot;future&quot; in reason.lower() or &quot;future&quot; in action.lower() for reason in data_lake[&quot;reasons&quot;] for action in data_lake[&quot;recommended_actions&quot;])
+assert workflow[&quot;risk_band&quot;] in {&quot;green&quot;, &quot;amber&quot;}
+assert report[&quot;summary&quot;][&quot;red&quot;] &gt;= 1
+print(&quot;Secure-by-design and resilience lab tests passed&quot;)
+</code></pre><h3>Expected learning outcome</h3><p>The output should show that future-ready decisions depend on secure defaults, resilience evidence, ownership, dependency transparency, recovery testing, and review of future technology pressure. The point is not to create a perfect risk score. The point is to practice decision-quality review before production adoption.</p></section>
+
+          <section id="checklist"><h2>21. Future-Ready Program Checklist</h2><ul><li>Are secure defaults reviewed for every customer-facing, admin-facing, and operator-facing system?</li><li>Do threat models produce testable requirements, telemetry, and release decisions?</li><li>Can the organization identify critical dependencies, suppliers, keys, models, APIs, and data stores quickly?</li><li>Are backups, restores, rollback, and break-glass workflows tested with evidence?</li><li>Are AI, PQC, OT/IoT, SASE, cloud, and identity initiatives reviewed before production?</li><li>Does procurement require security, logging, vulnerability handling, updateability, and recovery evidence?</li><li>Are incidents, audits, exercises, and vulnerability events converted into tracked corrective actions?</li><li>Can leadership see residual risk, blocked decisions, repeated failures, and trend direction?</li></ul></section>
+
+          <section id="quiz"><h2>22. Self-Assessment</h2><div class="quiz" data-quiz><div class="question"><p><strong>1. What is the best definition of secure by default?</strong></p><label><input type="radio" name="q1" value="a"> A product has many security settings available somewhere.</label><label><input type="radio" name="q1" value="b" data-correct="true"> The ordinary default state is safer without requiring expert hardening for basic protections.</label><label><input type="radio" name="q1" value="c"> The product never needs patching.</label></div><div class="question"><p><strong>2. Why is a backup job not enough evidence of resilience?</strong></p><label><input type="radio" name="q2" value="a" data-correct="true"> Because recovery requires tested restore procedures, integrity checks, owners, objectives, and acceptance criteria.</label><label><input type="radio" name="q2" value="b"> Because backups are never useful.</label><label><input type="radio" name="q2" value="c"> Because resilience applies only to OT systems.</label></div><div class="question"><p><strong>3. What makes a threat model useful?</strong></p><label><input type="radio" name="q3" value="a"> It exists as a document but never changes delivery.</label><label><input type="radio" name="q3" value="b" data-correct="true"> It changes requirements, tests, telemetry, defaults, release decisions, or recovery plans.</label><label><input type="radio" name="q3" value="c"> It lists every possible attack in the world.</label></div><div class="question"><p><strong>4. What is a safer way to evaluate emerging technology?</strong></p><label><input type="radio" name="q4" value="a"> Adopt it quickly because competitors are using it.</label><label><input type="radio" name="q4" value="b" data-correct="true"> Define mission value, data flows, misuse cases, constraints, secure defaults, resilience, rollback, owners, and metrics.</label><label><input type="radio" name="q4" value="c"> Block every new technology permanently.</label></div><button class="btn quiz-submit" type="button">Check answers</button><div class="quiz-result" aria-live="polite"></div></div></section>
+
+          <section id="deliverables"><h2>23. Deliverables</h2><ul><li>A secure-default review checklist for one fictional product or service.</li><li>A cyber-resilience evidence map covering critical functions, dependencies, backups, restore tests, playbooks, and decision owners.</li><li>A future-technology review memo for an AI, PQC, SASE, OT/IoT, or cloud proposal.</li><li>A program metrics dashboard with five risk-movement indicators.</li><li>Output from the safe local Python lab.</li></ul></section>
+
+          <section id="further-reading"><h2>24. Further Reading</h2><ul><li><a href="https://www.cisa.gov/securebydesign">CISA — Secure by Design.</a></li><li><a href="https://www.cisa.gov/resources-tools/resources/secure-demand-guide">CISA — Secure by Demand Guide.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/218/final">NIST SP 800-218 — Secure Software Development Framework.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/160/v2/r1/final">NIST SP 800-160 Vol. 2 Rev. 1 — Developing Cyber-Resilient Systems.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/184/final">NIST SP 800-184 — Guide for Cybersecurity Event Recovery.</a></li><li><a href="https://www.nist.gov/cyberframework">NIST Cybersecurity Framework 2.0.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final">NIST SP 800-34 Rev. 1 Update 1 — Contingency Planning Guide.</a></li><li><a href="https://www.cisa.gov/resources-tools/resources/cross-sector-cybersecurity-performance-goals">CISA Cross-Sector Cybersecurity Performance Goals.</a></li></ul></section>
+        </article><aside class="toc card"><h2>On this page</h2><ol id="tocList" class="toc-list"></ol></aside></div>
+
+      <div class="prev-next"><a class="btn" href="ot-iot-and-cyber-physical-security.html">← Lesson 15.4</a><a class="btn btn-primary" href="../week-16/index.html">Week 16 Capstone →</a></div>
+      <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

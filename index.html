@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MS Cybersecurity — Interactive Learning Platform</title>
+  <meta name="description" content="A free graduate-level cybersecurity course built on first principles, progressing from zero knowledge through advanced security engineering, operations, governance, and research.">
+  <meta property="og:title" content="MS Cybersecurity Interactive Learning Platform">
+  <meta property="og:description" content="Free graduate-level cybersecurity course — from first principles to advanced research.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="" data-page-id="home" data-title="Home" data-track="false">
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar">
+  <button id="openSidebar">☰ Navigation</button>
+  <span style="font-family:var(--serif);font-weight:700;font-size:.95rem">MS Cybersecurity</span>
+  <button class="theme-toggle">🌙 Dark mode</button>
+</div>
+
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand">
+      <span class="brand-mark">MS</span>
+      <div>
+        <h1>Cybersecurity</h1>
+        <small>Interactive Learning Platform</small>
+      </div>
+    </div>
+    <button id="closeSidebar" class="btn" style="margin:.25rem 0">✕ Close</button>
+    <div class="nav-search">
+      <label for="navSearch">Search lessons</label>
+      <input id="navSearch" class="site-search-input" type="search" placeholder="Type to search…" autocomplete="off">
+      <div class="mini-results search-results"></div>
+    </div>
+    <nav id="courseNav" aria-label="Course weeks"></nav>
+    <section class="nav-group">
+      <div class="nav-group-title">Your Progress</div>
+      <div id="progressList" class="progress-list small"></div>
+    </section>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="page-wrap">
+
+      <!-- Hero -->
+      <section class="hero" aria-label="Course introduction">
+        <div class="eyebrow">Open-Access Graduate Course · GitHub Pages</div>
+        <h1>MS Cybersecurity<br>Interactive Learning Platform</h1>
+        <p class="lead">A rigorous, modular university-level programme in cybersecurity — beginning with first principles and building toward graduate-level security engineering, operations, governance, and research. Designed for self-directed learners, working professionals, and academic cohorts alike.</p>
+        <div class="toolbar">
+          <a class="btn btn-primary" href="weeks/week-00/index.html">Begin Week 0</a>
+          <a class="btn" href="architecture.html">Platform architecture</a>
+          <a class="btn" href="glossary.html">Glossary</a>
+          <a class="btn" href="search.html">Full search</a>
+          <button class="theme-toggle">🌙 Dark mode</button>
+        </div>
+      </section>
+
+      <!-- Course stats -->
+      <div class="stats-bar" role="region" aria-label="Course statistics">
+        <div class="stat-item">
+          <span class="stat-number">17</span>
+          <span class="stat-label">Weeks</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">80+</span>
+          <span class="stat-label">Lessons</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">500+</span>
+          <span class="stat-label">Glossary terms</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">Free</span>
+          <span class="stat-label">Always open access</span>
+        </div>
+      </div>
+
+      <!-- Course features -->
+      <h2 class="course-section-title">Platform Features</h2>
+      <section class="grid" aria-label="Platform features">
+        <article class="card icon-card" data-icon="📐">
+          <h2>First-principles pedagogy</h2>
+          <p>Every lesson begins with plain-English foundations before introducing precise technical vocabulary, making the material accessible to learners at any level.</p>
+        </article>
+        <article class="card icon-card" data-icon="🎓">
+          <h2>Graduate-level rigour</h2>
+          <p>Content progresses to MS-level depth, integrating industry practice, academic research, formal standards (NIST, ISO, CIS), and real-world case studies.</p>
+        </article>
+        <article class="card icon-card" data-icon="🔬">
+          <h2>Interactive learning tools</h2>
+          <p>Built-in quiz mode, reading progress tracking, bookmarks, recently-viewed history, full-text search, Mermaid diagrams, and syntax-highlighted code examples.</p>
+        </article>
+        <article class="card icon-card" data-icon="🛡">
+          <h2>Ethical, defence-first</h2>
+          <p>All practical exercises emphasise authorised, ethical, defensive work. Offensive techniques are taught strictly within legal and responsible-disclosure frameworks.</p>
+        </article>
+        <article class="card icon-card" data-icon="☁">
+          <h2>Static &amp; free to host</h2>
+          <p>The platform is pure HTML, CSS, and JavaScript — no server, no database, no subscription required. Host it on GitHub Pages at zero cost.</p>
+        </article>
+        <article class="card icon-card" data-icon="🗺">
+          <h2>Structured career pathway</h2>
+          <p>A 16-week capstone and career roadmap guide learners from bridge foundations through portfolio defence and into professional certification pathways.</p>
+        </article>
+      </section>
+
+      <!-- Curriculum overview -->
+      <h2 class="course-section-title">Curriculum Overview</h2>
+      <section class="grid" aria-label="Curriculum modules">
+        <article class="card week-card">
+          <span class="week-num">Weeks 0 – 1</span>
+          <h3>Foundations &amp; Security Mindset</h3>
+          <p>Linux, networking, Python primer, CIA triad, threat modelling, ethics, and responsible disclosure.</p>
+          <a class="btn" href="weeks/week-00/index.html" style="margin-top:.75rem">Open Week 0 →</a>
+        </article>
+        <article class="card week-card">
+          <span class="week-num">Weeks 2 – 4</span>
+          <h3>Identity, Cryptography &amp; Secure Design</h3>
+          <p>Authentication, access control, cryptography from first principles, secure software engineering, and threat-driven design.</p>
+          <a class="btn" href="weeks/week-02/index.html" style="margin-top:.75rem">Open Week 2 →</a>
+        </article>
+        <article class="card week-card">
+          <span class="week-num">Weeks 5 – 8</span>
+          <h3>Systems, Web &amp; Network Security</h3>
+          <p>Memory safety, web application security, injection, network protocols, firewalls, VPNs, and the midterm practicum.</p>
+          <a class="btn" href="weeks/week-05/index.html" style="margin-top:.75rem">Open Week 5 →</a>
+        </article>
+        <article class="card week-card">
+          <span class="week-num">Weeks 9 – 12</span>
+          <h3>Operations, Cloud &amp; Incident Response</h3>
+          <p>Endpoint security, cloud IAM, SOC operations, SIEM, detection engineering, digital forensics, and IR runbooks.</p>
+          <a class="btn" href="weeks/week-09/index.html" style="margin-top:.75rem">Open Week 9 →</a>
+        </article>
+        <article class="card week-card">
+          <span class="week-num">Weeks 13 – 15</span>
+          <h3>Offensive Security, Governance &amp; Emerging Topics</h3>
+          <p>Authorised penetration testing, governance frameworks, privacy law, AI/LLM security, post-quantum cryptography, and Zero Trust at scale.</p>
+          <a class="btn" href="weeks/week-13/index.html" style="margin-top:.75rem">Open Week 13 →</a>
+        </article>
+        <article class="card week-card">
+          <span class="week-num">Week 16</span>
+          <h3>Capstone &amp; Career Roadmap</h3>
+          <p>Enterprise security assessment, risk register, portfolio defence, and a structured pathway toward professional certifications and research careers.</p>
+          <a class="btn" href="weeks/week-16/index.html" style="margin-top:.75rem">Open Capstone →</a>
+        </article>
+      </section>
+
+      <!-- Personal progress -->
+      <h2 class="course-section-title">Your Study Space</h2>
+      <section class="grid" aria-label="Personal progress">
+        <article class="card">
+          <h2>📖 Recently Viewed</h2>
+          <div id="recentList" class="recent-list small"></div>
+        </article>
+        <article class="card">
+          <h2>★ Bookmarks</h2>
+          <div id="bookmarkList" class="bookmark-list small"></div>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <p>© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. All course content is intended for authorised, ethical learning purposes only.</p>
+        <p style="margin-top:.35rem">Built with plain HTML, CSS &amp; JavaScript · Hosted on GitHub Pages · <a href="architecture.html">Platform architecture</a> · <a href="glossary.html">Glossary</a></p>
+      </footer>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+</body>
+</html>

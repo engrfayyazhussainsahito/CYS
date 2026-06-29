@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 4.5: Testing, Fuzzing, CI/CD, and Release Integrity | MS Cybersecurity</title>
+  <meta name="description" content="Testing, fuzzing, CI/CD, pipeline security, artifact integrity, provenance, release evidence, and safe release practices from first principles.">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="lesson-04-05" data-title="Lesson 4.5: Testing, Fuzzing, CI/CD, and Release Integrity">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation">
+    <div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div>
+    <button id="closeSidebar" class="btn">Close</button>
+    <div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div>
+    <nav id="courseNav"></nav>
+    <section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section>
+  </aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 4</a> / Lesson 4.5</div>
+      <header class="hero">
+        <div class="eyebrow">Week 4 · Secure Software and Supply Chain</div>
+        <h1>Lesson 4.5: Testing, Fuzzing, CI/CD, and Release Integrity</h1>
+        <p class="lead">Secure releases need more than working code. Testing checks expected behavior. Fuzzing explores unexpected inputs. CI/CD makes checks repeatable. Release integrity gives evidence that the artifact users receive is the artifact the team intended to ship.</p>
+        <div class="meta-grid">
+          <div class="meta-item"><strong>Estimated reading time</strong>300–420 minutes</div>
+          <div class="meta-item"><strong>Difficulty level</strong>Beginner → MS foundation</div>
+          <div class="meta-item"><strong>Required background</strong>Lessons 0.1–4.4 recommended; no CI/CD background required</div>
+          <div class="meta-item"><strong>Practice time</strong>6–9 hours</div>
+        </div>
+        <div class="toolbar">
+          <button id="bookmarkBtn" class="bookmark-btn" type="button">☆ Bookmark lesson</button>
+          <button id="completeBtn" class="complete-btn" type="button">Mark complete</button>
+          <button id="quizModeBtn" class="quiz-toggle" type="button">Start quiz mode</button>
+          <button class="pdf-btn print-page" type="button">Download lesson as PDF</button>
+          <button class="theme-toggle" type="button">Toggle dark mode</button>
+        </div>
+      </header>
+      <section class="lesson-visual card">
+        <div class="visual-graphic" aria-label="Secure release pipeline illustration">
+          <svg viewBox="0 0 780 430" role="img" aria-labelledby="svg-title svg-desc">
+            <title id="svg-title">Testing, fuzzing, CI/CD, and release integrity</title>
+            <desc id="svg-desc">A secure release pipeline moves from source code to tests, fuzzing, build, provenance, signed release, and deployment decision.</desc>
+            <defs><linearGradient id="pipeGrad45" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#6ea8ff"/><stop offset="100%" stop-color="#41d6b3"/></linearGradient><marker id="arrow45" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#41d6b3"/></marker></defs>
+            <rect x="24" y="42" width="732" height="334" rx="30" fill="var(--panel)" stroke="var(--border)" stroke-width="3"/>
+            <g fill="var(--bg)" stroke="var(--border)" stroke-width="3"><rect x="55" y="122" width="96" height="74" rx="18"/><rect x="184" y="122" width="96" height="74" rx="18"/><rect x="313" y="122" width="96" height="74" rx="18"/><rect x="442" y="122" width="96" height="74" rx="18"/><rect x="571" y="122" width="96" height="74" rx="18"/><rect x="313" y="254" width="96" height="64" rx="18"/><rect x="442" y="254" width="96" height="64" rx="18"/><rect x="571" y="254" width="96" height="64" rx="18"/></g>
+            <path d="M151 159h31M280 159h31M409 159h31M538 159h31" stroke="url(#pipeGrad45)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow45)"/><path d="M361 198v53M490 198v53M619 198v53" stroke="url(#pipeGrad45)" stroke-width="8" stroke-linecap="round" marker-end="url(#arrow45)"/>
+            <text x="103" y="151" text-anchor="middle" font-size="16" fill="var(--text)">Source</text><text x="103" y="174" text-anchor="middle" font-size="11" fill="var(--muted)">commit</text><text x="232" y="151" text-anchor="middle" font-size="16" fill="var(--text)">Tests</text><text x="232" y="174" text-anchor="middle" font-size="11" fill="var(--muted)">expected</text><text x="361" y="151" text-anchor="middle" font-size="16" fill="var(--text)">Fuzz</text><text x="361" y="174" text-anchor="middle" font-size="11" fill="var(--muted)">unexpected</text><text x="490" y="151" text-anchor="middle" font-size="16" fill="var(--text)">Build</text><text x="490" y="174" text-anchor="middle" font-size="11" fill="var(--muted)">artifact</text><text x="619" y="151" text-anchor="middle" font-size="16" fill="var(--text)">Release</text><text x="619" y="174" text-anchor="middle" font-size="11" fill="var(--muted)">ship</text><text x="361" y="284" text-anchor="middle" font-size="15" fill="var(--text)">Logs</text><text x="361" y="304" text-anchor="middle" font-size="11" fill="var(--muted)">evidence</text><text x="490" y="284" text-anchor="middle" font-size="15" fill="var(--text)">Provenance</text><text x="490" y="304" text-anchor="middle" font-size="11" fill="var(--muted)">how built</text><text x="619" y="284" text-anchor="middle" font-size="15" fill="var(--text)">Signature</text><text x="619" y="304" text-anchor="middle" font-size="11" fill="var(--muted)">verify</text>
+          </svg>
+        </div>
+        <div class="visual-panel"><h2>Release integrity is evidence, not hope.</h2><p>A secure pipeline should answer: What changed? Who approved it? What tests ran? What artifact was built? What dependencies were used? Was the artifact signed? Can deployment verify it?</p><div class="visual-steps"><div class="visual-step"><strong>Test</strong><span>Check intended behavior.</span></div><div class="visual-step"><strong>Fuzz</strong><span>Stress unexpected input.</span></div><div class="visual-step"><strong>Prove</strong><span>Record build and release evidence.</span></div></div></div>
+      </section>
+      <div class="layout-article"><article class="article">
+        <section id="overview"><h2>Week 4 Context</h2><p>Lessons 4.1–4.4 explained secure software lifecycle, secure design, input/output safety, secrets, dependencies, and SBOMs. Lesson 4.5 closes Week 4 by turning those ideas into a repeatable release process.</p><div class="callout warning"><p><strong>Safety boundary:</strong> this lesson only uses local toy applications and example CI files for repositories you own. Do not run tests, fuzzers, scanners, or build-integrity checks against systems, repositories, packages, or services you are not authorized to assess.</p></div></section>
+        <section id="introduction"><h2>1. Introduction</h2><h3>Plain-English explanation</h3><p><strong>Testing</strong> checks whether software behaves as expected. <strong>Fuzzing</strong> sends many unusual inputs to software to discover crashes or strange behavior. <strong>CI/CD</strong> automates build, test, package, and deployment steps. <strong>Release integrity</strong> gives evidence that the released artifact came from the intended source and was not quietly changed.</p><h3>Why this topic exists</h3><p>Humans forget steps. Manual releases are inconsistent. Attackers target the gap between source code and production: build scripts, CI runners, secrets, package registries, artifact stores, approval workflows, and deployment tooling. Secure teams therefore treat the pipeline as a security-sensitive system.</p><h3>Why this topic matters</h3><p>A software product can have clean source code but still ship a compromised artifact if the build system is tampered with. A team can write secure validation logic but miss an edge case if no test exercises it. A signed artifact can still be risky if the signing key is stolen or the wrong identity is trusted.</p><h3>Where it is used</h3><ul><li>Web applications, mobile apps, APIs, cloud services, embedded systems, operating-system packages, container images, and internal enterprise tools.</li><li>Software vendors, banks, hospitals, universities, defense contractors, government agencies, and cloud providers.</li><li>DevSecOps programs, vulnerability management, release engineering, compliance evidence, and incident response.</li></ul><h3>Who uses it</h3><ul><li><strong>Developers</strong> write tests and fix defects.</li><li><strong>Quality engineers</strong> design test strategies and automation.</li><li><strong>Security engineers</strong> add abuse-case tests, fuzzing, SAST, DAST, SCA, and release controls.</li><li><strong>Platform engineers</strong> operate CI/CD runners, artifact registries, signing systems, and deployment gates.</li><li><strong>Auditors and risk teams</strong> ask for evidence that releases were controlled.</li></ul></section>
+        <section id="learning-outcomes"><h2>2. Learning Outcomes</h2><ul><li>Define unit tests, integration tests, end-to-end tests, regression tests, security tests, fuzzing, CI, CD, pipeline, runner, artifact, provenance, attestation, signing, and release gate.</li><li>Explain why tests reduce uncertainty but do not prove absence of bugs.</li><li>Write beginner-level Python tests for validation logic.</li><li>Explain how fuzzing differs from normal example-based testing.</li><li>Describe a basic CI/CD pipeline and identify trust boundaries inside it.</li><li>Explain common CI/CD attacks and safe defensive controls.</li><li>Calculate simple test-pass rate, coverage ratio, and expected bug-finding probability.</li><li>Create a local release manifest with hashes and test evidence.</li><li>Explain why artifact signing and provenance help, and why they are not complete security by themselves.</li></ul></section>
+        <section id="prerequisites"><h2>3. Prerequisites</h2><details open><summary>Program</summary><p>A program is a set of instructions that a computer executes. A program has inputs, logic, outputs, errors, and states.</p></details><details open><summary>Source code and commit</summary><p>Source code is the human-readable form of a program. A commit is a recorded change in version control.</p></details><details open><summary>Build artifact</summary><p>An artifact is a built output, such as a package, binary, installer, container image, or generated website.</p></details><details open><summary>Hash and digital signature</summary><p>A hash is a fingerprint of data. A digital signature uses cryptography to bind a key or identity to data so others can verify integrity and origin.</p></details><details open><summary>Secret</summary><p>A secret is a credential or sensitive value that grants access. CI/CD systems often need secrets, so they are high-value targets.</p></details></section>
+        <section id="core-concepts"><h2>4. Core Concepts</h2><h3>4.1 Testing</h3><p>Testing runs software under selected conditions and checks results. A test is a question: “Given this input and setup, does the software produce the expected result?”</p><p><strong>Analogy:</strong> testing a bridge with known weights does not prove the bridge can survive every possible situation, but it gives evidence about expected conditions and engineering assumptions.</p><h3>4.2 Unit, integration, and end-to-end tests</h3><ul><li><strong>Unit test:</strong> checks a small function or module in isolation.</li><li><strong>Integration test:</strong> checks whether multiple components work together.</li><li><strong>End-to-end test:</strong> checks a whole user workflow, such as login → add item → checkout.</li><li><strong>Regression test:</strong> checks that a fixed bug does not return.</li><li><strong>Security test:</strong> checks security behavior, such as authorization, validation, rate limiting, and safe error handling.</li></ul><h3>4.3 Test oracle</h3><p>A test oracle is the rule that decides whether a test passed. Weak oracles create weak tests.</p><h3>4.4 Coverage</h3><p>Coverage measures how much code or behavior was exercised by tests. High line coverage does not prove the system is secure because a test can execute code without checking the right security property.</p><h3>4.5 Fuzzing</h3><p>Fuzzing automatically generates many inputs to find crashes, hangs, assertion failures, parser bugs, memory errors, and unexpected behavior. It is especially useful for parsers, file formats, network protocols, APIs, compilers, image processors, and low-level code.</p><h3>4.6 Fuzzing styles</h3><ul><li><strong>Mutation-based fuzzing:</strong> starts with valid examples and mutates them.</li><li><strong>Generation-based fuzzing:</strong> creates inputs from a grammar or model.</li><li><strong>Coverage-guided fuzzing:</strong> uses feedback from code coverage to search deeper paths.</li></ul><h3>4.7 Crash triage</h3><p>Crash triage means deciding whether a crash is reproducible, security-relevant, already known, and worth fixing urgently.</p><h3>4.8 Continuous Integration</h3><p>Continuous Integration, or CI, automatically builds and tests code when changes are proposed or merged.</p><h3>4.9 Continuous Delivery and Continuous Deployment</h3><p>Continuous Delivery keeps software ready for release, often with a human approval step. Continuous Deployment automatically deploys successful changes to production. The approval difference matters.</p><h3>4.10 Pipeline and runner</h3><p>A pipeline is an automated workflow. A runner is the machine or container that executes CI/CD jobs. If a runner has secrets or deployment permissions, untrusted code running on that runner becomes dangerous.</p><h3>4.11 Pipeline as a privileged system</h3><p>CI/CD can build, sign, publish, deploy, and access secrets. Secure pipelines use least privilege, isolated runners, protected branches, reviewed workflow changes, pinned actions, short-lived credentials, and separation between untrusted pull requests and trusted release jobs.</p><h3>4.12 Release gate</h3><p>A release gate is a required control before release, such as passing tests, vulnerability thresholds, code-owner approval, signed commits, artifact signing, SBOM generation, or manual approval.</p><h3>4.13 Artifact integrity</h3><p>Artifact integrity means the built release has not been unexpectedly modified. Hashes detect changes. Digital signatures make changes detectable and link the artifact to a signing key or identity.</p><h3>4.14 Provenance and attestation</h3><p>Provenance records where software came from and how it was built. An attestation is a signed statement about an artifact, such as which source commit, builder, dependency set, and build command produced it.</p><h3>4.15 Release evidence</h3><p>Release evidence includes test results, build logs, SBOM, vulnerability scan output, approvals, artifact hashes, signatures, provenance, deployment logs, and rollback plans.</p></section>
+        <section id="visual-learning"><h2>5. Visual Learning</h2><h3>Secure CI/CD pipeline architecture</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Dev[Developer] --&gt; PR[Pull request]
+  PR --&gt; Review[Code review]
+  Review --&gt; CI[CI: build and tests]
+  CI --&gt; SecChecks[Security checks]
+  SecChecks --&gt; Package[Package artifact]
+  Package --&gt; Sign[Sign artifact]
+  Sign --&gt; Registry[Artifact registry]
+  Registry --&gt; Gate[Release gate]
+  Gate --&gt; Deploy[Deploy]
+  Deploy --&gt; Monitor[Monitor]
+  SecretMgr[Secret manager] --&gt;|short-lived secrets| CI
+  Policy[Policy engine] --&gt; Gate
+  SBOM[SBOM + provenance] --&gt; Gate</pre></div><h3>Test strategy pyramid</h3><div class="diagram"><pre class="mermaid">flowchart TB
+  E2E[End-to-end tests
+Few, slower, broad confidence]
+  Integration[Integration tests
+Some, medium cost]
+  Unit[Unit tests
+Many, fast, precise]
+  Security[Security property tests
+Across all layers]
+  Unit --&gt; Integration --&gt; E2E
+  Security -. supports .- Unit
+  Security -. supports .- Integration
+  Security -. supports .- E2E</pre></div><h3>Fuzzing loop</h3><div class="diagram"><pre class="mermaid">flowchart LR
+  Seeds[Seed inputs] --&gt; Mutator[Generate or mutate input]
+  Mutator --&gt; Target[Run target parser/function]
+  Target --&gt; Observe[Observe crash, hang, assertion, coverage]
+  Observe --&gt; Corpus[Keep interesting inputs]
+  Corpus --&gt; Mutator
+  Observe --&gt; Triage[Triage findings]
+  Triage --&gt; Fix[Fix and add regression test]</pre></div><h3>Release decision tree</h3><div class="diagram"><pre class="mermaid">flowchart TD
+  Start[Release candidate ready?] --&gt; Tests{All required tests passed?}
+  Tests -- No --&gt; Stop1[Do not release]
+  Tests -- Yes --&gt; Vulns{Critical unresolved exposure?}
+  Vulns -- Yes --&gt; Stop2[Patch, mitigate, or formally accept risk]
+  Vulns -- No --&gt; Signed{Artifact signed and hash recorded?}
+  Signed -- No --&gt; Stop3[Generate integrity evidence]
+  Signed -- Yes --&gt; Provenance{Provenance and SBOM available?}
+  Provenance -- No --&gt; Stop4[Create release evidence]
+  Provenance -- Yes --&gt; Approve[Approve release]</pre></div><h3>Sequence diagram</h3><div class="diagram"><pre class="mermaid">sequenceDiagram
+  participant D as Developer
+  participant R as Repository
+  participant C as CI Runner
+  participant A as Artifact Registry
+  participant G as Release Gate
+  participant P as Production
+  D-&gt;&gt;R: Push commit / open PR
+  R-&gt;&gt;C: Trigger workflow
+  C-&gt;&gt;C: Install dependencies and run tests
+  C-&gt;&gt;C: Fuzz selected parsers
+  C-&gt;&gt;C: Build artifact
+  C-&gt;&gt;A: Upload artifact, hash, SBOM, provenance
+  A-&gt;&gt;G: Present evidence
+  G-&gt;&gt;P: Deploy only if policy passes</pre></div><h3>State diagram</h3><div class="diagram"><pre class="mermaid">stateDiagram-v2
+  [*] --&gt; Proposed
+  Proposed --&gt; Building
+  Building --&gt; Testing
+  Testing --&gt; SecurityReview
+  SecurityReview --&gt; Signed
+  Signed --&gt; Approved
+  Approved --&gt; Released
+  Testing --&gt; Rejected: tests fail
+  SecurityReview --&gt; Rejected: unacceptable risk
+  Rejected --&gt; Proposed: fix and retry
+  Released --&gt; Monitored
+  Monitored --&gt; RolledBack: severe issue</pre></div></section>
+        <section id="mind-map"><h2>6. Mind Maps</h2><div class="diagram"><pre class="mermaid">mindmap
+  root((Testing, Fuzzing, CI/CD, Release Integrity))
+    Testing
+      Unit tests
+      Integration tests
+      End-to-end tests
+      Regression tests
+      Security tests
+    Fuzzing
+      Mutation based
+      Generation based
+      Coverage guided
+      Crash triage
+      Regression creation
+    CI/CD
+      Pipeline
+      Runner
+      Secrets
+      Permissions
+      Approvals
+      Logs
+    Release Integrity
+      Hashes
+      Signatures
+      Provenance
+      Attestations
+      SBOM
+      Artifact registry
+    Security Risks
+      Malicious workflow changes
+      Secret exposure
+      Dependency tampering
+      Build compromise
+      Unsigned artifacts
+      Untrusted pull requests</pre></div></section>
+        <section id="mathematical-foundations"><h2>7. Mathematical Foundations</h2><h3>7.1 Test pass rate</h3><p><strong>Pass rate = passing tests / total tests.</strong> If 148 of 150 tests pass, then 148 / 150 = 98.67%. This is useful evidence, but one failing test may still block release if it covers a critical security property.</p><h3>7.2 Coverage ratio</h3><p><strong>Coverage = executed lines / total instrumented lines.</strong> If 720 of 900 lines execute, coverage is 80%. Security interpretation: coverage shows what ran, not whether authorization, validation, or error handling was checked correctly.</p><h3>7.3 Fuzzing discovery probability</h3><p>If each generated input has probability <em>q</em> of triggering a specific bug, the chance of finding the bug at least once after <em>n</em> independent inputs is <strong>1 − (1 − q)<sup>n</sup></strong>. Example: q = 0.001 and n = 3000 gives approximately 95.03%.</p><h3>7.4 Hash collision intuition</h3><p>A 256-bit hash has 2<sup>256</sup> possible outputs. Random collision finding is infeasible under ordinary assumptions, but hashes only help if the expected hash comes from a trusted source.</p><h3>7.5 Teaching risk score</h3><p><strong>Release risk = impact × likelihood × exposure − control strength.</strong> Example: 5 × 4 × 3 − 7 = 53. This is not a standard; it teaches that release decisions combine defects, exposure, and controls.</p></section>
+        <section id="practical-examples"><h2>8. Practical Examples</h2><h3>Linux examples</h3><p>Run local Python tests inside a virtual environment:</p><pre><code class="language-bash"># Safe local lab setup for Linux/macOS.
+mkdir -p testing-fuzzing-cicd-lab
+cd testing-fuzzing-cicd-lab
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip pytest
+cat &gt; validator.py &lt;&lt;&#x27;PYCODE&#x27;
+import re
+
+def is_valid_student_id(value: str) -&gt; bool:
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+PYCODE
+cat &gt; test_validator.py &lt;&lt;&#x27;PYCODE&#x27;
+from validator import is_valid_student_id
+
+def test_valid():
+    assert is_valid_student_id(&quot;STU-123456&quot;)
+
+def test_invalid():
+    assert not is_valid_student_id(&quot;123456&quot;)
+PYCODE
+pytest -q</code></pre><p>Calculate a local file hash:</p><pre><code class="language-bash">sha256sum release-demo.txt</code></pre><h3>Windows examples</h3><p>Run the same local test lab in PowerShell:</p><pre><code class="language-powershell"># Safe local lab setup for Windows PowerShell.
+New-Item -ItemType Directory -Force -Path testing-fuzzing-cicd-lab | Out-Null
+Set-Location testing-fuzzing-cicd-lab
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip pytest
+@&#x27;
+import re
+
+def is_valid_student_id(value: str) -&gt; bool:
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+&#x27;@ | Out-File validator.py -Encoding utf8
+@&#x27;
+from validator import is_valid_student_id
+
+def test_valid():
+    assert is_valid_student_id(&quot;STU-123456&quot;)
+
+def test_invalid():
+    assert not is_valid_student_id(&quot;123456&quot;)
+&#x27;@ | Out-File test_validator.py -Encoding utf8
+pytest -q</code></pre><p>Calculate a local file hash:</p><pre><code class="language-powershell">Get-FileHash .\release-demo.txt -Algorithm SHA256</code></pre><h3>Python examples</h3><p>Use unit tests to check validation behavior and a toy fuzzer to explore unexpected input.</p><pre><code class="language-python"># Safe local example: unit tests for a tiny validation function.
+# This code does not connect to the internet or attack anything.
+
+import re
+
+
+def is_valid_student_id(value: str) -&gt; bool:
+    &quot;&quot;&quot;Return True only for IDs like STU-123456.&quot;&quot;&quot;
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+
+
+def test_accepts_valid_id():
+    assert is_valid_student_id(&quot;STU-123456&quot;) is True
+
+
+def test_rejects_missing_prefix():
+    assert is_valid_student_id(&quot;123456&quot;) is False
+
+
+def test_rejects_letters_in_number_part():
+    assert is_valid_student_id(&quot;STU-12AB56&quot;) is False
+
+
+def test_rejects_extra_characters():
+    assert is_valid_student_id(&quot;STU-123456&lt;script&gt;&quot;) is False</code></pre><pre><code class="language-python"># Safe local example: beginner-friendly fuzzing of a parser function.
+# The target is our own toy code, not a real website or third-party service.
+
+import random
+import string
+
+
+def parse_score(text: str) -&gt; int:
+    &quot;&quot;&quot;Parse a score from 0 to 100. This function should not crash unexpectedly.&quot;&quot;&quot;
+    value = int(text)
+    if value &lt; 0 or value &gt; 100:
+        raise ValueError(&quot;score must be between 0 and 100&quot;)
+    return value
+
+
+def random_input(max_length: int = 8) -&gt; str:
+    &quot;&quot;&quot;Generate random text using digits, letters, and symbols.&quot;&quot;&quot;
+    alphabet = string.digits + string.ascii_letters + &quot;-+!@#$%^&amp;*()&quot;
+    size = random.randint(0, max_length)
+    return &quot;&quot;.join(random.choice(alphabet) for _ in range(size))
+
+
+for i in range(1000):
+    sample = random_input()
+    try:
+        parse_score(sample)
+    except ValueError:
+        pass  # Expected for invalid scores.
+    except Exception as error:
+        print(&quot;Unexpected crash on input:&quot;, repr(sample), &quot;error:&quot;, error)
+        break
+else:
+    print(&quot;No unexpected crash found in 1000 generated inputs.&quot;)</code></pre><h3>Network examples</h3><p>Safe network-related release checks include verifying that a local service fails closed, logs rejected requests, uses HTTPS in production configuration, and does not expose debug endpoints. Do not scan real networks without authorization.</p><pre><code class="language-bash">curl -i http://127.0.0.1:8000/health
+# Only use localhost or explicitly assigned lab targets.</code></pre><h3>Web examples</h3><pre><code class="language-python"># Example security test names for a web app
+# test_login_rejects_wrong_password
+# test_user_cannot_read_another_users_invoice
+# test_html_output_escapes_script_tags
+# test_rate_limit_after_repeated_failures
+# test_error_page_hides_stack_trace</code></pre><h3>Cloud examples</h3><pre><code class="language-text"># Pseudocode for a cloud release gate
+# 1. Verify artifact signature.
+# 2. Check artifact hash against release manifest.
+# 3. Confirm SBOM exists.
+# 4. Confirm deployment role has least privilege.
+# 5. Deploy to staging before production.
+# 6. Record deployment ID and rollback version.</code></pre></section>
+        <section id="code-examples"><h2>9. Code Examples</h2><h3>9.1 Unit test example</h3><pre><code class="language-python"># Safe local example: unit tests for a tiny validation function.
+# This code does not connect to the internet or attack anything.
+
+import re
+
+
+def is_valid_student_id(value: str) -&gt; bool:
+    &quot;&quot;&quot;Return True only for IDs like STU-123456.&quot;&quot;&quot;
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+
+
+def test_accepts_valid_id():
+    assert is_valid_student_id(&quot;STU-123456&quot;) is True
+
+
+def test_rejects_missing_prefix():
+    assert is_valid_student_id(&quot;123456&quot;) is False
+
+
+def test_rejects_letters_in_number_part():
+    assert is_valid_student_id(&quot;STU-12AB56&quot;) is False
+
+
+def test_rejects_extra_characters():
+    assert is_valid_student_id(&quot;STU-123456&lt;script&gt;&quot;) is False</code></pre><h4>Line-by-line explanation</h4><ul><li><code>import re</code> loads Python's regular-expression library.</li><li><code>is_valid_student_id</code> defines a function that returns a boolean answer.</li><li><code>isinstance</code> prevents non-string values from being processed as text.</li><li><code>re.fullmatch</code> requires the whole input to match, not just part of it.</li><li>The test functions check valid input, missing prefix, invalid characters, and extra content.</li></ul><h4>Common mistakes</h4><ul><li>Using <code>re.match</code> when <code>fullmatch</code> is required.</li><li>Testing only the happy path.</li><li>Writing tests that check implementation details instead of security behavior.</li></ul><h3>9.2 Beginner fuzzing example</h3><pre><code class="language-python"># Safe local example: beginner-friendly fuzzing of a parser function.
+# The target is our own toy code, not a real website or third-party service.
+
+import random
+import string
+
+
+def parse_score(text: str) -&gt; int:
+    &quot;&quot;&quot;Parse a score from 0 to 100. This function should not crash unexpectedly.&quot;&quot;&quot;
+    value = int(text)
+    if value &lt; 0 or value &gt; 100:
+        raise ValueError(&quot;score must be between 0 and 100&quot;)
+    return value
+
+
+def random_input(max_length: int = 8) -&gt; str:
+    &quot;&quot;&quot;Generate random text using digits, letters, and symbols.&quot;&quot;&quot;
+    alphabet = string.digits + string.ascii_letters + &quot;-+!@#$%^&amp;*()&quot;
+    size = random.randint(0, max_length)
+    return &quot;&quot;.join(random.choice(alphabet) for _ in range(size))
+
+
+for i in range(1000):
+    sample = random_input()
+    try:
+        parse_score(sample)
+    except ValueError:
+        pass  # Expected for invalid scores.
+    except Exception as error:
+        print(&quot;Unexpected crash on input:&quot;, repr(sample), &quot;error:&quot;, error)
+        break
+else:
+    print(&quot;No unexpected crash found in 1000 generated inputs.&quot;)</code></pre><h4>Line-by-line explanation</h4><ul><li><code>random</code> and <code>string</code> create test inputs.</li><li><code>parse_score</code> is the toy target under test.</li><li><code>random_input</code> creates unusual strings.</li><li>The loop tries 1000 generated inputs.</li><li><code>ValueError</code> is treated as expected rejection.</li><li>Any other exception is printed as an unexpected crash.</li></ul><h3>9.3 CI workflow example</h3><pre><code class="language-yaml"># .github/workflows/ci.yml
+# Safe educational CI workflow for a repository you own.
+
+name: Safe CI Demo
+
+on:
+  push:
+    branches: [&quot;main&quot;]
+  pull_request:
+    branches: [&quot;main&quot;]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+
+      - name: Install test tool
+        run: python -m pip install pytest
+
+      - name: Run tests
+        run: pytest -q</code></pre><h4>Line-by-line explanation</h4><ul><li><code>name</code> labels the workflow.</li><li><code>on</code> defines when it runs.</li><li><code>permissions: contents: read</code> starts with minimal repository permission.</li><li><code>runs-on</code> chooses a runner environment.</li><li><code>actions/checkout</code> checks out your code.</li><li><code>actions/setup-python</code> installs Python.</li><li>The final step runs tests.</li></ul><h4>Common mistakes</h4><ul><li>Giving workflows write permissions by default.</li><li>Running untrusted pull-request code with secrets available.</li><li>Using unreviewed third-party actions without pinning or trust review.</li><li>Letting deployment happen automatically from every branch.</li></ul><h3>9.4 Release hash example</h3><pre><code class="language-python"># Safe local example: create a file and calculate its SHA-256 hash.
+# Hashes help detect whether a release artifact changed.
+
+from pathlib import Path
+import hashlib
+
+artifact = Path(&quot;release-demo.txt&quot;)
+artifact.write_text(&quot;version=1.0.0\nmessage=training artifact\n&quot;, encoding=&quot;utf-8&quot;)
+
+digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+print(f&quot;{artifact.name} sha256={digest}&quot;)</code></pre><h4>Line-by-line explanation</h4><ul><li><code>Path</code> handles local files.</li><li><code>hashlib</code> provides hash functions.</li><li>The script writes a toy artifact.</li><li><code>sha256</code> calculates a fingerprint of the bytes.</li><li>The digest can be recorded in a release manifest.</li></ul><h3>9.5 Educational release manifest</h3><pre><code class="language-json">{
+  &quot;application&quot;: &quot;fictional-student-portal&quot;,
+  &quot;version&quot;: &quot;0.4.5-training&quot;,
+  &quot;source_commit&quot;: &quot;abc1234-training-only&quot;,
+  &quot;build_runner&quot;: &quot;local-lab&quot;,
+  &quot;tests&quot;: {
+    &quot;unit&quot;: &quot;passed&quot;,
+    &quot;integration&quot;: &quot;passed&quot;,
+    &quot;security_smoke&quot;: &quot;passed&quot;
+  },
+  &quot;artifacts&quot;: [
+    {
+      &quot;name&quot;: &quot;release-demo.txt&quot;,
+      &quot;sha256&quot;: &quot;replace-with-value-from-lab&quot;
+    }
+  ],
+  &quot;sbom&quot;: &quot;educational-sbom.json&quot;,
+  &quot;limitations&quot;: [
+    &quot;No real signing key used in this beginner lab.&quot;,
+    &quot;No production deployment performed.&quot;
+  ]
+}</code></pre></section>
+        <section id="security-perspective"><h2>10. Security Perspective</h2><h3>Common attacks</h3><ul><li>Malicious workflow modification to exfiltrate secrets or publish a malicious artifact.</li><li>Secret exposure in CI logs.</li><li>Dependency tampering or malicious build plugins.</li><li>Runner compromise.</li><li>Unsigned release replacement.</li><li>Untrusted pull-request execution with privileged tokens.</li><li>Cache poisoning.</li></ul><h3>Common vulnerabilities</h3><ul><li>Over-permissive CI tokens.</li><li>Long-lived cloud credentials in CI variables.</li><li>Unprotected release branches and tags.</li><li>Manual release steps with no evidence trail.</li><li>No artifact signing or verification.</li><li>No SBOM or dependency inventory at release time.</li><li>No separation between build, test, release, and deploy permissions.</li></ul><h3>Defensive strategies</h3><ul><li>Use least-privilege workflow permissions.</li><li>Separate untrusted PR workflows from trusted release workflows.</li><li>Require code review for workflow and build-script changes.</li><li>Use protected branches, protected tags, and environment approvals.</li><li>Prefer short-lived OIDC-based credentials over static keys.</li><li>Generate SBOMs and provenance during the build.</li><li>Sign artifacts and verify signatures before deployment.</li></ul><h3>Detection methods</h3><ul><li>Alert on workflow file changes and new CI secrets.</li><li>Monitor artifact hash or signature mismatches.</li><li>Review unusual release times, new maintainers, and unexpected deployments.</li><li>Inspect CI logs for unusual outbound connections.</li></ul><h3>Mitigation</h3><ul><li>Revoke exposed tokens and rotate secrets.</li><li>Disable compromised runners and rebuild from trusted infrastructure.</li><li>Rebuild artifacts from known-good source commits.</li><li>Invalidate affected releases and audit downstream deployments.</li></ul><h3>Best practices</h3><ul><li>Make releases reproducible and reviewable.</li><li>Store release evidence with the artifact.</li><li>Use policy-as-code for release gates.</li><li>Keep tests fast enough that developers actually run them.</li><li>Treat CI/CD configuration as production code.</li></ul></section>
+        <section id="industry-perspective"><h2>11. Industry Perspective</h2><ul><li><strong>Banks:</strong> strict release approvals, segregation of duties, audit evidence, fraud-risk tests, and rollback plans.</li><li><strong>Governments:</strong> traceability, secure build practices, procurement evidence, vulnerability handling, and controlled deployment.</li><li><strong>Cloud providers:</strong> automated pipelines with strong identity, artifact signing, canary releases, monitoring, and rollback.</li><li><strong>Healthcare:</strong> patient-safety tests, regulated data protection, and deployment evidence.</li><li><strong>Defense:</strong> provenance, controlled build environments, software assurance, tamper resistance, and strict change control.</li><li><strong>Universities:</strong> protection for identity systems, learning platforms, payroll, grant data, and student records.</li><li><strong>Large enterprises:</strong> centralized CI/CD platforms, code-owner review, artifact repositories, vulnerability gates, and developer guardrails.</li></ul></section>
+        <section id="research-perspective"><h2>12. Research Perspective</h2><p>Current research and engineering work focuses on making secure releases stronger and easier to adopt.</p><ul><li><strong>Fuzzing at scale:</strong> coverage guidance, grammar inference, hybrid fuzzing, and automatic crash triage.</li><li><strong>Property-based testing:</strong> generating structured inputs from specifications and checking invariants.</li><li><strong>Formal verification:</strong> mathematically proving selected security properties.</li><li><strong>Reproducible builds:</strong> allowing independent verification that source code produces the same artifact.</li><li><strong>Provenance usability:</strong> making signing, verification, and attestation practical for ordinary developers.</li><li><strong>CI/CD threat modeling:</strong> modeling runner compromise, cache poisoning, untrusted PRs, and secret exposure.</li><li><strong>AI-assisted development risk:</strong> studying how automated agents affect tests, workflows, review quality, and release safety.</li></ul><p>Open problems include measuring release trust, preventing build-system compromise, making provenance meaningful to consumers, reducing false positives in gates, and balancing fast delivery with strong verification.</p></section>
+        <section id="case-studies"><h2>13. Case Studies</h2><h3>Codecov Bash Uploader incident</h3><p><strong>What happened:</strong> a third party modified a Bash Uploader used in CI environments. The modified uploader could export environment variables from users' CI environments.</p><p><strong>Root cause:</strong> Codecov reported that an attacker extracted a key from an intermediate Docker image layer and used it to modify the uploader in storage.</p><p><strong>Impact:</strong> CI secrets, tokens, keys, and repository metadata could have been exposed for affected users.</p><p><strong>Lessons learned:</strong> verify downloaded tooling, minimize CI secrets, protect build artifacts, monitor script integrity, and rotate exposed credentials quickly.</p><h3>SolarWinds Orion software supply-chain compromise</h3><p><strong>What happened:</strong> attackers compromised the software supply chain for SolarWinds Orion and distributed malicious updates to customers.</p><p><strong>Root cause:</strong> the attack involved the trusted software build/update process, not only individual customer systems.</p><p><strong>Impact:</strong> many public and private organizations had to investigate exposure from trusted vendor updates.</p><p><strong>Lessons learned:</strong> signed software is not automatically safe if the build process is compromised. Provenance, build isolation, monitoring, vendor risk management, and detection remain necessary.</p><h3>xz Utils backdoor</h3><p><strong>What happened:</strong> malicious code was introduced into xz Utils release artifacts in a sophisticated open-source supply-chain attack.</p><p><strong>Root cause:</strong> the incident involved social, maintainer, release, and build-process weaknesses rather than a simple coding mistake.</p><p><strong>Impact:</strong> Linux distributions and security teams had to urgently identify affected versions and prevent distribution.</p><p><strong>Lessons learned:</strong> review release artifacts, protect maintainers, improve reproducible builds, monitor unusual build behavior, and avoid relying on trust reputation alone.</p></section>
+        <section id="misconceptions"><h2>14. Common Misconceptions</h2><ul><li><strong>“All tests passed, so the software is secure.”</strong> Passing tests only shows that selected checks passed.</li><li><strong>“High coverage means good security.”</strong> Coverage measures execution, not security-property quality.</li><li><strong>“Fuzzing is only for hackers.”</strong> Fuzzing is a defensive quality and security technique.</li><li><strong>“CI/CD automatically makes releases safe.”</strong> Automation can scale mistakes and attacks if permissions and trust boundaries are weak.</li><li><strong>“A signed artifact is always trustworthy.”</strong> A signature proves integrity relative to a key or identity; it does not prove the source, build, or signer was uncompromised.</li><li><strong>“SBOMs replace testing.”</strong> SBOMs provide inventory, not behavioral assurance.</li><li><strong>“Only production pipelines matter.”</strong> Development and staging pipelines may contain secrets or deployment paths.</li><li><strong>“Manual approval fixes everything.”</strong> Approval without evidence is weak control.</li></ul></section>
+        <section id="summary"><h2>15. Summary</h2><p>Testing checks expected behavior. Fuzzing explores unexpected inputs. CI/CD makes checks and releases repeatable. Release integrity creates evidence that software came from the intended source, passed required checks, and was not altered unexpectedly. Secure release engineering connects coding, secrets, dependencies, build infrastructure, artifact signing, provenance, monitoring, and risk decisions.</p></section>
+        <section id="glossary"><h2>16. Glossary</h2><dl><dt>Artifact</dt><dd>A built software output such as a package, binary, installer, container image, or generated website.</dd><dt>Attestation</dt><dd>A signed statement about an artifact or process, such as how software was built.</dd><dt>Build</dt><dd>The process of turning source code and dependencies into a runnable or distributable artifact.</dd><dt>CI</dt><dd>Continuous Integration; automated building and testing of code changes.</dd><dt>CD</dt><dd>Continuous Delivery or Continuous Deployment, depending on whether human release approval is required.</dd><dt>Coverage</dt><dd>A measurement of what code or behavior was exercised by tests.</dd><dt>Fuzzing</dt><dd>Automated testing that feeds many unexpected inputs to a target to find crashes or abnormal behavior.</dd><dt>Pipeline</dt><dd>An automated sequence of software delivery steps.</dd><dt>Provenance</dt><dd>Evidence of where software came from and how it was produced.</dd><dt>Release gate</dt><dd>A required control that must pass before software is released or deployed.</dd><dt>Runner</dt><dd>The machine or container that executes CI/CD jobs.</dd><dt>Test oracle</dt><dd>The rule that decides whether a test passed or failed.</dd></dl></section>
+        <section id="self-assessment"><h2>17. Self-Assessment</h2><h3>20 MCQs</h3><ol class="quiz-list"><li><p>What is the main purpose of a unit test?</p><ol type="A"><li>Check a small piece of code</li><li>Replace all security review</li><li>Deploy to production</li><li>Encrypt secrets</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does fuzzing mainly explore?</p><ol type="A"><li>Only valid business workflows</li><li>Unexpected or malformed inputs</li><li>Employee schedules</li><li>Cloud billing</li></ol><details><summary>Answer</summary><p>B.</p></details></li><li><p>What does CI stand for?</p><ol type="A"><li>Cyber Integrity</li><li>Continuous Integration</li><li>Code Identity</li><li>Central Installation</li></ol><details><summary>Answer</summary><p>B.</p></details></li><li><p>Which is the safest default permission for a basic CI workflow?</p><ol type="A"><li>All permissions</li><li>Administrator</li><li>Read-only unless more is required</li><li>Production deploy access</li></ol><details><summary>Answer</summary><p>C.</p></details></li><li><p>What is an artifact?</p><ol type="A"><li>A built release output</li><li>A password policy</li><li>A firewall rule only</li><li>A meeting note only</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does a hash help detect?</p><ol type="A"><li>Whether a file changed</li><li>Whether code is legally licensed</li><li>Whether a developer is honest</li><li>Whether a user is authenticated</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does a signature add beyond a raw hash?</p><ol type="A"><li>A link to a signing key or identity</li><li>Guaranteed absence of bugs</li><li>Automatic patching</li><li>Faster CPU speed</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is provenance?</p><ol type="A"><li>Evidence of how and where software was produced</li><li>A password manager</li><li>A web browser setting</li><li>A local firewall</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Why are CI runners sensitive?</p><ol type="A"><li>They may execute code with access to secrets or release permissions</li><li>They are always offline</li><li>They only display documentation</li><li>They cannot access files</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is a release gate?</p><ol type="A"><li>A required check before release</li><li>A keyboard shortcut</li><li>A type of malware</li><li>A DNS record</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which statement is correct?</p><ol type="A"><li>All tests passing proves no vulnerabilities exist</li><li>Tests reduce uncertainty but cannot prove absence of all bugs</li><li>Tests are useless</li><li>Only production users should test software</li></ol><details><summary>Answer</summary><p>B.</p></details></li><li><p>What is a regression test?</p><ol type="A"><li>A test that checks a fixed bug does not return</li><li>A cloud bill</li><li>A digital certificate</li><li>A firewall bypass</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What should happen when a fuzzer finds a crash?</p><ol type="A"><li>Ignore it</li><li>Triage, reproduce, fix, and add a regression test when appropriate</li><li>Publish exploit code immediately</li><li>Disable all logs</li></ol><details><summary>Answer</summary><p>B.</p></details></li><li><p>Why separate untrusted PR workflows from trusted release workflows?</p><ol type="A"><li>To prevent untrusted code from accessing secrets or release permissions</li><li>To make tests slower</li><li>To avoid version control</li><li>To remove all approvals</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What does SBOM provide?</p><ol type="A"><li>Component inventory</li><li>Guaranteed secure execution</li><li>Password reset</li><li>Network encryption</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is the risk of long-lived CI secrets?</p><ol type="A"><li>If leaked, they may remain useful to attackers</li><li>They always expire instantly</li><li>They cannot be logged</li><li>They prevent all malware</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which item is release evidence?</p><ol type="A"><li>Test results</li><li>Artifact hash</li><li>Approval record</li><li>All of the above</li></ol><details><summary>Answer</summary><p>D.</p></details></li><li><p>What is continuous deployment?</p><ol type="A"><li>Automatically deploying successful changes</li><li>Never releasing software</li><li>Manual testing only</li><li>Password hashing</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>Which is a common CI/CD attack?</p><ol type="A"><li>Malicious workflow modification</li><li>Changing font size</li><li>Adding documentation</li><li>Using a glossary</li></ol><details><summary>Answer</summary><p>A.</p></details></li><li><p>What is the best interpretation of high test coverage?</p><ol type="A"><li>Useful evidence, but not proof of security</li><li>Proof no bugs exist</li><li>Proof no attacker exists</li><li>Proof no dependencies exist</li></ol><details><summary>Answer</summary><p>A.</p></details></li></ol><h3>10 Short Questions</h3><ol><li>Define fuzzing in one sentence.</li><li>What is the difference between CI and continuous deployment?</li><li>Why should CI workflow file changes require review?</li><li>What is a release artifact?</li><li>What is a test oracle?</li><li>Why does high coverage not guarantee security?</li><li>What is provenance?</li><li>Why are hashes not enough if the expected hash comes from an untrusted source?</li><li>Give two examples of release evidence.</li><li>Why are long-lived CI secrets risky?</li></ol><h3>5 Long Questions</h3><ol><li>Design a secure release process for a small web application. Include tests, approvals, artifact integrity, and rollback.</li><li>Explain how fuzzing complements unit testing. Include strengths and limitations.</li><li>Threat model a CI/CD pipeline for a student portal.</li><li>Compare artifact hashing, artifact signing, and provenance.</li><li>Write a release-risk memo for a build where all unit tests passed but one critical dependency vulnerability remains unresolved.</li></ol><h3>Scenario-Based Questions</h3><ol><li>An outside PR changes a workflow file and prints environment variables. What should reviewers do?</li><li>A release artifact hash does not match the recorded manifest. What are response steps?</li><li>A fuzzer finds a crash in an image parser used on public uploads. How should the team triage it?</li><li>A CI job needs cloud deployment access. How can the team reduce risk?</li><li>A production deployment succeeded, but monitoring shows a high error rate. What controls should activate?</li></ol><h3>Interview Questions</h3><ol><li>How would you secure a GitHub Actions workflow?</li><li>What is the difference between continuous delivery and continuous deployment?</li><li>What evidence would you require before approving a production release?</li><li>How do you handle secrets in CI/CD?</li><li>What is fuzzing useful for?</li></ol><h3>Critical Thinking Questions</h3><ol><li>When can an automated release gate create a false sense of security?</li><li>Should every vulnerability block release? Explain trade-offs.</li><li>How can organizations keep developers productive while enforcing pipeline security?</li><li>What are the social risks of relying on approvals without meaningful evidence?</li><li>How should a small open-source project choose realistic release-integrity controls?</li></ol><h3>Research Questions</h3><ol><li>How can fuzzing results be automatically prioritized by security impact?</li><li>How can provenance be made understandable for non-expert consumers?</li><li>How can build systems resist insider compromise?</li><li>How do AI coding agents change CI/CD threat models?</li><li>What metrics best predict release safety?</li></ol></section>
+        <section id="practice-lab"><h2>18. Practice Lab</h2><h3>Title</h3><p><strong>Safe Local Release Pipeline Evidence Lab</strong></p><h3>Prerequisites</h3><ul><li>Python 3 installed locally.</li><li>Basic terminal or PowerShell usage.</li><li>No internet target, cloud account, or external system required.</li></ul><h3>Objectives</h3><ul><li>Create a tiny Python function and tests.</li><li>Run tests locally.</li><li>Run a toy fuzzer against local code.</li><li>Create a release artifact.</li><li>Record its SHA-256 hash.</li><li>Create a simple release manifest with evidence.</li></ul><h3>Linux/macOS setup</h3><pre><code class="language-bash"># Safe local lab setup for Linux/macOS.
+mkdir -p testing-fuzzing-cicd-lab
+cd testing-fuzzing-cicd-lab
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip pytest
+cat &gt; validator.py &lt;&lt;&#x27;PYCODE&#x27;
+import re
+
+def is_valid_student_id(value: str) -&gt; bool:
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+PYCODE
+cat &gt; test_validator.py &lt;&lt;&#x27;PYCODE&#x27;
+from validator import is_valid_student_id
+
+def test_valid():
+    assert is_valid_student_id(&quot;STU-123456&quot;)
+
+def test_invalid():
+    assert not is_valid_student_id(&quot;123456&quot;)
+PYCODE
+pytest -q</code></pre><h3>Windows PowerShell setup</h3><pre><code class="language-powershell"># Safe local lab setup for Windows PowerShell.
+New-Item -ItemType Directory -Force -Path testing-fuzzing-cicd-lab | Out-Null
+Set-Location testing-fuzzing-cicd-lab
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip pytest
+@&#x27;
+import re
+
+def is_valid_student_id(value: str) -&gt; bool:
+    if not isinstance(value, str):
+        return False
+    return re.fullmatch(r&quot;STU-[0-9]{6}&quot;, value) is not None
+&#x27;@ | Out-File validator.py -Encoding utf8
+@&#x27;
+from validator import is_valid_student_id
+
+def test_valid():
+    assert is_valid_student_id(&quot;STU-123456&quot;)
+
+def test_invalid():
+    assert not is_valid_student_id(&quot;123456&quot;)
+&#x27;@ | Out-File test_validator.py -Encoding utf8
+pytest -q</code></pre><h3>Add the toy fuzzer</h3><p>Create <code>fuzz_score.py</code> and paste the fuzzing example from section 9.2. Run it locally:</p><pre><code class="language-bash">python fuzz_score.py</code></pre><h3>Create artifact and hash</h3><p>Create <code>hash_artifact.py</code> using the section 9.4 example and run it:</p><pre><code class="language-bash">python hash_artifact.py</code></pre><h3>Create release manifest</h3><p>Create <code>release-manifest.json</code> from the section 9.5 example and replace the placeholder hash with your calculated hash.</p><h3>Expected outcomes</h3><ul><li>You can explain what each test checks.</li><li>You can explain why the fuzzer may find unexpected behavior.</li><li>You can produce a local artifact hash.</li><li>You can explain what your release manifest proves and what it does not prove.</li></ul><h3>Safety rules</h3><ul><li>Do not fuzz public websites, APIs, or third-party services.</li><li>Do not upload fake secrets to public repositories.</li><li>Do not put real credentials in test files.</li><li>Run all commands only in your own local lab directory.</li></ul></section>
+        <section id="further-reading"><h2>19. Further Reading</h2><ul><li>NIST SP 800-218 Secure Software Development Framework.</li><li>NIST SP 800-204C DevSecOps guidance for cloud-native applications.</li><li>NIST SP 800-204D software supply-chain security in DevSecOps CI/CD pipelines.</li><li>OWASP Web Security Testing Guide and OWASP fuzzing resources.</li><li>GitHub Actions security hardening documentation.</li><li>SLSA specification and provenance documentation.</li><li>Sigstore and cosign documentation for software signing and transparency.</li><li>OpenSSF Scorecard project for open-source security health checks.</li><li>Research topics: coverage-guided fuzzing, reproducible builds, provenance usability, build isolation, CI/CD threat modeling, and AI-assisted workflow risk.</li></ul></section>
+        <div class="prev-next"><a class="btn" href="secrets-dependencies-and-sboms.html">← Lesson 4.4</a><a class="btn" href="index.html">Week 4 Overview</a><a class="btn btn-primary" href="../week-05/memory-c-and-unsafe-code-from-first-principles.html">Next: Lesson 5.1 →</a></div>
+      </article><aside class="toc"><h2>On this page</h2><ol id="tocList"></ol></aside></div>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script>
+<script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script>
+<script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script>
+<script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body></html>

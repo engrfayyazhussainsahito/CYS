@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 16.5: Final Portfolio, Defense, and Career Roadmap | MS Cybersecurity</title>
+  <meta name="description" content="Capstone lesson on assembling a defensible cybersecurity portfolio, presenting a final defense, mapping evidence to NICE-style work, and building a post-course career roadmap.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-16-lesson-5" data-title="Lesson 16.5: Final Portfolio, Defense, and Career Roadmap">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 16</a> / Lesson 16.5</div>
+      <header class="hero"><div class="eyebrow">Week 16 · Lesson 16.5</div><h1>Final Portfolio, Defense, and Career Roadmap</h1><p class="lead">A final cybersecurity portfolio is not a folder of screenshots. It is a defensible evidence package that shows what you assessed, what you concluded, what you could not prove, what decisions remain, and what professional capabilities you can demonstrate next.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>90–120 minutes</div><div class="meta-item"><strong>Difficulty level</strong>MS capstone completion</div><div class="meta-item"><strong>Required background</strong>Weeks 0–16, especially Lessons 16.1–16.4</div><div class="meta-item"><strong>Lab mode</strong>Safe local fictional portfolio-readiness review</div></div></header>
+
+      <div class="callout"><strong>Boundary:</strong> This lesson uses fictional capstone materials. Do not include secrets, real credentials, regulated personal data, proprietary screenshots, private customer records, client names, confidential vulnerability details, or any artifact from systems you were not explicitly authorized to assess.</div>
+
+      <div class="lesson-layout">
+        <article class="lesson-content">
+          <section id="objectives"><h2>1. Learning Objectives</h2><p>By the end of this lesson, you should be able to:</p><ul><li>Assemble a capstone portfolio that is traceable, sanitized, and reviewer-ready.</li><li>Separate claims, evidence, assumptions, unknowns, and recommendations.</li><li>Prepare a concise final defense with backup appendices for deeper questions.</li><li>Map portfolio artifacts to cybersecurity work capabilities without overstating readiness.</li><li>Build a post-course roadmap using evidence, skill gaps, role targets, and measurable next actions.</li><li>Explain ethical boundaries for public portfolios, interview demonstrations, and future practice.</li></ul></section>
+
+          <section id="research-basis"><h2>2. Research Basis</h2><p>This lesson uses NIST CSF 2.0 for organizing cybersecurity outcomes across Govern, Identify, Protect, Detect, Respond, and Recover; NIST SP 800-55 Volumes 1 and 2 for measurement and measurement-program thinking; NIST SP 800-53A for assessment evidence discipline; NIST SP 800-181 Rev. 1 and the current NICE Framework component model for work-role, task, knowledge, and skill language; and CISA Cross-Sector Cybersecurity Performance Goals as a practical baseline for measurable security practices.</p><p>The important lesson is not that you should memorize every framework. It is that a professional portfolio should be organized around evidence, outcomes, and decision usefulness. A portfolio that only says “I learned SIEM” is weak. A portfolio that shows a scoped telemetry problem, evidence IDs, limitations, investigation logic, response recommendation, metrics, and a reflection on what you would learn next is much stronger.</p></section>
+
+          <section id="portfolio-purpose"><h2>3. What the Final Portfolio Must Prove</h2><p>Your portfolio must prove four things: you can work safely, reason from evidence, communicate to different stakeholders, and keep learning after the course. It does not need to prove that you are already a senior security architect, legal counsel, red-team lead, forensic examiner, or CISO.</p><p>A strong capstone portfolio answers these questions:</p><ul><li>What was the approved fictional scope?</li><li>Which systems, data, identities, dependencies, and stakeholders mattered?</li><li>Which risks were supported by evidence?</li><li>Which controls existed only on paper, and which were operating effectively?</li><li>What did the detection/incident-response drill show?</li><li>Which privacy, legal, contractual, or supplier questions require escalation?</li><li>Which recommendations are urgent, which are strategic, and which require leadership trade-offs?</li><li>What skills did you demonstrate, and what evidence supports that claim?</li></ul></section>
+
+          <section id="claim-evidence"><h2>4. Claim-Evidence Matrix</h2><p>The final defense should not rely on unsupported statements. Every major claim should map to evidence. Use a simple matrix:</p><div class="table-wrap"><table><thead><tr><th>Claim</th><th>Evidence IDs</th><th>Confidence</th><th>Limitation</th><th>Decision needed</th></tr></thead><tbody><tr><td>Identity risk is the highest priority.</td><td>EV-002, EV-003, EV-005</td><td>Medium/high</td><td>Scenario lacks full privileged-session data.</td><td>Approve exception-retirement plan and owner.</td></tr><tr><td>Detection is constrained by log retention.</td><td>EV-003, EV-004</td><td>Medium</td><td>Only fictional sample telemetry is available.</td><td>Approve retention target and SIEM source onboarding.</td></tr><tr><td>Supplier dependency creates response uncertainty.</td><td>EV-002, EV-005</td><td>Medium</td><td>Contractual terms are summarized, not legally reviewed.</td><td>Assign vendor owner and legal review path.</td></tr></tbody></table></div><p>This matrix protects you from overclaiming. It also helps a reviewer challenge your reasoning without losing the thread of your evidence.</p></section>
+
+          <section id="portfolio-structure"><h2>5. Recommended Portfolio Structure</h2><pre><code>capstone-portfolio/
+├── README.md
+├── 00-charter/
+├── 01-context/
+├── 02-risk-and-controls/
+├── 03-detection-ir-forensics/
+├── 04-governance-reporting/
+├── 05-final-defense/
+├── 06-career-roadmap/
+└── evidence-index.csv</code></pre><p>The <code>README.md</code> should explain scope, safety boundary, artifact list, how to review the package, and what is fictional. The evidence index should give every artifact a stable ID so that your report, slides, and Q&amp;A can refer to the same source of truth.</p></section>
+
+          <section id="sanitization"><h2>6. Sanitization and Public Portfolio Hygiene</h2><p>A portfolio can help your career, but a careless portfolio can harm people and organizations. Before publishing or sharing anything, remove secrets, credentials, tokens, IP addresses tied to real organizations, customer data, student data, patient data, private communications, screenshots from real systems, internal architecture details, vulnerability proof that enables misuse, and names of organizations unless you have written permission.</p><p>Use fictionalized examples when possible. If you worked in a real environment, describe the method and learning outcome without disclosing protected details. “Built a log-source coverage matrix for endpoint, identity, and cloud telemetry” is usually safer than publishing a real SIEM screenshot.</p></section>
+
+          <section id="defense"><h2>7. Final Defense Format</h2><p>A useful defense is short, structured, and evidence-backed. Aim for 8–12 minutes of presentation plus reviewer questions. The main defense should not be a walkthrough of every artifact. It should explain judgment.</p><ol><li><strong>Scope and boundary:</strong> what you were authorized to do and what you excluded.</li><li><strong>Business context:</strong> crown jewels, dependencies, data sensitivity, and stakeholders.</li><li><strong>Top risks:</strong> evidence-backed risk statements with confidence and limitations.</li><li><strong>Detection/IR drill:</strong> what the timeline and evidence review showed.</li><li><strong>Governance brief:</strong> decisions, owners, privacy/legal escalation questions, third-party issues.</li><li><strong>Roadmap:</strong> immediate, near-term, and strategic recommendations.</li><li><strong>Skills demonstrated:</strong> the capabilities your portfolio supports and the gaps you still have.</li></ol></section>
+
+          <section id="questions"><h2>8. Answering Reviewer Questions</h2><p>Strong answers are precise. Weak answers defend every decision as if it were certain. Use this pattern:</p><ul><li><strong>Fact:</strong> “The fictional SIEM source table shows identity logs retained for 14 days.”</li><li><strong>Inference:</strong> “That weakens investigation depth for incidents discovered after two weeks.”</li><li><strong>Limitation:</strong> “The scenario does not provide full cost data for retention expansion.”</li><li><strong>Recommendation:</strong> “I would ask leadership to approve a target retention period and have the SOC validate storage, privacy, and cost constraints.”</li></ul><p>This style is more credible than pretending the capstone contains perfect information.</p></section>
+
+          <section id="career-map"><h2>9. Mapping Portfolio Evidence to Career Pathways</h2><p>Use the NICE Framework as a vocabulary for cybersecurity work, but do not overfit yourself to one title. A beginner portfolio may support several adjacent pathways:</p><div class="table-wrap"><table><thead><tr><th>Pathway</th><th>Portfolio evidence</th><th>Common gap</th><th>Next evidence to build</th></tr></thead><tbody><tr><td>SOC analyst / detection triage</td><td>Alert triage notes, timeline, evidence manifest, detection recommendations</td><td>More live SIEM exposure and tuning practice</td><td>Safe detection lab write-up and rule-review notebook</td></tr><tr><td>GRC / risk analyst</td><td>Risk register, control evidence index, governance brief, decision log</td><td>More audit evidence review and framework mapping</td><td>Control assessment sample pack and CPG/CSF mapping</td></tr><tr><td>Security engineering support</td><td>Architecture map, remediation roadmap, control validation plan</td><td>More implementation practice</td><td>Local IAM, logging, hardening, or cloud-lab build notes</td></tr><tr><td>Incident-response junior analyst</td><td>Incident timeline, evidence chain, containment/recovery recommendations</td><td>More supervised live-response practice</td><td>Fictional tabletop after-action report and runbook exercise</td></tr></tbody></table></div></section>
+
+          <section id="skills-inventory"><h2>10. Skills Inventory</h2><p>Do not list skills because they sound impressive. List skills only when you can point to evidence. A useful inventory has three columns: demonstrated, developing, and future.</p><ul><li><strong>Demonstrated:</strong> risk statement writing, evidence indexing, fictional incident timeline construction, executive briefing, scope control.</li><li><strong>Developing:</strong> SIEM tuning, cloud IAM implementation, deeper forensics, control testing, third-party evidence review.</li><li><strong>Future:</strong> supervised production experience, advanced detection engineering, secure architecture review, privacy engineering, leadership communication.</li></ul></section>
+
+          <section id="roadmap"><h2>11. Building a Career Roadmap</h2><p>A roadmap should convert gaps into actions. Avoid vague goals like “learn more cloud security.” Write measurable next steps:</p><ul><li>Build one safe local detection lab and publish a sanitized write-up.</li><li>Create a control-evidence sample pack mapped to CSF, CPGs, and one internal policy example.</li><li>Practice explaining one risk register to both a technical reviewer and a nontechnical leader.</li><li>Complete one cloud IAM lab in a personal sandbox and document the threat model.</li><li>Review one incident-response tabletop scenario and write an after-action report.</li></ul><p>The order matters. Pick a first target role, then build evidence for that role. Do not try to become a SOC analyst, GRC analyst, cloud engineer, malware analyst, pentester, privacy engineer, and CISO at the same time.</p></section>
+
+          <section id="metrics"><h2>12. Measuring Post-Course Progress</h2><p>Use measures that show capability, not activity alone. Hours studied can be useful, but they do not prove competence. Better measures include number of finished artifacts, number of reviewed reports, number of corrected assumptions, number of labs documented with limitations, number of peer/instructor review comments resolved, and number of role-relevant gaps closed.</p><p>This follows the same measurement logic used throughout the course: choose measures that support decisions, not vanity metrics.</p></section>
+
+          <section id="ethics"><h2>13. Ethics After the Course</h2><p>After this course, the safety boundary still applies. Do not test systems you do not own or have explicit permission to assess. Do not collect data because it is available. Do not publish vulnerability evidence that enables harm. Do not claim certifications, work experience, legal authority, or incident-response authority you do not have. Professional credibility comes from accurate boundaries as much as technical skill.</p></section>
+
+          <section id="rubric"><h2>14. Final Portfolio Rubric</h2><div class="table-wrap"><table><thead><tr><th>Area</th><th>Strong evidence</th><th>Weak evidence</th></tr></thead><tbody><tr><td>Scope and ethics</td><td>Clear authorization boundary, exclusions, and safe methods</td><td>Ambiguous target permission or real-system leakage</td></tr><tr><td>Evidence quality</td><td>Stable IDs, summaries, timestamps, limitations, and traceability</td><td>Unlabeled screenshots or tool output with no interpretation</td></tr><tr><td>Risk reasoning</td><td>Asset, threat, weakness, impact, likelihood, confidence, owner, treatment</td><td>Severity labels without business context</td></tr><tr><td>IR and detection</td><td>Timeline, triage logic, evidence preservation, containment/recovery reasoning</td><td>Alert list with no investigation path</td></tr><tr><td>Governance communication</td><td>Decision-ready executive brief with owners and uncertainty</td><td>Technical jargon without decisions</td></tr><tr><td>Career roadmap</td><td>Role target, evidence, gaps, next actions, review cadence</td><td>Generic “get better at cybersecurity” plan</td></tr></tbody></table></div></section>
+
+          <section id="common-failures"><h2>15. Common Failure Points</h2><ul><li><strong>Artifact dump:</strong> The portfolio has many files but no narrative or evidence index.</li><li><strong>Overclaiming:</strong> The learner states conclusions that the evidence does not support.</li><li><strong>Hidden uncertainty:</strong> Unknowns are removed instead of explained.</li><li><strong>Unsafe sharing:</strong> The portfolio includes sensitive details from real systems.</li><li><strong>One-audience report:</strong> The same document is used for analysts, executives, legal/privacy owners, and interviewers.</li><li><strong>Unmeasurable roadmap:</strong> The next steps are vague and cannot be reviewed.</li></ul></section>
+
+          <section id="deliverables"><h2>16. Final Deliverables</h2><p>Your final Lesson 16.5 deliverables are:</p><ul><li>A sanitized capstone portfolio folder.</li><li>An evidence index with stable IDs.</li><li>A claim-evidence matrix.</li><li>A 8–12 minute final-defense outline or slide plan.</li><li>A limitations and assumptions page.</li><li>A skills inventory mapped to evidence.</li><li>A 30/60/90-day career roadmap for one or two target pathways.</li></ul></section>
+
+          <section id="completion-checklist"><h2>17. Completion Checklist</h2><ul><li>Every major claim has evidence or is labeled as an assumption.</li><li>Every artifact is sanitized for public or reviewer sharing.</li><li>The defense can be delivered without reading the report aloud.</li><li>The report separates facts, inferences, unknowns, and recommendations.</li><li>The portfolio explains what is fictional, local, or course-provided.</li><li>The career roadmap names specific next artifacts, not just topics.</li><li>The final package can be reviewed by someone who did not watch you build it.</li></ul></section>
+
+          <section id="lab"><h2>18. Safe Local Lab: Review a Fictional Final Portfolio</h2><p>This lab reviews a fictional capstone portfolio manifest for missing sections, unsupported claims, evidence issues, defense-readiness gaps, and career-roadmap quality. It performs no scanning, web requests, authentication, exploitation, model calls, cloud access, vendor contact, legal analysis, or real assessment.</p><h3>Step 1 — Create <code>capstone_portfolio_manifest.json</code></h3><pre><code>{
+  &quot;capstone_title&quot;: &quot;Meridian Health Cooperative Security Capstone&quot;,
+  &quot;student&quot;: &quot;Learner Name&quot;,
+  &quot;portfolio_date&quot;: &quot;2026-06-30&quot;,
+  &quot;authorization_boundary&quot;: &quot;Fictional course-provided scenario and local files only&quot;,
+  &quot;evidence_catalog&quot;: [
+    {
+      &quot;id&quot;: &quot;EV-001&quot;,
+      &quot;artifact&quot;: &quot;scope-and-authorization.md&quot;,
+      &quot;summary&quot;: &quot;Defines fictional organization, approved scope, excluded systems, stakeholders, and safe methods.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;EV-002&quot;,
+      &quot;artifact&quot;: &quot;asset-data-identity-map.csv&quot;,
+      &quot;summary&quot;: &quot;Maps key fictional assets, data types, owners, identity paths, dependencies, and business criticality.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;EV-003&quot;,
+      &quot;artifact&quot;: &quot;risk-register.csv&quot;,
+      &quot;summary&quot;: &quot;Lists scored risks with likelihood, impact, control gaps, confidence, owners, and treatment plans.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;EV-004&quot;,
+      &quot;artifact&quot;: &quot;incident-timeline.csv&quot;,
+      &quot;summary&quot;: &quot;Fictional detection and incident-response timeline with UTC timestamps and uncertainty notes.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;EV-005&quot;,
+      &quot;artifact&quot;: &quot;executive-brief.md&quot;,
+      &quot;summary&quot;: &quot;Governance, privacy, legal-escalation, and third-party decision brief.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    },
+    {
+      &quot;id&quot;: &quot;EV-006&quot;,
+      &quot;artifact&quot;: &quot;presentation-outline.md&quot;,
+      &quot;summary&quot;: &quot;Ten-minute defense outline with evidence IDs and likely questions.&quot;,
+      &quot;contains_sensitive_data&quot;: false,
+      &quot;sanitized&quot;: true
+    }
+  ],
+  &quot;portfolio_sections&quot;: [
+    {&quot;section&quot;: &quot;00-charter&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-001&quot;]},
+    {&quot;section&quot;: &quot;01-context&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-002&quot;]},
+    {&quot;section&quot;: &quot;02-risk-and-controls&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-003&quot;]},
+    {&quot;section&quot;: &quot;03-detection-ir-forensics&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-004&quot;]},
+    {&quot;section&quot;: &quot;04-governance-reporting&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-005&quot;]},
+    {&quot;section&quot;: &quot;05-final-defense&quot;, &quot;required&quot;: true, &quot;present&quot;: true, &quot;evidence_ids&quot;: [&quot;EV-006&quot;]}
+  ],
+  &quot;claims&quot;: [
+    {
+      &quot;claim&quot;: &quot;The highest capstone risk is delayed detection and response caused by incomplete log retention for high-value cloud and identity assets.&quot;,
+      &quot;type&quot;: &quot;risk conclusion&quot;,
+      &quot;evidence_ids&quot;: [&quot;EV-002&quot;, &quot;EV-003&quot;, &quot;EV-004&quot;],
+      &quot;uncertainty&quot;: &quot;medium&quot;,
+      &quot;owner_question&quot;: &quot;Can the organization fund retention expansion and detection tuning in the next quarter?&quot;
+    },
+    {
+      &quot;claim&quot;: &quot;Privileged access weaknesses should be remediated before broad control expansion because they affect identity, cloud administration, incident response, and vendor access.&quot;,
+      &quot;type&quot;: &quot;prioritization rationale&quot;,
+      &quot;evidence_ids&quot;: [&quot;EV-002&quot;, &quot;EV-003&quot;, &quot;EV-005&quot;],
+      &quot;uncertainty&quot;: &quot;low&quot;,
+      &quot;owner_question&quot;: &quot;Who owns exception retirement and emergency-access procedure approval?&quot;
+    },
+    {
+      &quot;claim&quot;: &quot;The portfolio demonstrates readiness for junior security analyst, GRC analyst, SOC analyst, and security engineering support pathways, but not independent legal/compliance authority or unsupervised offensive testing.&quot;,
+      &quot;type&quot;: &quot;career claim&quot;,
+      &quot;evidence_ids&quot;: [&quot;EV-001&quot;, &quot;EV-003&quot;, &quot;EV-004&quot;, &quot;EV-005&quot;],
+      &quot;uncertainty&quot;: &quot;medium&quot;,
+      &quot;owner_question&quot;: &quot;Which role family should the learner target first?&quot;
+    }
+  ],
+  &quot;defense_plan&quot;: {
+    &quot;duration_minutes&quot;: 10,
+    &quot;slides&quot;: [
+      &quot;scope and ethical boundary&quot;,
+      &quot;business context and crown jewels&quot;,
+      &quot;top risks and evidence&quot;,
+      &quot;detection/IR evidence drill&quot;,
+      &quot;governance and third-party decisions&quot;,
+      &quot;recommendations, residual risk, and roadmap&quot;,
+      &quot;skills demonstrated and next learning plan&quot;
+    ],
+    &quot;backup_appendices&quot;: [&quot;risk-register.csv&quot;, &quot;evidence-index.csv&quot;, &quot;timeline.csv&quot;, &quot;claim-evidence-matrix.csv&quot;]
+  },
+  &quot;career_targets&quot;: [
+    {
+      &quot;target_role&quot;: &quot;SOC Analyst / Detection Triage&quot;,
+      &quot;nice_alignment&quot;: [&quot;monitoring&quot;, &quot;analysis&quot;, &quot;incident response&quot;, &quot;documentation&quot;],
+      &quot;supporting_evidence&quot;: [&quot;EV-004&quot;, &quot;EV-006&quot;],
+      &quot;gaps&quot;: [&quot;more live SIEM practice&quot;, &quot;alert tuning under supervision&quot;],
+      &quot;next_actions&quot;: [&quot;complete two safe detection-engineering labs&quot;, &quot;write one public sanitized case study&quot;]
+    },
+    {
+      &quot;target_role&quot;: &quot;GRC / Security Risk Analyst&quot;,
+      &quot;nice_alignment&quot;: [&quot;risk management&quot;, &quot;controls&quot;, &quot;assessment&quot;, &quot;governance reporting&quot;],
+      &quot;supporting_evidence&quot;: [&quot;EV-001&quot;, &quot;EV-003&quot;, &quot;EV-005&quot;],
+      &quot;gaps&quot;: [&quot;more audit evidence review&quot;, &quot;more third-party risk practice&quot;],
+      &quot;next_actions&quot;: [&quot;build one control evidence sample pack&quot;, &quot;map risks to CSF outcomes and CPGs&quot;]
+    },
+    {
+      &quot;target_role&quot;: &quot;Security Engineering Support&quot;,
+      &quot;nice_alignment&quot;: [&quot;architecture support&quot;, &quot;secure design&quot;, &quot;remediation planning&quot;, &quot;metrics&quot;],
+      &quot;supporting_evidence&quot;: [&quot;EV-002&quot;, &quot;EV-003&quot;, &quot;EV-005&quot;],
+      &quot;gaps&quot;: [&quot;more implementation work&quot;, &quot;more cloud IAM hands-on practice&quot;],
+      &quot;next_actions&quot;: [&quot;build a local IAM policy lab&quot;, &quot;document a remediation verification checklist&quot;]
+    }
+  ]
+}</code></pre><h3>Step 2 — Create <code>portfolio_readiness_review.py</code></h3><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;
+Safe local capstone portfolio review lab.
+Reads fictional capstone_portfolio_manifest.json and writes portfolio_review_output.json.
+No network activity, scanning, authentication, exploitation, model calls, or real assessment.
+&quot;&quot;&quot;
+import json
+from pathlib import Path
+
+MANIFEST = Path(&quot;capstone_portfolio_manifest.json&quot;)
+OUTPUT = Path(&quot;portfolio_review_output.json&quot;)
+
+REQUIRED_SECTIONS = [
+    &quot;00-charter&quot;,
+    &quot;01-context&quot;,
+    &quot;02-risk-and-controls&quot;,
+    &quot;03-detection-ir-forensics&quot;,
+    &quot;04-governance-reporting&quot;,
+    &quot;05-final-defense&quot;,
+]
+
+REQUIRED_DEFENSE_TOPICS = [
+    &quot;scope&quot;,
+    &quot;business context&quot;,
+    &quot;top risks&quot;,
+    &quot;detection&quot;,
+    &quot;governance&quot;,
+    &quot;recommendations&quot;,
+    &quot;skills&quot;,
+]
+
+
+def load_manifest(path: Path) -&gt; dict:
+    if not path.exists():
+        raise SystemExit(f&quot;Missing {path}. Create the JSON file first.&quot;)
+    return json.loads(path.read_text(encoding=&quot;utf-8&quot;))
+
+
+def evidence_ids(manifest: dict) -&gt; set[str]:
+    return {item[&quot;id&quot;] for item in manifest.get(&quot;evidence_catalog&quot;, [])}
+
+
+def review_sections(manifest: dict, known_evidence: set[str]) -&gt; list[str]:
+    warnings: list[str] = []
+    sections = {item[&quot;section&quot;]: item for item in manifest.get(&quot;portfolio_sections&quot;, [])}
+
+    for section in REQUIRED_SECTIONS:
+        item = sections.get(section)
+        if not item:
+            warnings.append(f&quot;Missing required portfolio section: {section}&quot;)
+            continue
+        if item.get(&quot;required&quot;) and not item.get(&quot;present&quot;):
+            warnings.append(f&quot;Required section is marked absent: {section}&quot;)
+        if not item.get(&quot;evidence_ids&quot;):
+            warnings.append(f&quot;Section has no evidence IDs: {section}&quot;)
+        for ev_id in item.get(&quot;evidence_ids&quot;, []):
+            if ev_id not in known_evidence:
+                warnings.append(f&quot;Section {section} references unknown evidence ID: {ev_id}&quot;)
+    return warnings
+
+
+def review_evidence(manifest: dict) -&gt; list[str]:
+    warnings: list[str] = []
+    for item in manifest.get(&quot;evidence_catalog&quot;, []):
+        if item.get(&quot;contains_sensitive_data&quot;) and item.get(&quot;sanitized&quot;):
+            warnings.append(f&quot;Evidence {item[&#x27;id&#x27;]} still needs manual sanitization proof: {item[&#x27;artifact&#x27;]}&quot;)
+        if item.get(&quot;contains_sensitive_data&quot;) and not item.get(&quot;sanitized&quot;):
+            warnings.append(f&quot;Evidence {item[&#x27;id&#x27;]} must not be included until sanitized: {item[&#x27;artifact&#x27;]}&quot;)
+        if not item.get(&quot;summary&quot;):
+            warnings.append(f&quot;Evidence {item[&#x27;id&#x27;]} has no summary.&quot;)
+    return warnings
+
+
+def review_claims(manifest: dict, known_evidence: set[str]) -&gt; list[str]:
+    warnings: list[str] = []
+    for claim in manifest.get(&quot;claims&quot;, []):
+        refs = claim.get(&quot;evidence_ids&quot;, [])
+        if not refs:
+            warnings.append(f&quot;Unsupported claim has no evidence: {claim.get(&#x27;claim&#x27;, &#x27;&lt;missing claim text&gt;&#x27;)}&quot;)
+        for ev_id in refs:
+            if ev_id not in known_evidence:
+                warnings.append(f&quot;Claim references unknown evidence ID {ev_id}: {claim.get(&#x27;claim&#x27;, &#x27;&#x27;)}&quot;)
+        if claim.get(&quot;uncertainty&quot;) not in {&quot;low&quot;, &quot;medium&quot;, &quot;high&quot;}:
+            warnings.append(f&quot;Claim lacks low/medium/high uncertainty label: {claim.get(&#x27;claim&#x27;, &#x27;&#x27;)}&quot;)
+        if not claim.get(&quot;owner_question&quot;):
+            warnings.append(f&quot;Claim has no decision-owner question: {claim.get(&#x27;claim&#x27;, &#x27;&#x27;)}&quot;)
+    return warnings
+
+
+def review_defense(manifest: dict) -&gt; list[str]:
+    warnings: list[str] = []
+    plan = manifest.get(&quot;defense_plan&quot;, {})
+    duration = plan.get(&quot;duration_minutes&quot;)
+    if duration is None or duration &gt; 12:
+        warnings.append(&quot;Defense plan should be concise: target 8–12 minutes for the main briefing.&quot;)
+    slide_text = &quot; &quot;.join(plan.get(&quot;slides&quot;, [])).lower()
+    for topic in REQUIRED_DEFENSE_TOPICS:
+        if topic not in slide_text:
+            warnings.append(f&quot;Defense plan may be missing topic: {topic}&quot;)
+    if not plan.get(&quot;backup_appendices&quot;):
+        warnings.append(&quot;Defense plan should list backup appendices for reviewer questions.&quot;)
+    return warnings
+
+
+def review_career_targets(manifest: dict) -&gt; list[str]:
+    warnings: list[str] = []
+    targets = manifest.get(&quot;career_targets&quot;, [])
+    if len(targets) &lt; 2:
+        warnings.append(&quot;Career roadmap should compare at least two target pathways.&quot;)
+    for target in targets:
+        role = target.get(&quot;target_role&quot;, &quot;&lt;missing role&gt;&quot;)
+        if not target.get(&quot;supporting_evidence&quot;):
+            warnings.append(f&quot;Career target has no supporting portfolio evidence: {role}&quot;)
+        if not target.get(&quot;gaps&quot;):
+            warnings.append(f&quot;Career target has no skill gaps: {role}&quot;)
+        if not target.get(&quot;next_actions&quot;):
+            warnings.append(f&quot;Career target has no next actions: {role}&quot;)
+    return warnings
+
+
+def readiness_score(warnings: list[str]) -&gt; int:
+    return max(0, 100 - len(warnings) * 8)
+
+
+def main() -&gt; None:
+    manifest = load_manifest(MANIFEST)
+    known_evidence = evidence_ids(manifest)
+
+    warnings: list[str] = []
+    warnings.extend(review_sections(manifest, known_evidence))
+    warnings.extend(review_evidence(manifest))
+    warnings.extend(review_claims(manifest, known_evidence))
+    warnings.extend(review_defense(manifest))
+    warnings.extend(review_career_targets(manifest))
+
+    result = {
+        &quot;capstone_title&quot;: manifest.get(&quot;capstone_title&quot;),
+        &quot;portfolio_date&quot;: manifest.get(&quot;portfolio_date&quot;),
+        &quot;authorization_boundary&quot;: manifest.get(&quot;authorization_boundary&quot;),
+        &quot;evidence_count&quot;: len(manifest.get(&quot;evidence_catalog&quot;, [])),
+        &quot;claim_count&quot;: len(manifest.get(&quot;claims&quot;, [])),
+        &quot;career_target_count&quot;: len(manifest.get(&quot;career_targets&quot;, [])),
+        &quot;readiness_score&quot;: readiness_score(warnings),
+        &quot;warnings&quot;: warnings,
+        &quot;defense_summary&quot;: {
+            &quot;duration_minutes&quot;: manifest.get(&quot;defense_plan&quot;, {}).get(&quot;duration_minutes&quot;),
+            &quot;slide_count&quot;: len(manifest.get(&quot;defense_plan&quot;, {}).get(&quot;slides&quot;, [])),
+            &quot;appendix_count&quot;: len(manifest.get(&quot;defense_plan&quot;, {}).get(&quot;backup_appendices&quot;, [])),
+        },
+    }
+
+    OUTPUT.write_text(json.dumps(result, indent=2), encoding=&quot;utf-8&quot;)
+    print(f&quot;Portfolio readiness score: {result[&#x27;readiness_score&#x27;]}/100&quot;)
+    print(f&quot;Evidence items: {result[&#x27;evidence_count&#x27;]} | Claims: {result[&#x27;claim_count&#x27;]} | Career targets: {result[&#x27;career_target_count&#x27;]}&quot;)
+    if warnings:
+        print(&quot;Warnings:&quot;)
+        for warning in warnings:
+            print(f&quot;- {warning}&quot;)
+    else:
+        print(&quot;No blocking warnings found in this fictional manifest.&quot;)
+    print(f&quot;Wrote {OUTPUT}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><h3>Step 3 — Run the lab locally</h3><pre><code>python3 portfolio_readiness_review.py</code></pre><p>Expected result: the script prints a portfolio readiness score, counts evidence items, claims, and career targets, and writes <code>portfolio_review_output.json</code>. The provided fictional manifest is designed to pass without blocking warnings. You can intentionally remove evidence IDs or add a sensitive-data flag to see how the review catches portfolio problems.</p></section>
+
+          <section id="references"><h2>19. Further Reading</h2><ul><li><a href="https://www.nist.gov/cyberframework">NIST Cybersecurity Framework 2.0.</a></li><li><a href="https://nvlpubs.nist.gov/nistpubs/CSWP/NIST.CSWP.29.pdf">NIST CSF 2.0 PDF.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/53/a/r5/final">NIST SP 800-53A Rev. 5 — Assessing Security and Privacy Controls.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/55/v1/final">NIST SP 800-55 Vol. 1 — Identifying and Selecting Measures.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/55/v2/final">NIST SP 800-55 Vol. 2 — Developing an Information Security Measurement Program.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/181/r1/final">NIST SP 800-181 Rev. 1 — NICE Workforce Framework for Cybersecurity.</a></li><li><a href="https://www.nist.gov/itl/applied-cybersecurity/nice/nice-framework-resource-center/nice-framework-current-versions">NICE Framework current versions and components.</a></li><li><a href="https://www.cisa.gov/cross-sector-cybersecurity-performance-goals">CISA Cross-Sector Cybersecurity Performance Goals.</a></li><li><a href="https://niccs.cisa.gov/tools/nice-framework">CISA NICCS NICE Framework tool.</a></li></ul></section>
+        </article>
+
+        <aside class="lesson-sidebar"><div class="mini-card"><h3>Lesson focus</h3><ul><li>Portfolio evidence</li><li>Claim-evidence matrix</li><li>Final defense</li><li>Sanitization</li><li>NICE-style role mapping</li><li>Career roadmap</li></ul></div><div class="mini-card"><h3>Deliverable</h3><p>A defensible final capstone portfolio and career roadmap that do not overclaim what the evidence proves.</p></div><div class="mini-card"><h3>Safety rule</h3><p>Publish methods and sanitized learning artifacts; do not publish protected real-world evidence.</p></div></aside>
+      </div>
+
+      <div class="prev-next"><a class="btn" href="governance-privacy-legal-and-third-party-executive-brief.html">← Lesson 16.4</a><a class="btn btn-primary" href="../../index.html">Course Home →</a></div>
+      <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>

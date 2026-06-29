@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 14.3: Privacy Engineering and Data Protection | MS Cybersecurity</title>
+  <meta name="description" content="Privacy engineering and data protection from first principles: data lifecycle, minimization, purpose limitation, retention, rights support, privacy risk, controls, and privacy-by-design.">
+  <link rel="stylesheet" href="assets/css/styles.css"><link rel="stylesheet" href="../assets/css/styles.css"><link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body data-root="../../" data-page-id="week-14-lesson-3" data-title="Lesson 14.3: Privacy Engineering and Data Protection">
+<a class="skip-link" href="#main">Skip to content</a><div class="progress" id="readingProgress"></div>
+<div class="mobile-topbar"><button id="openSidebar">☰ Menu</button><button class="theme-toggle">Toggle theme</button></div>
+<div class="site-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Course navigation"><div class="brand"><span class="brand-mark">MS</span><div><h1>Cybersecurity</h1><small>Interactive Course</small></div></div><button id="closeSidebar" class="btn">Close</button><div class="nav-search"><label for="navSearch">Search</label><input id="navSearch" class="site-search-input" type="search" placeholder="Search lessons"><div class="mini-results search-results"></div></div><nav id="courseNav"></nav><section class="nav-group"><div class="nav-group-title">Progress</div><div id="progressList" class="progress-list small"></div></section></aside>
+  <main class="main" id="main">
+    <div class="page-wrap">
+      <div class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="index.html">Week 14</a> / Lesson 14.3</div>
+      <header class="hero"><div class="eyebrow">Week 14 · Lesson 14.3</div><h1>Privacy Engineering and Data Protection</h1><p class="lead">Privacy engineering turns privacy principles into architecture, defaults, data-flow controls, retention behavior, rights workflows, vendor controls, and evidence. It asks not only whether personal data is secure, but whether it should be collected, used, shared, inferred, retained, or exposed in the first place.</p><div class="meta-grid"><div class="meta-item"><strong>Estimated reading time</strong>85–115 minutes</div><div class="meta-item"><strong>Difficulty level</strong>Intermediate</div><div class="meta-item"><strong>Required background</strong>Week 14 Lessons 14.1–14.2 plus prior lessons on IAM, logging, cloud, SOC, IR, and governance</div><div class="meta-item"><strong>Lab mode</strong>Safe local privacy-activity review using fictional JSON data</div></div></header>
+
+      <div class="callout"><strong>Legal boundary:</strong> This lesson is educational and technical. It does not provide legal advice, determine lawful basis, interpret jurisdiction-specific obligations, or replace privacy counsel, DPO, compliance, HR, procurement, or executive risk owners.</div>
+
+      <div class="lesson-layout">
+        <article class="lesson-content">
+          <section id="objectives"><h2>1. Learning Objectives</h2><p>By the end of this lesson, you should be able to:</p><ul><li>Explain why privacy is broader than secrecy or access control.</li><li>Describe privacy engineering as the design of systems, data flows, defaults, controls, and evidence that reduce privacy risk.</li><li>Map a processing activity from collection through deletion or anonymization.</li><li>Distinguish personal data, PII, sensitive data, pseudonymized data, anonymized data, and derived data.</li><li>Apply data minimization, purpose limitation, retention limitation, transparency, rights support, and accountability as engineering requirements.</li><li>Identify where privacy risk needs escalation to privacy, legal, compliance, product, procurement, security, or data-governance owners.</li><li>Build a privacy-review artifact that separates fact, inference, risk, control, and unresolved legal question.</li></ul></section><section id="research-basis"><h2>2. Research Basis</h2><p>This lesson is grounded in current and durable privacy references. The NIST Privacy Framework is a voluntary tool for helping organizations identify and manage privacy risk while building products and services. NISTIR 8062 introduces privacy engineering objectives—predictability, manageability, and disassociability—and a privacy risk model. NIST PRAM gives a structured method for analyzing, assessing, and prioritizing privacy risks. NIST SP 800-53 Rev. 5 integrates security and privacy controls into one control catalog, while NIST SP 800-122 gives practical guidance for identifying and protecting PII. The OECD privacy principles remain useful for collection limitation, data quality, purpose specification, use limitation, safeguards, openness, individual participation, and accountability.</p><p>The legal/regulatory references are used only to teach escalation questions, not to provide legal advice. GDPR Articles 5, 6, and 25 illustrate principles, lawful bases, and data protection by design/default; EDPB guidance expands Article 25 implementation expectations. EU and California public guidance also demonstrate that privacy-rights handling is an operational system, not a policy statement.</p></section><section id="definition"><h2>3. Privacy Engineering in One Sentence</h2><p><strong>Privacy engineering is the discipline of converting privacy principles, user expectations, legal obligations, and organizational risk decisions into system requirements, defaults, data flows, controls, telemetry, and evidence.</strong></p><p>This definition matters because privacy cannot be bolted on by writing a notice after a system is built. If the product already collects too much data, shares it with unreviewed parties, stores it indefinitely, and cannot answer access or deletion requests, a polished privacy notice does not fix the architecture.</p><div class="callout"><strong>Governance boundary:</strong> Engineers and security teams can identify privacy risk and design controls. They should not independently decide jurisdiction-specific legal bases, notification duties, cross-border transfer legality, or regulatory interpretations.</div></section><section id="privacy-vs-security"><h2>4. Privacy Is Not the Same as Security</h2><p>Security and privacy overlap, but they are not the same discipline.</p><table><thead><tr><th>Question</th><th>Security view</th><th>Privacy view</th></tr></thead><tbody><tr><td>Can unauthorized people access the data?</td><td>Access control, authentication, encryption, monitoring, incident response.</td><td>Necessary but incomplete.</td></tr><tr><td>Should the organization collect this data at all?</td><td>Sometimes outside the security team's scope.</td><td>Central question: necessity, purpose, fairness, expectations, and risk.</td></tr><tr><td>How long should the data exist?</td><td>Retention may be driven by logging, backup, audit, or investigation needs.</td><td>Retention must be tied to purpose, necessity, obligations, and deletion feasibility.</td></tr><tr><td>Can people understand and influence processing?</td><td>May be limited to account settings and secure access.</td><td>Transparency, rights, consent/choice, objection, correction, deletion, and portability may matter.</td></tr><tr><td>Can data be used for a new purpose?</td><td>Focus may be whether access is authorized.</td><td>Purpose compatibility, notice, lawful basis, consent/choice, and fairness may matter.</td></tr></tbody></table><p>A privacy failure can occur even when no attacker exists. Overcollection, opaque profiling, excessive retention, unjustified sharing, dark-pattern consent, or inability to honor rights can create privacy risk without a traditional breach.</p></section><section id="data-taxonomy"><h2>5. Data Taxonomy for Privacy Work</h2><p>Privacy engineering starts with precise data language.</p><ul><li><strong>Personal data:</strong> data relating to an identified or identifiable person. Different laws define this differently, so treat the exact legal definition as a legal/compliance question.</li><li><strong>PII:</strong> information that can distinguish or trace an individual's identity or link to an individual; NIST SP 800-122 uses a broad context-based approach.</li><li><strong>Sensitive personal data:</strong> data that can create higher harm if misused, such as health, biometric, government identifier, financial, precise location, children's, or protected-class data, depending on the applicable rule set.</li><li><strong>Pseudonymized data:</strong> identifiers are replaced or separated, but re-identification remains possible with additional information.</li><li><strong>Anonymized data:</strong> data transformed so individuals are not reasonably identifiable under the relevant context. This is difficult to prove and should not be claimed casually.</li><li><strong>Derived or inferred data:</strong> data produced by models, analytics, scoring, enrichment, or profiling. It can be privacy-relevant even when it was not directly collected from the person.</li></ul><div class="callout"><strong>Failure point:</strong> Treating a user ID, device ID, IP address, cookie, advertising ID, or hashed email as “not personal” can be wrong depending on context, linkage, and jurisdiction.</div></section><section id="data-lifecycle"><h2>6. The Data Lifecycle</h2><p>Privacy controls should follow data through its full lifecycle:</p><pre class="mermaid">flowchart LR
+  A[Plan purpose and necessity] --> B[Collect]
+  B --> C[Store]
+  C --> D[Use and analyze]
+  D --> E[Share or disclose]
+  E --> F[Retain]
+  F --> G[Delete, anonymize, or archive]
+  D --> H[Rights and transparency support]
+  E --> I[Vendor and transfer review]
+  G --> J[Evidence of disposal or retained obligation]</pre><p>Each step needs different questions. Collection asks whether the data is necessary. Storage asks how access, encryption, backup, segregation, and retention work. Use asks whether the purpose is compatible and understandable. Sharing asks who receives data and under what contract or obligation. Deletion asks whether data really disappears from primary systems, backups, logs, vendors, analytics stores, and derived datasets.</p></section><section id="principles"><h2>7. Engineering Privacy Principles into Requirements</h2><p>Principles become useful only when they are expressed as testable requirements.</p><table><thead><tr><th>Principle</th><th>Engineering requirement</th><th>Evidence example</th></tr></thead><tbody><tr><td>Purpose limitation</td><td>Every field maps to a documented purpose and approved processing activity.</td><td>Data inventory, field-purpose matrix, product requirement, privacy approval.</td></tr><tr><td>Data minimization</td><td>Collect only fields needed for the approved purpose, and default optional collection off.</td><td>Schema review, UI default review, telemetry event specification.</td></tr><tr><td>Retention limitation</td><td>Retention periods are defined, implemented, monitored, and exception-controlled.</td><td>Retention policy, deletion job logs, backup retention design, exception records.</td></tr><tr><td>Transparency</td><td>People can understand what data is processed and why.</td><td>Notice text, just-in-time disclosure, settings copy, consent/choice records.</td></tr><tr><td>Rights support</td><td>Systems can locate, export, correct, restrict, or delete data where required.</td><td>Rights-request workflow, identity-verification design, fulfillment evidence.</td></tr><tr><td>Security safeguards</td><td>Access, encryption, logging, monitoring, and incident response match data sensitivity.</td><td>Access reviews, audit logs, encryption inventory, incident playbook.</td></tr><tr><td>Accountability</td><td>Owners, decisions, risks, controls, and exceptions are documented.</td><td>RACI, decision record, risk assessment, control evidence, review cadence.</td></tr></tbody></table></section><section id="lawful-basis"><h2>8. Lawful Basis, Consent, and Choice</h2><p>Privacy engineering must not assume that “the user accepted the terms” is enough. Different jurisdictions and processing contexts use different legal concepts. GDPR Article 6, for example, lists lawful bases such as consent, contract necessity, legal obligation, vital interests, public task, and legitimate interests. Other privacy regimes may use different vocabulary such as notice, opt-out, sensitive-data limitation, sale/share opt-out, or specific sectoral authorization.</p><p>For engineers, the requirement is not to decide the legal basis alone. The requirement is to make sure each processing purpose has a recorded basis or authorization decision, the product behavior matches that decision, and the system can produce evidence.</p><div class="callout"><strong>Bad pattern:</strong> A product team says, “We collect this for analytics,” but cannot explain which fields are necessary, where users are informed, whether opt-out/objection applies, how long it is retained, or which vendors receive it.</div></section><section id="design-default"><h2>9. Data Protection by Design and by Default</h2><p>Data protection by design means privacy is considered during architecture, requirements, implementation, launch, and ongoing change—not only after a complaint or audit. Data protection by default means the system's default state should avoid unnecessary collection, unnecessary accessibility, unnecessary sharing, and unnecessary retention.</p><p>Practical default controls include:</p><ul><li>optional telemetry disabled unless approved or clearly disclosed where required;</li><li>least-privilege access to personal data;</li><li>role separation between support, engineering, analytics, and security teams;</li><li>field-level retention and deletion behavior;</li><li>privacy-preserving aggregation for metrics;</li><li>purpose-specific datasets instead of unrestricted data lakes;</li><li>production-data use restrictions in development and testing;</li><li>clear escalation if a new use, vendor, region, or profiling behavior is added.</li></ul></section><section id="nist-objectives"><h2>10. NIST Privacy Engineering Objectives</h2><p>NISTIR 8062 introduces three helpful engineering objectives:</p><table><thead><tr><th>Objective</th><th>Meaning for engineers</th><th>Design questions</th></tr></thead><tbody><tr><td>Predictability</td><td>People and operators can understand how data is processed.</td><td>Are purposes, notices, defaults, flows, and outputs understandable? Are surprise uses avoided?</td></tr><tr><td>Manageability</td><td>Data processing can be administered, corrected, configured, limited, audited, and changed.</td><td>Can users or operators change preferences, correct data, restrict processing, revoke choices, and fulfill rights?</td></tr><tr><td>Disassociability</td><td>Processing can occur with reduced linkability to individuals where feasible.</td><td>Can aggregation, tokenization, pseudonymization, anonymization, local processing, or separation reduce identifiability?</td></tr></tbody></table><p>These objectives are not magic labels. They help convert privacy goals into system capabilities. A system with strong security but poor predictability and manageability may still create privacy risk.</p></section><section id="privacy-risk"><h2>11. Privacy Risk and Privacy Harm</h2><p>Privacy risk is not only the probability of a data breach. It includes the possibility that data processing creates problems for individuals. Examples include unwanted disclosure, surveillance, chilling effects, discrimination, exclusion, embarrassment, loss of autonomy, identity misuse, physical safety risk, financial harm, or inability to correct inaccurate data.</p><p>A useful privacy-risk statement resembles a cyber-risk statement but focuses on data actions and individual impact:</p><blockquote>Because the marketing platform enriches prospect records from an unclear broker source and lacks documented opt-out handling, individuals may be profiled or contacted in ways they did not expect, creating transparency, fairness, and rights-handling risk.</blockquote><p>Risk scoring should not hide uncertainty. It should document the affected people, data categories, processing action, context, expected user understanding, controls, missing evidence, and decision owner.</p></section><section id="pia-dpia"><h2>12. PIA/DPIA Thinking</h2><p>Privacy Impact Assessments and Data Protection Impact Assessments are structured ways to analyze a processing activity before or during deployment. Names and legal triggers vary by jurisdiction, but the engineering questions are stable:</p><ul><li>What data is collected, generated, inferred, stored, shared, and deleted?</li><li>Whose data is involved: customers, employees, children, patients, citizens, visitors, prospects, contractors, or administrators?</li><li>What is the purpose, and can the purpose be achieved with less data?</li><li>What sensitive categories, vulnerable populations, profiling, monitoring, or automated decisions are involved?</li><li>Which vendors, subprocessors, regions, models, logs, backups, and analytics stores receive the data?</li><li>What rights, choices, notices, defaults, and support workflows are needed?</li><li>What residual risk remains, who owns it, and when is it reviewed?</li></ul><div class="callout"><strong>Escalation trigger:</strong> Health context, employee monitoring, precise location, children, biometrics, large-scale profiling, cross-border transfer, broker enrichment, or new AI-driven inference should trigger privacy/legal review before launch.</div></section><section id="controls"><h2>13. Privacy Controls</h2><p>Privacy controls combine technical, process, contractual, and governance mechanisms. Common controls include:</p><ul><li><strong>Data inventory:</strong> maintain records of systems, fields, purposes, owners, retention, and sharing.</li><li><strong>Purpose binding:</strong> restrict data use to approved purposes and require review for new uses.</li><li><strong>Access governance:</strong> apply least privilege, separation of duties, approval, logging, and periodic review.</li><li><strong>Retention and deletion:</strong> implement retention schedules, deletion jobs, archive controls, backup limits, and exception records.</li><li><strong>De-identification:</strong> use aggregation, tokenization, pseudonymization, anonymization, or synthetic data where appropriate, with re-identification risk review.</li><li><strong>Transparency and rights workflows:</strong> support notices, preferences, access, correction, deletion, objection/opt-out, restriction, and portability where required.</li><li><strong>Vendor controls:</strong> review processors/subprocessors, contracts, data-processing terms, audit rights, breach notification terms, and return/delete obligations.</li><li><strong>Monitoring and assurance:</strong> test whether controls operate, not just whether they are documented.</li></ul></section><section id="architecture-patterns"><h2>14. Privacy-Preserving Architecture Patterns</h2><p>Privacy engineering often succeeds through architectural reduction rather than after-the-fact restriction.</p><table><thead><tr><th>Pattern</th><th>Use</th><th>Limit</th></tr></thead><tbody><tr><td>Collect less</td><td>Remove fields that are not necessary for the purpose.</td><td>Requires product discipline and field-purpose review.</td></tr><tr><td>Process locally</td><td>Keep some computation on device or in a controlled tenant.</td><td>May not eliminate telemetry, sync, or support data.</td></tr><tr><td>Aggregate early</td><td>Store metrics at cohort or event-count level instead of person level.</td><td>Small cohorts can still create re-identification risk.</td></tr><tr><td>Separate identifiers</td><td>Store identity fields separately from behavioral or sensitive attributes.</td><td>Linkage keys and privileged joins still need control.</td></tr><tr><td>Tokenize or pseudonymize</td><td>Reduce direct exposure of identifiers in operational datasets.</td><td>Still personal in many contexts if re-identification is possible.</td></tr><tr><td>Use synthetic or masked data for testing</td><td>Avoid production personal data in lower environments.</td><td>Must verify realism, leakage risk, and protected attributes.</td></tr><tr><td>Time-bound access</td><td>Grant personal-data access for support or investigations only when needed.</td><td>Needs logging, approval, review, and emergency handling.</td></tr></tbody></table></section><section id="security-logs"><h2>15. Privacy in Security Logging and Monitoring</h2><p>Security teams need logs to detect attacks and investigate incidents, but logs can contain personal data, employee monitoring data, source IPs, device identifiers, location hints, authentication events, message metadata, and administrator actions. The answer is not “stop logging.” The answer is governed logging.</p><p>Governed logging requires documented purpose, retention, access controls, monitoring of privileged access, disclosure rules, legal/privacy escalation for employee investigations, and deletion/archival behavior. SOC teams should be able to explain why a log source exists, what it contains, who can query it, how long it is retained, and when it may be shared with legal, HR, regulators, customers, or law enforcement.</p><div class="callout"><strong>Balance:</strong> Weak logging can harm security and incident response. Excessive or opaque logging can harm privacy. The defensible path is scoped, justified, access-controlled, retained for a defined period, and reviewed.</div></section><section id="case-study"><h2>16. Case Study: Feature Analytics</h2><p>A team wants to add analytics to a healthcare appointment portal. The initial event design collects account ID, exact appointment type, provider name, device ID, IP address, page sequence, typed search terms, and a two-year raw-event retention period. The product goal is to improve booking completion.</p><p>A privacy-engineered redesign would ask:</p><ul><li>Can booking completion be measured with aggregated funnel events instead of person-level histories?</li><li>Is appointment type necessary, or is a broader category enough?</li><li>Can search terms be excluded or redacted?</li><li>Can device identifiers be rotated or avoided?</li><li>Can raw events expire after a short window while aggregate metrics remain?</li><li>Which vendor receives events, and what contract, subprocessor, region, deletion, and breach terms apply?</li><li>What notice, consent/choice, legitimate-interest assessment, or privacy-owner decision is required?</li><li>Can support and engineering access be separated from product analytics access?</li></ul><p>The stronger design achieves the business objective with less data, shorter retention, lower identifiability, clearer controls, and better evidence.</p></section><section id="lab"><h2>17. Lab: Privacy Activity Review</h2><p>This safe local lab reviews fictional processing activities and flags privacy-engineering issues. It performs no network activity, no data discovery, no legal analysis, no scanning, and no access to real systems.</p><h3>Step 1 — Create <code>privacy_activities.json</code></h3><pre><code>[
+  {
+    &quot;system&quot;: &quot;Patient Portal Analytics&quot;,
+    &quot;processing_purpose&quot;: &quot;Measure feature usage to improve appointment booking&quot;,
+    &quot;data_categories&quot;: [&quot;account_id&quot;, &quot;appointment_type&quot;, &quot;clickstream&quot;, &quot;ip_address&quot;, &quot;device_id&quot;],
+    &quot;sensitive_flags&quot;: [&quot;health_context&quot;, &quot;device_identifier&quot;],
+    &quot;lawful_basis_recorded&quot;: &quot;legitimate_interest_review_pending&quot;,
+    &quot;retention_days&quot;: 730,
+    &quot;sharing&quot;: [&quot;internal_product_team&quot;, &quot;third_party_analytics_vendor&quot;],
+    &quot;user_rights_support&quot;: [&quot;access&quot;, &quot;delete&quot;],
+    &quot;controls&quot;: [&quot;role_based_access&quot;, &quot;vendor_dpa_signed&quot;],
+    &quot;issues&quot;: [&quot;purpose_broader_than_needed&quot;, &quot;retention_not_justified&quot;, &quot;no_dpia_record&quot;]
+  },
+  {
+    &quot;system&quot;: &quot;Employee Security Logs&quot;,
+    &quot;processing_purpose&quot;: &quot;Detect account compromise and investigate incidents&quot;,
+    &quot;data_categories&quot;: [&quot;employee_id&quot;, &quot;login_time&quot;, &quot;source_ip&quot;, &quot;device_name&quot;, &quot;admin_action&quot;],
+    &quot;sensitive_flags&quot;: [&quot;employee_monitoring&quot;],
+    &quot;lawful_basis_recorded&quot;: &quot;security_obligation&quot;,
+    &quot;retention_days&quot;: 180,
+    &quot;sharing&quot;: [&quot;security_operations&quot;, &quot;legal_on_approved_escalation&quot;],
+    &quot;user_rights_support&quot;: [&quot;access&quot;, &quot;rectification&quot;, &quot;restriction_review&quot;],
+    &quot;controls&quot;: [&quot;access_review&quot;, &quot;audit_logging&quot;, &quot;need_to_know&quot;, &quot;retention_schedule&quot;],
+    &quot;issues&quot;: []
+  },
+  {
+    &quot;system&quot;: &quot;Marketing Lead Enrichment&quot;,
+    &quot;processing_purpose&quot;: &quot;Build prospect profiles for sales outreach&quot;,
+    &quot;data_categories&quot;: [&quot;name&quot;, &quot;email&quot;, &quot;job_title&quot;, &quot;company&quot;, &quot;inferred_interests&quot;],
+    &quot;sensitive_flags&quot;: [&quot;profiling&quot;],
+    &quot;lawful_basis_recorded&quot;: &quot;not_recorded&quot;,
+    &quot;retention_days&quot;: 1095,
+    &quot;sharing&quot;: [&quot;sales_team&quot;, &quot;data_broker&quot;, &quot;email_campaign_platform&quot;],
+    &quot;user_rights_support&quot;: [&quot;access&quot;],
+    &quot;controls&quot;: [&quot;privacy_notice_link&quot;],
+    &quot;issues&quot;: [&quot;lawful_basis_missing&quot;, &quot;broker_source_unclear&quot;, &quot;opt_out_not_documented&quot;, &quot;excessive_retention&quot;]
+  }
+]</code></pre><h3>Step 2 — Create <code>privacy_review.py</code></h3><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;
+Safe privacy-engineering review lab.
+This script uses only fictional local JSON. It performs no network activity,
+no legal analysis, no data discovery, and no real privacy assessment.
+&quot;&quot;&quot;
+import json
+from pathlib import Path
+
+REQUIRED_RIGHTS = {&quot;access&quot;}
+HIGH_RISK_FLAGS = {&quot;health_context&quot;, &quot;employee_monitoring&quot;, &quot;profiling&quot;, &quot;precise_location&quot;, &quot;children&quot;}
+REQUIRED_CONTROLS_FOR_VENDOR_SHARING = {&quot;vendor_dpa_signed&quot;}
+MAX_DEFAULT_RETENTION_DAYS = 365
+
+
+def score_activity(activity):
+    warnings = []
+    score = 0
+    flags = set(activity.get(&quot;sensitive_flags&quot;, []))
+    controls = set(activity.get(&quot;controls&quot;, []))
+    rights = set(activity.get(&quot;user_rights_support&quot;, []))
+    sharing = set(activity.get(&quot;sharing&quot;, []))
+    issues = set(activity.get(&quot;issues&quot;, []))
+
+    if flags &amp; HIGH_RISK_FLAGS:
+        score += 3
+        warnings.append(&quot;high-risk context requires privacy-owner review&quot;)
+
+    if activity.get(&quot;lawful_basis_recorded&quot;) in {&quot;not_recorded&quot;, &quot;legitimate_interest_review_pending&quot;, &quot;unknown&quot;}:
+        score += 3
+        warnings.append(&quot;lawful-basis or justification record is missing/incomplete&quot;)
+
+    if activity.get(&quot;retention_days&quot;, 0) &gt; MAX_DEFAULT_RETENTION_DAYS:
+        score += 2
+        warnings.append(&quot;retention period needs documented necessity and approval&quot;)
+
+    if any(&quot;vendor&quot; in item or &quot;broker&quot; in item or &quot;platform&quot; in item for item in sharing):
+        if not (controls &amp; REQUIRED_CONTROLS_FOR_VENDOR_SHARING):
+            score += 2
+            warnings.append(&quot;third-party sharing lacks minimum vendor/data-processing evidence&quot;)
+
+    if not REQUIRED_RIGHTS &lt;= rights:
+        score += 1
+        warnings.append(&quot;minimum access-right support is not documented&quot;)
+
+    if &quot;no_dpia_record&quot; in issues or &quot;profiling&quot; in flags or &quot;health_context&quot; in flags:
+        score += 2
+        warnings.append(&quot;DPIA/PIA screening should be documented&quot;)
+
+    if &quot;purpose_broader_than_needed&quot; in issues:
+        score += 1
+        warnings.append(&quot;purpose statement may be too broad for minimization review&quot;)
+
+    if &quot;broker_source_unclear&quot; in issues:
+        score += 2
+        warnings.append(&quot;data provenance is unclear; source and notice chain need review&quot;)
+
+    if &quot;opt_out_not_documented&quot; in issues:
+        score += 2
+        warnings.append(&quot;choice/objection/opt-out handling is not documented&quot;)
+
+    if score &gt;= 9:
+        priority = &quot;escalate&quot;
+    elif score &gt;= 5:
+        priority = &quot;review&quot;
+    else:
+        priority = &quot;monitor&quot;
+
+    return {
+        &quot;system&quot;: activity[&quot;system&quot;],
+        &quot;priority&quot;: priority,
+        &quot;score&quot;: score,
+        &quot;warnings&quot;: warnings,
+        &quot;recommended_artifacts&quot;: recommend_artifacts(activity, priority),
+    }
+
+
+def recommend_artifacts(activity, priority):
+    artifacts = [&quot;data-flow diagram&quot;, &quot;processing-purpose record&quot;, &quot;retention rationale&quot;]
+    if priority in {&quot;review&quot;, &quot;escalate&quot;}:
+        artifacts.extend([&quot;privacy risk assessment&quot;, &quot;privacy/legal owner decision record&quot;])
+    if any(&quot;vendor&quot; in item or &quot;broker&quot; in item or &quot;platform&quot; in item for item in activity.get(&quot;sharing&quot;, [])):
+        artifacts.extend([&quot;vendor due-diligence evidence&quot;, &quot;data-processing agreement or equivalent contract evidence&quot;])
+    if &quot;profiling&quot; in activity.get(&quot;sensitive_flags&quot;, []):
+        artifacts.append(&quot;profiling/automated-decision review&quot;)
+    return artifacts
+
+
+def main():
+    data = json.loads(Path(&quot;privacy_activities.json&quot;).read_text())
+    report = [score_activity(item) for item in data]
+    for item in report:
+        print(f&quot;{item[&#x27;system&#x27;]}: {item[&#x27;priority&#x27;].upper()} score={item[&#x27;score&#x27;]}&quot;)
+        for warning in item[&quot;warnings&quot;]:
+            print(f&quot;  - {warning}&quot;)
+        print(&quot;  artifacts:&quot;)
+        for artifact in item[&quot;recommended_artifacts&quot;]:
+            print(f&quot;    * {artifact}&quot;)
+    return report
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre><h3>Step 3 — Optional local test file</h3><pre><code>#!/usr/bin/env python3
+from privacy_review import score_activity
+
+
+def test_high_risk_vendor_activity_escalates():
+    activity = {
+        &quot;system&quot;: &quot;Test&quot;,
+        &quot;processing_purpose&quot;: &quot;Broad analytics&quot;,
+        &quot;data_categories&quot;: [&quot;id&quot;, &quot;health_context&quot;],
+        &quot;sensitive_flags&quot;: [&quot;health_context&quot;],
+        &quot;lawful_basis_recorded&quot;: &quot;not_recorded&quot;,
+        &quot;retention_days&quot;: 800,
+        &quot;sharing&quot;: [&quot;third_party_analytics_vendor&quot;],
+        &quot;user_rights_support&quot;: [],
+        &quot;controls&quot;: [],
+        &quot;issues&quot;: [&quot;no_dpia_record&quot;, &quot;purpose_broader_than_needed&quot;],
+    }
+    result = score_activity(activity)
+    assert result[&quot;priority&quot;] == &quot;escalate&quot;
+    assert result[&quot;score&quot;] &gt;= 9
+    assert any(&quot;lawful-basis&quot; in w for w in result[&quot;warnings&quot;])
+
+
+def test_well_controlled_security_logs_monitor():
+    activity = {
+        &quot;system&quot;: &quot;Security Logs&quot;,
+        &quot;processing_purpose&quot;: &quot;Detect account compromise&quot;,
+        &quot;data_categories&quot;: [&quot;employee_id&quot;, &quot;source_ip&quot;],
+        &quot;sensitive_flags&quot;: [],
+        &quot;lawful_basis_recorded&quot;: &quot;security_obligation&quot;,
+        &quot;retention_days&quot;: 180,
+        &quot;sharing&quot;: [&quot;security_operations&quot;],
+        &quot;user_rights_support&quot;: [&quot;access&quot;, &quot;rectification&quot;],
+        &quot;controls&quot;: [&quot;access_review&quot;, &quot;audit_logging&quot;, &quot;retention_schedule&quot;],
+        &quot;issues&quot;: [],
+    }
+    result = score_activity(activity)
+    assert result[&quot;priority&quot;] == &quot;monitor&quot;
+    assert result[&quot;score&quot;] == 0
+
+
+if __name__ == &quot;__main__&quot;:
+    test_high_risk_vendor_activity_escalates()
+    test_well_controlled_security_logs_monitor()
+    print(&quot;privacy review tests passed&quot;)
+</code></pre><h3>Expected learning outcome</h3><p>The goal is not to automate legal compliance. The goal is to practice identifying incomplete lawful-basis records, excessive retention, high-risk context, unclear data provenance, missing DPIA/PIA screening, weak rights support, and missing vendor evidence.</p></section><section id="checklist"><h2>18. Privacy Engineering Checklist</h2><ul><li>Is each processing purpose documented and approved?</li><li>Does every field map to a purpose and necessity rationale?</li><li>Are sensitive, inferred, employee, child, location, health, biometric, financial, or profiling data identified?</li><li>Are default settings privacy-preserving rather than maximum-collection?</li><li>Is retention implemented technically, not only written in a policy?</li><li>Can rights requests be fulfilled within the applicable workflow and system limitations?</li><li>Are vendors, subprocessors, regions, and data-sharing paths documented?</li><li>Is production personal data blocked from development and testing unless formally approved?</li><li>Are logs, backups, analytics, model-training datasets, and derived tables included in the data map?</li><li>Are legal/privacy/compliance escalation triggers clear?</li><li>Is residual privacy risk recorded with an owner and review date?</li></ul></section><section id="quiz"><h2>19. Self-Assessment</h2><div class="quiz" data-quiz><div class="question"><p><strong>1. Which statement is strongest?</strong></p><label><input type="radio" name="q1" value="a"> Privacy means encrypting personal data.</label><label><input type="radio" name="q1" value="b" data-correct="true"> Privacy includes controlling collection, purpose, use, sharing, retention, rights, transparency, and safeguards.</label><label><input type="radio" name="q1" value="c"> Privacy is only a legal department issue.</label></div><div class="question"><p><strong>2. What is the safest interpretation of pseudonymized data?</strong></p><label><input type="radio" name="q2" value="a"> It is automatically anonymous.</label><label><input type="radio" name="q2" value="b" data-correct="true"> It may still be personal data if re-identification is possible or context allows linkage.</label><label><input type="radio" name="q2" value="c"> It has no privacy risk.</label></div><div class="question"><p><strong>3. Why is retention engineering important?</strong></p><label><input type="radio" name="q3" value="a"> A policy alone deletes data.</label><label><input type="radio" name="q3" value="b" data-correct="true"> Retention must be implemented across systems, backups, logs, vendors, archives, and exceptions.</label><label><input type="radio" name="q3" value="c"> Longer retention always improves security.</label></div><div class="question"><p><strong>4. Which activity should trigger privacy/legal review?</strong></p><label><input type="radio" name="q4" value="a"> Renaming an internal variable.</label><label><input type="radio" name="q4" value="b" data-correct="true"> Adding broker enrichment, profiling, sensitive data, or new cross-border vendor sharing.</label><label><input type="radio" name="q4" value="c"> Removing an unused field from collection.</label></div><button class="btn quiz-submit" type="button">Check answers</button><div class="quiz-result" aria-live="polite"></div></div></section>
+          <section id="further-reading"><h2>Further Reading</h2><ul><li><a href="https://www.nist.gov/privacy-framework">NIST Privacy Framework.</a></li><li><a href="https://nvlpubs.nist.gov/nistpubs/ir/2017/nist.ir.8062.pdf">NISTIR 8062 — Privacy Engineering and Risk Management.</a></li><li><a href="https://www.nist.gov/privacy-framework/nist-pram">NIST Privacy Risk Assessment Methodology.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final">NIST SP 800-53 Rev. 5 — Security and Privacy Controls.</a></li><li><a href="https://csrc.nist.gov/pubs/sp/800/122/final">NIST SP 800-122 — Guide to Protecting the Confidentiality of PII.</a></li><li><a href="https://www.edpb.europa.eu/documents/guideline/guidelines-42019-on-article-25-data-protection-by-design-and-by-default_en">EDPB Guidelines 4/2019 on Data Protection by Design and by Default.</a></li><li><a href="https://commission.europa.eu/law/law-topic/data-protection/information-individuals_en">European Commission — Information for Individuals.</a></li><li><a href="https://oag.ca.gov/privacy/ccpa">California Attorney General — CCPA.</a></li><li><a href="https://www.oecd.org/en/topics/sub-issues/privacy-principles.html">OECD Privacy Principles.</a></li></ul></section>
+          <div class="prev-next"><a class="btn" href="risk-management-controls-and-assurance.html">← Lesson 14.2</a><a class="btn btn-primary" href="cyber-law-regulation-and-incident-reporting.html">Lesson 14.4 →</a></div>
+        </article>
+        <aside class="toc"><h2>On this page</h2><ol><li><a href="#objectives">Learning Objectives</a></li><li><a href="#research-basis">Research Basis</a></li><li><a href="#definition">Privacy Engineering</a></li><li><a href="#privacy-vs-security">Privacy vs Security</a></li><li><a href="#data-taxonomy">Data Taxonomy</a></li><li><a href="#data-lifecycle">Data Lifecycle</a></li><li><a href="#principles">Principles</a></li><li><a href="#lawful-basis">Lawful Basis</a></li><li><a href="#design-default">Design and Default</a></li><li><a href="#nist-objectives">NIST Objectives</a></li><li><a href="#privacy-risk">Privacy Risk</a></li><li><a href="#pia-dpia">PIA/DPIA Thinking</a></li><li><a href="#controls">Controls</a></li><li><a href="#architecture-patterns">Architecture Patterns</a></li><li><a href="#security-logs">Security Logs</a></li><li><a href="#case-study">Case Study</a></li><li><a href="#lab">Lab</a></li><li><a href="#checklist">Checklist</a></li><li><a href="#quiz">Self-Assessment</a></li><li><a href="#further-reading">Further Reading</a></li></ol></aside>
+      </div>
+      <footer class="footer">© <span id="year"></span> MS Cybersecurity Interactive Learning Platform. Authorized, ethical learning only.</footer>
+    </div>
+  </main>
+</div>
+<script src="assets/js/nav-data.js"></script><script src="../assets/js/nav-data.js"></script><script src="../../assets/js/nav-data.js"></script><script src="assets/js/search-index.js"></script><script src="../assets/js/search-index.js"></script><script src="../../assets/js/search-index.js"></script><script src="assets/js/glossary-data.js"></script><script src="../assets/js/glossary-data.js"></script><script src="../../assets/js/glossary-data.js"></script><script src="assets/js/site.js"></script><script src="../assets/js/site.js"></script><script src="../../assets/js/site.js"></script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script>if(window.mermaid){mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:document.documentElement.dataset.theme==='dark'?'dark':'default'});}</script>
+</body>
+</html>
