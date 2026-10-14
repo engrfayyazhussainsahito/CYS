@@ -1,451 +1,212 @@
-# MS Cybersecurity Interactive Learning Platform
+# MS Cybersecurity — Interactive Learning Platform
 
-A free static website for a zero-to-advanced MS-level cybersecurity course.
+**An Open-Access, Graduate-Level Cybersecurity Learning Resource**
 
-## Current release
+[![Live Platform](https://img.shields.io/badge/Live%20Platform-Visit%20Website-2563eb)](https://engrfayyazhussainsahito.github.io/CYS/)
+[![Hosting](https://img.shields.io/badge/Hosting-GitHub%20Pages-181717)](https://pages.github.com/)
+[![Code License](https://img.shields.io/badge/Code-MIT-green)](LICENSE-CODE.md)
+[![Content License](https://img.shields.io/badge/Content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md)
 
-This starter release includes:
+**[Explore the Live Platform](https://engrfayyazhussainsahito.github.io/CYS/)** · **[Browse the Curriculum](https://engrfayyazhussainsahito.github.io/CYS/#curriculum)** · **[Explore the Glossary](https://engrfayyazhussainsahito.github.io/CYS/glossary.html)**
 
-- Complete static-site architecture
-- Sidebar navigation
-- Search page and mini search
-- Dark mode
-- Reading progress bar
-- Table of contents
-- Previous/next navigation
-- Copy code buttons
-- Mermaid diagrams
-- Browser print-to-PDF
-- Bookmarks through Local Storage
-- Recently viewed lessons
-- Glossary search
-- Progress tracker
-- Quiz mode
-- Responsive design
-- Print-friendly CSS
-- Accessibility-oriented structure
-- Week 0 overview
-- Full Lesson 0.1: Lab Readiness and Learning Path
+## Overview
 
-## Hosting on GitHub Pages
+MS Cybersecurity is an open-access, browser-based learning platform designed to support systematic cybersecurity education, independent study, and graduate-level technical development.
 
-1. Create a new GitHub repository.
-2. Upload all files in this folder to the repository root.
-3. Open repository Settings → Pages.
-4. Choose deployment from a branch.
-5. Select the main branch and root folder.
-6. Save and open the generated GitHub Pages URL.
+The platform follows a structured learning pathway that begins with foundational computing, networking, Linux, and security principles before progressing toward secure software engineering, cryptography, network and web security, cloud security, security operations, incident response, digital forensics, governance, and emerging security challenges.
 
-## Adding a new lesson
+Its pedagogical approach combines first-principles explanations, technical depth, practical exercises, diagrams, real-world security scenarios, and research-informed concepts. The objective is to help learners develop not only familiarity with cybersecurity terminology, but also the analytical skills required to understand threats, evaluate security controls, investigate incidents, and design more secure systems.
 
-1. Copy `content/templates/lesson-template.html` into the correct `weeks/week-XX/` folder.
-2. Rename the file with a readable slug.
-3. Fill all 19 required lesson sections.
-4. Add the lesson to `assets/js/nav-data.js`.
-5. Add searchable metadata to `assets/js/search-index.js`.
-6. Add new terms to `assets/js/glossary-data.js`.
-7. Test the page locally by opening `index.html` in a browser.
+The platform is built with HTML, CSS, and JavaScript and is hosted on GitHub Pages. It is designed for browser-based access without requiring a dedicated application server or database.
 
-## Safety rule
+## Learning Platform at a Glance
 
-All labs must be isolated, authorized, and educational. Do not include instructions for unauthorized testing against real systems.
+- **17-week learning pathway** covering foundational through advanced cybersecurity topics.
+- **80+ lessons** organized into a progressive curriculum.
+- **500+ glossary terms** supporting technical vocabulary and conceptual understanding.
+- **Interactive learning features** including search, quizzes, bookmarks, and reading-progress tracking.
+- **Practical security exercises** emphasizing analysis, documentation, defensive engineering, and authorized testing.
+- **Open access** for students, educators, researchers, and independent learners.
 
-## Licenses
+*Content and feature coverage may evolve as the curriculum develops.*
 
-- Code: MIT License, see `LICENSE-CODE.md`.
-- Course content: Creative Commons Attribution 4.0, see `LICENSE-CONTENT.md`.
+## Curriculum
 
+The curriculum is organized into progressive learning stages.
 
-## Current content status
+| Stage | Core Topics |
+|---|---|
+| **Weeks 0–1: Foundations and Security Mindset** | Linux, networking, Python fundamentals, security objectives, threat modeling, ethics, and responsible disclosure |
+| **Weeks 2–4: Identity, Cryptography, and Secure Design** | Authentication, authorization, access control, cryptographic principles, secure software engineering, and threat-driven design |
+| **Weeks 5–8: Systems, Web, and Network Security** | Memory safety, web application vulnerabilities, API security, network protocols, firewalls, VPNs, and security assessment |
+| **Weeks 9–10: Cloud and Platform Security** | Endpoint security, cloud identity and access management, containers, Kubernetes, DevSecOps, and software supply-chain security |
+| **Weeks 11–12: Security Operations, Incident Response, and Forensics** | SIEM, telemetry pipelines, detection engineering, alert triage, threat hunting, evidence preservation, digital forensics, and incident recovery |
+| **Weeks 13–15: Offensive Security, Governance, and Emerging Topics** | Authorized penetration testing, security governance, privacy, AI/LLM security, post-quantum cryptography, and Zero Trust |
+| **Week 16: Capstone and Career Development** | Enterprise security assessment, risk registers, portfolio presentation, professional development, and research pathways |
 
-- Lesson 0.1: Lab Readiness and Learning Path — ready
-- Lesson 0.2: Linux from Zero for Cybersecurity — ready
-- Lesson 0.3: Networking from Zero — next planned lesson
+For the latest lesson availability and sequence, consult the [live curriculum](https://engrfayyazhussainsahito.github.io/CYS/).
 
+## Key Features
 
-## Latest content update
+### 1. First-Principles Learning
 
-- Added Lesson 0.3: Networking from Zero for Cybersecurity.
+Lessons introduce foundational concepts in accessible language before progressing to precise terminology, technical mechanisms, and more advanced applications. This approach supports learners who are building their cybersecurity knowledge from the ground up.
 
-- Lesson 0.4: Python for Security Learners is now included.
+### 2. Structured Technical Progression
 
+Topics are organized to connect foundational knowledge with practical security engineering, operational defense, governance, and research-oriented challenges.
 
-## Current generated lesson
+### 3. Interactive Learning Experience
 
-- Week 2, Lesson 2.1: Operating Systems from First Principles
+The platform includes browser-based learning utilities such as:
 
+- Full-text lesson search.
+- Interactive quiz mode.
+- Reading-progress tracking.
+- Bookmarks and recently viewed lessons.
+- Searchable cybersecurity glossary.
+- Table of contents and lesson navigation.
+- Syntax-highlighted code examples and diagrams.
+- Dark mode and responsive layouts.
+- Browser-based printing for offline reading.
 
-## Important URL Structure
+### 4. Practical and Scenario-Based Learning
 
-Lesson files live under `weeks/week-XX/`. For example:
+Practical material supports the development of security analysis, threat assessment, incident investigation, evidence handling, risk documentation, and remediation skills. Exercises are intended for isolated labs, explicitly authorized environments, and educational scenarios.
 
-`weeks/week-02/users-groups-and-identity.html`
+### 5. Research-Informed Security Content
 
-Root-level lesson slugs such as `users-groups-and-identity.html` are included only as redirect aliases. They exist to prevent broken styling if a lesson is opened from the repository root.
+The curriculum incorporates established security frameworks, technical standards, defensive practices, and documented industry guidance where appropriate. Topics include security governance, incident response, secure development, cloud security, privacy engineering, AI security, and emerging cryptographic challenges.
 
-If a page appears as plain unstyled text, it usually means CSS/JavaScript assets were referenced from the wrong folder. This build includes resilient asset fallbacks and root-level redirects to prevent that issue on GitHub Pages project sites.
+## Intended Audience
 
+This resource is suitable for:
 
-## Current build note
+- Undergraduate and graduate students in Computer Science, Cybersecurity, and Information Technology.
+- University instructors developing cybersecurity teaching materials.
+- Early-career security analysts and aspiring SOC professionals.
+- Developers and system administrators learning secure engineering practices.
+- Independent learners preparing for cybersecurity projects and professional certifications.
+- Researchers exploring security engineering, threat detection, governance, and emerging security technologies.
 
-This build includes Week 4 — Secure Software and Supply Chain, Lesson 4.1.
+Some lessons require familiarity with programming, operating systems, networking, or security fundamentals. Learners should follow the curriculum sequentially when building their knowledge from the beginning.
 
-## Latest content update
-- Week 5: Memory Safety and Binary Foundations — Lesson 5.1 added.
+## Getting Started
 
+### Option 1: Use the Live Platform
 
-## Current build status
+Visit the website and begin with the introductory learning pathway:
 
-Generated through Week 6 Lesson 6.1: Web Applications from First Principles.
+**[Launch MS Cybersecurity](https://engrfayyazhussainsahito.github.io/CYS/)**
 
+Navigate through the weekly curriculum, search lessons, review glossary terms, and use the available learning tools to support independent study.
 
-## Latest content added
+### Option 2: Run the Project Locally
 
-- Lesson 6.2 — Sessions, Cookies, and Browser Security.
+The platform uses static web technologies and does not require a backend application server for its core learning experience.
 
-- Lesson 6.3 — Injection, XSS, and Secure Output.
+Clone the repository:
 
+```bash
+git clone https://github.com/engrfayyazhussainsahito/CYS.git
+cd CYS
+```
 
-Latest generated lesson: Lesson 6.4 — API Security and Object-Level Authorization.
+Open `index.html` in a modern web browser.
 
-- Week 7 Lesson 7.2 added: TCP/IP, DNS, and Routing Security.
+For a more consistent local testing experience, use Python's built-in HTTP server if Python is installed:
 
+```bash
+python -m http.server 8000
+```
 
-Latest update: Added Lesson 7.3 — Firewalls, Segmentation, and Zero Trust.
+Then open:
 
+`http://localhost:8000`
 
-## Latest content update
+If your system uses `python3` instead, run `python3 -m http.server 8000`.
 
-- Added Lesson 10.3: Containers, Images, and Kubernetes Security.
+## Repository Structure
 
+The repository contains the static website, learning materials, supporting assets, and curriculum files.
 
-Latest update: added Lesson 10.4 — DevSecOps Pipelines and Infrastructure as Code.
+```text
+CYS/
+├── assets/          # Stylesheets, scripts, navigation and supporting assets
+├── content/         # Organized course content and content resources
+├── weeks/           # Weekly curriculum and lesson materials
+├── index.html       # Main learning-platform entry point
+├── architecture.html
+├── glossary.html
+├── search.html
+├── LICENSE-CODE.md
+├── LICENSE-CONTENT.md
+└── README.md
+```
 
-## Latest content update
+The repository also contains root-level lesson HTML files and weekly overview pages. These provide additional entry points into the course material.
 
-- Added Week 11 overview: Security Operations, Monitoring, and Detection Engineering.
-- Expanded Week 11 overview into a full course-week landing page with SOC mental model, lesson map, workflow diagram, failure points, practical deliverables, safety boundary, and readiness checklist.
-- Added Lesson 11.1: Security Operations from First Principles.
-- Updated navigation, search index, glossary terms, root redirects, and Lesson 10.5 next-link progression.
+## Learning Outcomes
 
-## Current build status
+By working through the relevant curriculum and completing its exercises, learners should be able to:
 
-Generated through Week 16 Lesson 16.3. Weeks 11–15 are complete; Week 16 is in progress.
+1. Explain foundational cybersecurity principles, threats, vulnerabilities, and risk.
+2. Analyze identity, authentication, authorization, and cryptographic mechanisms.
+3. Identify common web, API, operating-system, and network security weaknesses.
+4. Apply secure design, defensive configuration, and vulnerability-management concepts.
+5. Interpret security telemetry and reason about detection, investigation, and incident response.
+6. Understand evidence preservation and the principles of digital forensic investigation.
+7. Evaluate security governance, privacy, cloud security, and software supply-chain risks.
+8. Discuss emerging challenges such as AI/LLM security and post-quantum cryptography.
+9. Document findings and communicate security recommendations in a structured manner.
 
+These are intended learning outcomes; completing the website alone does not constitute a formal academic qualification or professional certification.
 
-## Latest content update
+## Ethical Use and Safety
 
-- Added Lesson 11.2: SIEM, Log Sources, and Telemetry Pipelines.
-- Updated Week 11 overview, navigation, search index, glossary terms, root redirect, and Lesson 11.1 next-link progression.
+Cybersecurity education must be conducted responsibly.
 
+- Perform security testing only on systems you own or have explicit authorization to assess.
+- Use isolated laboratories, intentionally vulnerable environments, and approved training platforms for practical exercises.
+- Respect applicable laws, privacy requirements, organizational policies, and rules of engagement.
+- Preserve evidence and document findings responsibly.
+- Follow coordinated vulnerability disclosure practices when reporting security weaknesses.
+- Do not use this educational material to access, disrupt, exploit, or exfiltrate data from unauthorized systems.
 
-## Latest content update
+All practical activities should remain within clearly defined and authorized boundaries.
 
-- Added Lesson 11.3: Detection Engineering and Rule Lifecycle.
-- Updated Week 11 overview, navigation, search index, glossary terms, root redirect, and Lesson 11.2 next-link progression.
+## Licensing
 
+This repository uses separate licenses for software and educational content:
 
-## Latest content update
+- **Source code:** MIT License — see [LICENSE-CODE.md](LICENSE-CODE.md).
+- **Course content:** Creative Commons Attribution 4.0 International (CC BY 4.0) — see [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
 
-- Added Lesson 11.4: Alert Triage, Investigation, and Threat Hunting.
-- Grounded the lesson in current NIST SP 800-61 Rev. 3, CISA response playbooks, NIST SP 800-92 log-management guidance, MITRE ATT&CK, and common structured hunting workflow patterns.
-- Updated Week 11 overview, navigation, search index, glossary terms, root redirect, and Lesson 11.3 next-link progression.
+Review the applicable license before reusing, adapting, redistributing, or incorporating any material into another project. Third-party resources and trademarks remain subject to their respective terms.
 
+## Contributions and Academic Use
 
-## Latest content update
+Suggestions, corrections, accessibility improvements, and educational enhancements are welcome.
 
-- Added Lesson 11.5: Metrics, Automation, and SOC Maturity.
-- Grounded the lesson in current measurement and operations references including NIST SP 800-55 Volume 1, NIST CSF 2.0, CISA Cybersecurity Performance Goals 2.0, CISA Zero Trust Maturity Model 2.0, NIST SP 800-137, and MITRE ATT&CK data-source guidance.
-- Updated Week 11 overview, navigation, search index, glossary terms, root redirect, and Lesson 11.4 next-link progression.
-- Week 11 is complete; Week 12 Incident Response & Forensics has begun with the overview and Lesson 12.1.
+Potential contributions include:
 
+- Improving explanations and technical accuracy.
+- Correcting broken references and navigation.
+- Developing additional learning exercises and diagrams.
+- Improving accessibility, usability, and browser compatibility.
+- Updating lessons against authoritative standards and documentation.
+- Proposing new topics relevant to cybersecurity education and research.
 
-## Latest content update
+Contributions should be technically accurate, clearly documented, ethically appropriate, and consistent with the educational purpose of the platform. Please describe substantive changes and cite authoritative references where relevant.
 
-- Added Week 12 Overview: Incident Response & Forensics.
-- Grounded the overview in current NIST SP 800-61 Rev. 3, NIST CSF 2.0, CISA incident/vulnerability response playbooks, NIST SP 800-86 forensic guidance, NIST SP 800-184 recovery planning, and NIST SP 800-84 exercise guidance.
-- Replaced the generic Week 12 placeholder with a Week 12 lesson map covering incident response fundamentals, evidence preservation, host/memory/network/cloud evidence, containment/recovery runbooks, and reporting/tabletop exercises.
-- Updated navigation, search index, glossary terms, root redirect, home page status, README status, and Lesson 11.5 next-link progression.
+## Project Information
 
+**Project:** MS Cybersecurity — Interactive Learning Platform  
+**Repository:** [engrfayyazhussainsahito/CYS](https://github.com/engrfayyazhussainsahito/CYS)  
+**Live Website:** [engrfayyazhussainsahito.github.io/CYS](https://engrfayyazhussainsahito.github.io/CYS/)  
+**Technology:** HTML, CSS, JavaScript, GitHub Pages  
+**Focus:** Cybersecurity education, security engineering, defensive operations, governance, and emerging security research
 
-## Week 12 Lesson 12.1 update
+---
 
-- Added Lesson 12.1: Incident Response from First Principles.
-- Grounded the lesson in NIST SP 800-61 Rev. 3, NIST CSF 2.0, CISA response playbooks, NIST SP 800-86, NIST SP 800-184, and NIST SP 800-84.
-- Added a safe fictional JSONL/Python incident declaration decision-aid lab.
-- Updated navigation, search, glossary, root redirects, and Week 12 overview links.
-
-
-## Week 12 Lesson 12.2 update
-
-- Added Lesson 12.2: Evidence Preservation and Digital Forensics Fundamentals.
-- Integrated evidence preservation, chain of custody, forensic process, hashing, volatility, documentation discipline, and scoped defensive collection.
-- Added a safe fictional local Python lab for validating evidence manifests and chain-of-custody metadata.
-
-
-## Week 12 Lesson 12.3 update
-
-- Added Lesson 12.3: Host, Memory, Network, and Cloud Evidence.
-- Grounded the lesson in NIST SP 800-86, NIST IR 8354, NIST IR 8006, NIST SP 800-92, NIST SP 800-61 Rev. 3, AWS cloud incident response/log-source guidance, Microsoft Azure/Entra logging documentation, and Google Cloud audit/flow-log documentation.
-- Integrated host, memory, network, cloud, SaaS, identity, and container evidence selection with volatility, retention, authorization, privacy, and interpretation limits.
-- Added a safe fictional local Python lab for evidence-source prioritization.
-- Updated navigation, search, glossary, root redirect, Week 12 overview, and Lesson 12.2 next-link progression.
-
-
-## Week 12 Lesson 12.4 update
-
-- Added Lesson 12.4: Containment, Eradication, and Recovery Runbooks.
-- Grounded the lesson in NIST SP 800-61 Rev. 3, NIST CSF 2.0 Respond/Recover outcomes, CISA incident/vulnerability response playbooks, NIST SP 800-184 recovery planning, NIST SP 800-86 forensic integration, NIST SP 800-84 testing guidance, and the CISA/MS-ISAC Ransomware Guide.
-- Integrated containment tradeoffs, evidence preservation, identity/host/cloud/SaaS containment, eradication by root-cause hypothesis, recovery validation, decision records, and response metrics.
-- Added a safe fictional local Python lab for ranking containment options and producing runbook decision records.
-- Updated navigation, search, glossary, root redirect, Week 12 overview, and Lesson 12.3 next-link progression.
-
-
-## Week 12 Lesson 12.5 update
-
-- Added Lesson 12.5: Reporting, Lessons Learned, and Tabletop Exercises.
-- Grounded the lesson in NIST SP 800-61 Rev. 3, NIST CSF 2.0, CISA incident/vulnerability response playbooks, NIST SP 800-84 TT&E guidance, NIST SP 800-184 recovery planning, CISA Tabletop Exercise Packages, and current CISA reporting context.
-- Integrated incident reporting, fact/inference/unknown separation, audience-specific reporting, evidence-to-claim mapping, closure criteria, lessons learned, corrective-action registers, tabletop design, exercise injects, and after-action reporting.
-- Added a safe fictional local Python lab for building an after-action package and tabletop plan.
-- Updated navigation, search, glossary, root redirect, Week 12 overview, and Lesson 12.4 next-link progression.
-- Week 12 is complete; Week 13 Offensive Security Methodology is the next planned module.
-
-
-## Week 13 Overview update
-
-- Added Week 13 Overview: Offensive Security Methodology.
-- Replaced the generic Week 13 placeholder with a researched lesson map covering authorized offensive security, scoping/rules of engagement, reconnaissance and attack-surface mapping, vulnerability validation and exploit-safety boundaries, and reporting/remediation/purple-team handoff.
-- Grounded the overview in NIST SP 800-115, NIST SP 800-53 Rev. 5, NIST SP 800-53A Rev. 5, OWASP WSTG, MITRE ATT&CK, CISA Cyber Hygiene Services, CREST penetration-testing guidance, and PTES.
-- Updated navigation, search, glossary, root redirect, home page status, and Lesson 12.5 next-link progression.
-- Week 13 has begun; Lesson 13.1 is now complete and Lesson 13.2 is the next planned item.
-
-
-## Week 13 Lesson 13.1 update
-
-- Added Lesson 13.1: Authorized Offensive Security from First Principles.
-- Grounded the lesson in NIST SP 800-115, NIST SP 800-53 Rev. 5, NIST SP 800-53A Rev. 5, OWASP WSTG, MITRE ATT&CK, CISA Cyber Hygiene Services, and PTES.
-- Integrated authorization, scope, rules of engagement, testing-type distinctions, evidence quality, privacy/data handling, risk validation, and defensive handoff.
-- Added a safe fictional local Python lab for assessment authorization readiness. The lab performs no scanning, exploitation, credential collection, or network activity.
-- Updated navigation, search, glossary, root redirect, Week 13 overview, and next-link progression.
-
-
-## Week 13 Lesson 13.2 update
-
-- Added Lesson 13.2: Scoping, Rules of Engagement, and Test Planning.
-- Grounded the lesson in NIST SP 800-115, NIST SP 800-53A Rev. 5, NIST SP 800-53 Rev. 5, OWASP WSTG, MITRE ATT&CK, and CISA Cyber Hygiene Services.
-- Integrated scope statements, rules of engagement, allowed and prohibited methods, test windows, emergency contacts, stop conditions, communication/deconfliction, evidence/data handling, production/cloud/SaaS/third-party traps, and readiness review.
-- Added a safe fictional local Python lab for validating rules-of-engagement and test-plan completeness. The lab performs no scanning, exploitation, credential collection, or network activity.
-- Updated navigation, search, glossary, root redirect, Week 13 overview, and Lesson 13.1 next-link progression.
-
-
-## Week 13 Lesson 13.3 update
-
-- Added Lesson 13.3: Reconnaissance, Enumeration, and Attack Surface Mapping.
-- Grounded the lesson in NIST SP 800-115, OWASP WSTG Information Gathering, MITRE ATT&CK Reconnaissance TA0043, NCSC External Attack Surface Management guidance, CISA Cyber Hygiene Services, and NIST SP 800-53 Rev. 5.
-- Focused on authorized passive reconnaissance, active enumeration boundaries, owner validation, inventory reconciliation, web/API surface, cloud/SaaS surface, identity surface, third-party dependencies, exposure prioritization, and evidence quality.
-- Added a safe fictional local Python lab that triages attack-surface observations without scanning, crawling, DNS lookups, web requests, authentication, exploitation, credential use, or network activity.
-- Updated navigation, search, glossary, root redirect, Week 13 overview, and Lesson 13.2 next-link progression.
-
-
-## Week 13 Lesson 13.4 update
-
-- Added Lesson 13.4: Vulnerability Validation, Exploit Safety, and Evidence.
-- Grounded the lesson in NIST SP 800-115, FIRST CVSS v4.0, FIRST EPSS, CISA Known Exploited Vulnerabilities guidance, SSVC, NIST SP 800-40 Rev. 4, and OWASP WSTG.
-- Focused on least-invasive proof, scanner triage, exploit-safety boundaries, CVSS/EPSS/KEV/SSVC prioritization inputs, evidence package standards, impact wording, data handling, remediation, and retest criteria.
-- Added a safe fictional local Python lab that classifies validation decisions without scanning, crawling, DNS lookups, web requests, authentication, exploitation, credential use, or network activity.
-- Updated navigation, search, glossary, root redirect, Week 13 overview, home page status, and Lesson 13.3 next-link progression.
-
-
-## Latest content update
-
-- Added Lesson 13.5: Reporting, Remediation, Retesting, and Purple-Team Handoff.
-- Completed Week 13 — Offensive Security Methodology.
-- Updated navigation, search index, glossary terms, root redirect, Week 13 overview, Lesson 13.4 next-link progression, and home/status text.
-- Included a safe fictional local Python lab for reporting artifacts, remediation tickets, retest cases, and purple-team handoff notes.
-
-
-## Week 14 Overview update
-
-- Added Week 14 Overview: Governance, Risk, Privacy, Law.
-- Replaced the generic Week 14 placeholder with a researched lesson map covering cybersecurity governance, risk management/controls/assurance, privacy engineering/data protection, cyber law/regulation/incident reporting, and third-party risk/audit evidence/governance reporting.
-- Grounded the overview in NIST CSF 2.0, NIST SP 800-37 Rev. 2, NIST SP 800-53 Rev. 5, the NIST Privacy Framework, CISA Cybersecurity Performance Goals 2.0, EU GDPR/data-protection guidance, NIS2, CIRCIA, SEC cybersecurity disclosure rules, DORA, and the EU Cyber Resilience Act.
-- Added a legal/educational boundary: this content is not legal advice and jurisdiction-specific duties must be escalated to counsel/compliance/privacy owners.
-- Updated navigation, search index, glossary terms, root redirect, home page status, and Lesson 13.5 next-link progression.
-- Week 14 has begun with the overview and governance/risk lessons now in progress.
-
-
-## Week 14 Lesson 14.1 update
-
-- Added Lesson 14.1: Cybersecurity Governance from First Principles.
-- Grounded the lesson in NIST CSF 2.0, NIST SP 800-37 Rev. 2, NIST SP 800-53 Rev. 5, NIST SP 800-55 Vol. 1, the NIST Privacy Framework, CISA Cybersecurity Performance Goals 2.0, and ISO/IEC 27001:2022.
-- Focused on accountability, decision rights, risk appetite/tolerance, risk owners, control owners, policy owners, governance committees, exceptions, residual risk, metrics, assurance, privacy/legal escalation, and board-ready reporting.
-- Added a safe fictional local Python lab for governance-readiness review. The lab performs no network, scanning, authentication, exploitation, cloud, legal, or real organizational assessment activity.
-- Updated navigation, search index, glossary terms, root redirect, Week 14 overview, and home/status text.
-- Lesson 14.3 has now been added; the next planned item is Lesson 14.4 — Cyber Law, Regulation, and Incident Reporting.
-
-
-## Week 14 Lesson 14.2 update
-
-- Added Lesson 14.2: Risk Management, Controls, and Assurance.
-- Grounded the lesson in NIST SP 800-30, NIST SP 800-37, NIST SP 800-53/53A, NISTIR 8286 Rev. 1, NIST SP 800-137, NIST SP 800-55 Vol. 1, and CISA Cybersecurity Performance Goals 2.0.
-- Added a safe fictional JSON/Python lab for risk statement review, control evidence checks, ownership gaps, residual-risk decision readiness, and assurance warnings.
-- Updated Week 14 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 14.1 next-link progression.
-
-- Next planned item: Lesson 14.5 — Third-Party Risk, Audit Evidence, and Governance Reporting.
-
-
-## Week 14 Lesson 14.3 update
-
-- Added Lesson 14.3: Privacy Engineering and Data Protection.
-- Grounded the lesson in the NIST Privacy Framework, NISTIR 8062, NIST PRAM, NIST SP 800-53 Rev. 5, NIST SP 800-122, OECD privacy principles, GDPR Articles 5/6/25, EDPB Article 25 guidance, European Commission rights guidance, and California CCPA public guidance.
-- Focused on privacy engineering, data lifecycle mapping, personal-data taxonomy, minimization, purpose limitation, retention, data protection by design/default, privacy risk, PIA/DPIA thinking, vendor sharing, rights workflows, and privacy in security logging.
-- Added a safe fictional local Python lab for privacy-activity review. The lab performs no network activity, scanning, data discovery, legal analysis, or real privacy assessment.
-- Updated Week 14 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 14.2 next-link progression.
-
-- Next planned item: Lesson 14.5 — Third-Party Risk, Audit Evidence, and Governance Reporting.
-
-
-## Week 14 Lesson 14.4 update
-
-- Added Lesson 14.4: Cyber Law, Regulation, and Incident Reporting.
-- Grounded the lesson in NIST CSF 2.0, NIST SP 800-61 Rev. 3, GDPR Articles 33/34, SEC cybersecurity incident disclosure guidance, CIRCIA rulemaking materials, NIS2 Article 23, DORA incident-reporting materials, the FTC Safeguards Rule notification requirement, and EU Cyber Resilience Act reporting guidance.
-- Focused on legal boundaries, incident reporting vs breach notification vs securities disclosure, materiality support, reporting clocks, communications governance, contractual notifications, third-party notices, evidence preservation, and decision records.
-- Added a safe fictional local Python lab for incident-reporting triage and reporting-matrix generation. The lab performs no network activity, scanning, evidence collection, legal analysis, or real incident assessment.
-- Updated Week 14 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 14.3 next-link progression.
-
-- Next planned item: Lesson 14.5 — Third-Party Risk, Audit Evidence, and Governance Reporting.
-
-
-
-
-## Week 14 Lesson 14.5 update
-
-- Added Lesson 14.5: Third-Party Risk, Audit Evidence, and Governance Reporting.
-- Grounded the lesson in NIST SP 800-161 Rev. 1 Update 1, NIST CSF 2.0, NIST SP 1305, NIST SP 800-53/53A, NIST SP 800-218, CISA Secure Software Development Attestation materials, AICPA SOC reporting references, and ISO/IEC 27036 supplier-relationship concepts.
-- Focused on third-party/supplier risk, vendor tiering, contracts, subprocessors/fourth parties, cloud shared responsibility, software supply-chain assurance, evidence quality, SOC/ISO evidence limits, complementary controls, remediation, exit planning, and governance reporting.
-- Added a safe fictional local Python lab for vendor-risk and audit-evidence triage. The lab performs no network activity, scanning, vendor access, legal analysis, or real assurance decision.
-- Updated Week 14 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 14.4 next-link progression.
-
-- Week 14 is now complete. Next planned module: Week 15 — Advanced and Emerging Topics.
-
-
-## Week 15 Overview update
-
-- Added Week 15 Overview: Advanced and Emerging Topics.
-- Replaced the generic Week 15 placeholder with a researched lesson map covering AI/LLM security and model governance, post-quantum cryptography and crypto-agility, zero trust at scale and identity-centric architecture, OT/IoT/cyber-physical security, and secure-by-design/cyber-resilience programs.
-- Grounded the overview in NIST AI RMF, NIST AI 600-1 Generative AI Profile, OWASP LLM Top 10, NIST PQC FIPS 203/204/205 materials, NIST SP 1800-38, NIST SP 800-207, CISA Zero Trust Maturity Model 2.0, NIST SP 800-82 Rev. 3, NIST IR 8425, CISA Secure by Design, and NIST SP 800-160 Vol. 2 Rev. 1.
-- Updated navigation, search index, glossary, root redirect, home page status, and Lesson 14.5 next-link progression.
-
-- Week 15 has begun. Next planned item: Lesson 15.1 — AI Security, LLM Risk, and Model Governance.
-
-
-## Week 15 Lesson 15.1 update
-
-- Added Lesson 15.1: AI Security, LLM Risk, and Model Governance.
-- Grounded the lesson in NIST AI RMF 1.0, NIST AI 600-1 Generative AI Profile, OWASP Top 10 for Large Language Model Applications, OWASP AI Exchange, NIST AI 100-2 Adversarial Machine Learning taxonomy, MITRE ATLAS, ISO/IEC 42001:2023, and EU AI Act governance context.
-- Focused on AI system inventory, LLM application risk, prompt injection as a control-boundary issue, retrieval-augmented generation, tool use, agentic AI, model/data supply chain, TEVV, monitoring, human oversight, and governance evidence.
-- Added a safe fictional local Python lab for AI governance triage. The lab performs no network activity, model calls, prompt testing against real services, exploitation, vendor access, or legal analysis.
-- Updated Week 15 overview, navigation, search index, glossary, root redirect, home page status, and Week 15 progression.
-
-- Next planned item: Lesson 15.2 — Post-Quantum Cryptography and Crypto-Agility.
-
-
-## Week 15 Lesson 15.2 update
-
-- Added Lesson 15.2: Post-Quantum Cryptography and Crypto-Agility.
-- Grounded the lesson in NIST FIPS 203, FIPS 204, and FIPS 205; NIST/NCCoE Migration to Post-Quantum Cryptography guidance; NIST SP 1800-38; NIST IR 8547 draft transition guidance; and NSA CNSA Suite 2.0 context for high-assurance environments.
-- Focused on cryptographic inventory, CBOMs, CRQC risk, harvest-now-decrypt-later, ML-KEM, ML-DSA, SLH-DSA, crypto-agility, PKI, certificates, firmware/code signing, vendor dependencies, hybrid transition, interoperability testing, rollback, and governance.
-- Added a safe fictional local Python lab for PQC readiness triage. The lab performs no scanning, DNS lookup, web request, cryptographic operation, certificate collection, authentication, vendor access, or system inspection.
-- Updated Week 15 overview, navigation, search index, glossary, root redirect, home page status, and Week 15 progression.
-
-- Next planned item: Lesson 15.3 — Zero Trust at Scale, SASE, and Identity-Centric Architecture.
-
-
-## Week 15 Lesson 15.3 update
-
-- Added Lesson 15.3: Zero Trust at Scale, SASE, and Identity-Centric Architecture.
-- Grounded the lesson in NIST SP 800-207, NIST NCCoE SP 1800-35, OMB M-22-09, CISA Zero Trust maturity concepts, NIST SP 800-53, and NIST SP 800-137.
-- Focused on Zero Trust as architecture rather than product, identity-centric security, policy decision/enforcement points, device and workload posture, application/resource-specific access, network segmentation, data controls, SASE/SSE/ZTNA distinctions, telemetry, automation, legacy exceptions, and maturity metrics.
-- Added a safe fictional local Python lab for Zero Trust readiness triage. The lab performs no network activity, scanning, authentication, exploitation, bypass testing, vendor access, or real security assessment.
-- Updated Week 15 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 15.2 next-link progression.
-
-
-
-## Week 15 Lesson 15.4 update
-
-- Added Lesson 15.4: OT, IoT, and Cyber-Physical Security.
-- Grounded the lesson in NIST SP 800-82 Rev. 3, NIST SP 800-213, NISTIR 8259, NISTIR 8425, CISA ICS resources, CISA Cross-Sector Cybersecurity Performance Goals, and ISA/IEC 62443.
-- Focused on safety, availability, engineering ownership, cyber-physical impact, passive discovery, segmentation, remote-access governance, firmware/support lifecycle, IoT procurement, monitoring, privacy, and incident-response coordination.
-- Added a safe fictional local Python lab for OT/IoT/cyber-physical risk triage. The lab performs no network activity, scanning, protocol interaction, authentication, vendor access, device interaction, configuration change, or real safety/security assessment.
-- Updated Week 15 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 15.3 next-link progression.
-
-
-
-## Week 15 Lesson 15.5 update
-
-- Added Lesson 15.5: Secure by Design, Cyber Resilience, and Future-Ready Programs.
-- Grounded the lesson in CISA Secure by Design/Secure by Demand, NIST SP 800-218 SSDF, NIST SP 800-160 Vol. 2 Rev. 1, NIST SP 800-184, NIST CSF 2.0, NIST SP 800-34, and CISA Cross-Sector Cybersecurity Performance Goals.
-- Focused on secure defaults, design evidence, threat-informed design, recovery testing, cyber resilience, procurement pressure, dependency transparency, future technology review, metrics, and continuous improvement.
-- Added a safe fictional local Python lab for secure-by-design and resilience triage. The lab performs no network activity, model calls, scanning, exploitation, authentication, vendor access, or real security assessment.
-- Updated Week 15 overview, navigation, search index, glossary, root redirect, home page status, and Lesson 15.4 next-link progression.
-
-- Week 15 is now complete. Next planned module: Week 16 — Capstone.
-
-
-## Week 16 Overview update
-
-- Added Week 16 Overview: Capstone.
-- Replaced the generic Week 16 placeholder with a researched capstone lesson map covering scenario/charter, enterprise assessment/risk register, detection/IR/forensic evidence drill, governance/privacy/legal/third-party executive briefing, and final portfolio/defense/career roadmap.
-- Grounded the overview in NIST CSF 2.0, NIST SP 800-37 Rev. 2, NIST SP 800-53A Rev. 5, NIST SP 800-55 Vol. 1, NIST SP 800-115, NIST SP 800-61 Rev. 3, CISA Cross-Sector Cybersecurity Performance Goals, and NIST SP 800-181 Rev. 1 NICE Framework.
-- Focused on authorization, evidence quality, scope control, risk reasoning, control assessment, incident-response integration, governance reporting, portfolio structure, and oral defense readiness.
-- Updated navigation, search index, glossary, root redirect, home page status, and Lesson 15.5 next-link progression.
-
-- Week 16 has begun. Next planned item: Lesson 16.1 — Capstone Scenario, Charter, and Success Criteria.
-
-
-## Week 16 Lesson 16.1 update
-
-- Added Lesson 16.1: Capstone Scenario, Charter, and Success Criteria.
-- Built the capstone foundation around fictional scenario design, scope, authorization boundary, stakeholders, decision rights, success criteria, evidence rules, rubric, and portfolio sanitization.
-- Research basis includes NIST CSF 2.0, NIST SP 800-37 Rev. 2, NIST SP 800-53A Rev. 5, NIST SP 800-115, NIST SP 800-61 Rev. 3, CISA CPGs, and the NICE Framework.
-- Added a safe local JSON + Python charter-readiness lab. The lab performs no scanning, network activity, authentication, exploitation, cloud access, or real assessment.
-- Updated Week 16 overview, navigation, search index, glossary, root redirect, home page status, and Week 16 progression.
-- Next planned item after Lesson 16.1: Lesson 16.2 — Enterprise Security Assessment and Risk Register.
-
-
-
-## Week 16 Lesson 16.2 update
-
-- Added Lesson 16.2: Enterprise Security Assessment and Risk Register.
-- Added a researched capstone lesson covering assessment planning, asset/data/dependency mapping, control evidence review, risk statements, scoring discipline, residual risk, treatment decisions, evidence notebooks, and executive risk rollups.
-- Added a safe fictional local Python lab that generates a risk register from course-provided JSON and flags evidence/ownership/control-readiness warnings without network activity or real assessment.
-- Updated Week 16 overview, Lesson 16.1 progression, navigation, search index, glossary, root redirect, README, and home page status.
-- Next planned item: Lesson 16.3 — Detection, Incident Response, and Forensic Evidence Drill.
-
-
-## Week 16 Lesson 16.3 update
-
-- Added Lesson 16.3: Detection, Incident Response, and Forensic Evidence Drill.
-- Added safe fictional telemetry/evidence lab for alert triage, evidence manifest review, incident timeline construction, declaration recommendation, containment/recovery recommendations, and situation-report support.
-- Updated Week 16 overview, navigation, search, glossary, root redirect, README, and home-page status.
-- Research basis: NIST SP 800-61 Rev. 3, NIST SP 800-86, NIST SP 800-92, NIST IR 8387, CISA incident/vulnerability response playbooks, MITRE ATT&CK, and NIST SP 800-84.
-- Next planned item: Lesson 16.4 — Governance, Privacy, Legal, and Third-Party Executive Brief.
-
-
-## Week 16 Lesson 16.4 update
-
-- Added Lesson 16.4: Governance, Privacy, Legal, and Third-Party Executive Brief.
-- Added a researched capstone lesson covering executive decision support, governance ownership, privacy/legal escalation, third-party risk, contractual-notice candidates, materiality caution, and fact/inference/unknown discipline.
-- Added a safe fictional local Python lab that builds executive-brief, escalation, supplier-risk, and decision-log artifacts without network activity or real reporting.
-- Updated Week 16 overview, Lesson 16.3 progression, navigation, search index, glossary, root redirect, README, and home-page status.
-- Next planned item: Lesson 16.5 — Final Portfolio, Defense, and Career Roadmap.
-
-
-## Week 16 Lesson 16.5 update
-
-- Added Lesson 16.5: Final Portfolio, Defense, and Career Roadmap.
-- Added a researched capstone completion lesson covering portfolio evidence, claim-evidence matrices, sanitization, final defense, reviewer questions, NICE-style role mapping, skills inventory, measurable career roadmaps, and ethical public-portfolio boundaries.
-- Research basis includes NIST CSF 2.0, NIST SP 800-53A Rev. 5, NIST SP 800-55 Volumes 1 and 2, NIST SP 800-181 Rev. 1, current NICE Framework component guidance, CISA Cross-Sector Cybersecurity Performance Goals, and CISA NICCS NICE tooling.
-- Added a safe fictional local Python lab that reviews a capstone portfolio manifest, verifies required sections, checks evidence references, flags unsupported claims, reviews defense readiness, and evaluates career-roadmap quality.
-- Updated Week 16 overview, Lesson 16.4 progression, navigation, search index, glossary, root redirect, README, and home-page status.
-- Week 16 is complete. The 16-week MS Cybersecurity course path is now complete.
+*An open-access educational resource for developing rigorous cybersecurity knowledge through structured learning, practical reasoning, and responsible security practice.*
